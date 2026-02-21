@@ -1,0 +1,1018 @@
+[00:00:06.580] Server  WARN    ⚠ The "middleware" file convention is deprecated. Please use "proxy" instead. Learn more: https://nextjs.org/docs/messages/middleware-to-proxy
+[00:00:07.086] Server  LOG     ✓ Ready in 6.3s
+[00:00:13.767] Server  LOG     ○ Compiling / ...
+[00:00:16.685] Server  ERROR   ⨯ ./src/components/ai/AgentOasisChatSheet.tsx:9:1
+Module not found: Can't resolve 'react-markdown'
+   7 | import { trpc } from "@/trpc/client";
+   8 | import { cn } from "@/lib/utils";
+>  9 | import ReactMarkdown from "react-markdown";
+     | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  10 |
+  11 | interface AgentOasisChatSheetProps {
+  12 |     open: boolean;
+
+
+
+Import traces:
+  Client Component Browser:
+    ./src/components/ai/AgentOasisChatSheet.tsx [Client Component Browser]
+    ./src/components/layout/DesktopSidebar.tsx [Client Component Browser]
+    ./src/components/layout/DesktopSidebar.tsx [Server Component]
+    ./src/app/(app)/layout.tsx [Server Component]
+
+  Client Component SSR:
+    ./src/components/ai/AgentOasisChatSheet.tsx [Client Component SSR]
+    ./src/components/layout/DesktopSidebar.tsx [Client Component SSR]
+    ./src/components/layout/DesktopSidebar.tsx [Server Component]
+    ./src/app/(app)/layout.tsx [Server Component]
+
+https://nextjs.org/docs/messages/module-not-found
+
+
+[00:00:19.720] Server  LOG     ○ Compiling /_error ...
+[00:00:20.781] Browser ERROR   uncaughtError: Error: ./src/components/ai/AgentOasisChatSheet.tsx:9:1
+Module not found: Can't resolve 'react-markdown'
+   7 | import { trpc } from "@/trpc/client";
+   8 | import { cn } from "@/lib/utils";
+>  9 | import ReactMarkdown from "react-markdown";
+     | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  10 |
+  11 | interface AgentOasisChatSheetProps {
+  12 |     open: boolean;
+
+
+
+Import traces:
+  Client Component Browser:
+    ./src/components/ai/AgentOasisChatSheet.tsx [Client Component Browser]
+    ./src/components/layout/DesktopSidebar.tsx [Client Component Browser]
+    ./src/components/layout/DesktopSidebar.tsx [Server Component]
+    ./src/app/(app)/layout.tsx [Server Component]
+
+  Client Component SSR:
+    ./src/components/ai/AgentOasisChatSheet.tsx [Client Component SSR]
+    ./src/components/layout/DesktopSidebar.tsx [Client Component SSR]
+    ./src/components/layout/DesktopSidebar.tsx [Server Component]
+    ./src/app/(app)/layout.tsx [Server Component]
+
+https://nextjs.org/docs/messages/module-not-found
+
+
+[00:00:21.708] Browser ERROR   ./src/components/ai/AgentOasisChatSheet.tsx:9:1
+Module not found: Can't resolve 'react-markdown'
+   7 | import { trpc } from "@/trpc/client";
+   8 | import { cn } from "@/lib/utils";
+>  9 | import ReactMarkdown from "react-markdown";
+     | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  10 |
+  11 | interface AgentOasisChatSheetProps {
+  12 |     open: boolean;
+
+Import traces:
+  Client Component Browser:
+    ./src/components/ai/AgentOasisChatSheet.tsx [Client Component Browser]
+    ./src/components/layout/DesktopSidebar.tsx [Client Component Browser]
+    ./src/components/layout/DesktopSidebar.tsx [Server Component]
+    ./src/app/(app)/layout.tsx [Server Component]
+
+  Client Component SSR:
+    ./src/components/ai/AgentOasisChatSheet.tsx [Client Component SSR]
+    ./src/components/layout/DesktopSidebar.tsx [Client Component SSR]
+    ./src/components/layout/DesktopSidebar.tsx [Server Component]
+    ./src/app/(app)/layout.tsx [Server Component]
+
+https://nextjs.org/docs/messages/module-not-found
+[00:00:21.708] Browser ERROR   ./src/components/ai/AgentOasisChatSheet.tsx:9:1
+Module not found: Can't resolve 'react-markdown'
+   7 | import { trpc } from "@/trpc/client";
+   8 | import { cn } from "@/lib/utils";
+>  9 | import ReactMarkdown from "react-markdown";
+     | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  10 |
+  11 | interface AgentOasisChatSheetProps {
+  12 |     open: boolean;
+
+Import traces:
+  Client Component Browser:
+    ./src/components/ai/AgentOasisChatSheet.tsx [Client Component Browser]
+    ./src/components/layout/DesktopSidebar.tsx [Client Component Browser]
+    ./src/components/layout/DesktopSidebar.tsx [Server Component]
+    ./src/app/(app)/layout.tsx [Server Component]
+
+  Client Component SSR:
+    ./src/components/ai/AgentOasisChatSheet.tsx [Client Component SSR]
+    ./src/components/layout/DesktopSidebar.tsx [Client Component SSR]
+    ./src/components/layout/DesktopSidebar.tsx [Server Component]
+    ./src/app/(app)/layout.tsx [Server Component]
+
+https://nextjs.org/docs/messages/module-not-found
+[00:00:21.708] Browser ERROR   ./src/components/ai/AgentOasisChatSheet.tsx:9:1
+Module not found: Can't resolve 'react-markdown'
+   7 | import { trpc } from "@/trpc/client";
+   8 | import { cn } from "@/lib/utils";
+>  9 | import ReactMarkdown from "react-markdown";
+     | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  10 |
+  11 | interface AgentOasisChatSheetProps {
+  12 |     open: boolean;
+
+Import traces:
+  Client Component Browser:
+    ./src/components/ai/AgentOasisChatSheet.tsx [Client Component Browser]
+    ./src/components/layout/DesktopSidebar.tsx [Client Component Browser]
+    ./src/components/layout/DesktopSidebar.tsx [Server Component]
+    ./src/app/(app)/layout.tsx [Server Component]
+
+  Client Component SSR:
+    ./src/components/ai/AgentOasisChatSheet.tsx [Client Component SSR]
+    ./src/components/layout/DesktopSidebar.tsx [Client Component SSR]
+    ./src/components/layout/DesktopSidebar.tsx [Server Component]
+    ./src/app/(app)/layout.tsx [Server Component]
+
+https://nextjs.org/docs/messages/module-not-found
+[00:01:22.169] Server  ERROR   ⨯ ./node_modules/recharts/es6/util/ReactUtils.js:3:1
+Module not found: Can't resolve 'react-is'
+  1 | import get from 'es-toolkit/compat/get';
+  2 | import { Children } from 'react';
+> 3 | import { isFragment } from 'react-is';
+    | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  4 | import { isNullish } from './DataUtils';
+  5 | export var SCALE_TYPES = ['auto', 'linear', 'pow', 'sqrt', 'log', 'identity', 'time', 'band', 'point', 'ordinal', 'quantile', 'quantize', 'utc', 'sequential', 'threshold'];
+  6 |
+
+
+
+Import traces:
+  Client Component Browser:
+    ./node_modules/recharts/es6/util/ReactUtils.js [Client Component Browser]
+    ./node_modules/recharts/es6/cartesian/Line.js [Client Component Browser]
+    ./src/components/dashboard/IncomeExpenseChart.tsx [Client Component Browser]
+    ./src/app/(app)/page.tsx [Client Component Browser]
+    ./src/app/(app)/page.tsx [Server Component]
+
+  Client Component SSR:
+    ./node_modules/recharts/es6/util/ReactUtils.js [Client Component SSR]
+    ./node_modules/recharts/es6/cartesian/Line.js [Client Component SSR]
+    ./src/components/dashboard/IncomeExpenseChart.tsx [Client Component SSR]
+    ./src/app/(app)/page.tsx [Client Component SSR]
+    ./src/app/(app)/page.tsx [Server Component]
+
+https://nextjs.org/docs/messages/module-not-found
+
+
+[00:01:22.174] Server  ERROR   ⨯ ./node_modules/recharts/es6/util/ReactUtils.js:3:1
+Module not found: Can't resolve 'react-is'
+  1 | import get from 'es-toolkit/compat/get';
+  2 | import { Children } from 'react';
+> 3 | import { isFragment } from 'react-is';
+    | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  4 | import { isNullish } from './DataUtils';
+  5 | export var SCALE_TYPES = ['auto', 'linear', 'pow', 'sqrt', 'log', 'identity', 'time', 'band', 'point', 'ordinal', 'quantile', 'quantize', 'utc', 'sequential', 'threshold'];
+  6 |
+
+
+
+Import traces:
+  Client Component Browser:
+    ./node_modules/recharts/es6/util/ReactUtils.js [Client Component Browser]
+    ./node_modules/recharts/es6/cartesian/Line.js [Client Component Browser]
+    ./src/components/dashboard/IncomeExpenseChart.tsx [Client Component Browser]
+    ./src/app/(app)/page.tsx [Client Component Browser]
+    ./src/app/(app)/page.tsx [Server Component]
+
+  Client Component SSR:
+    ./node_modules/recharts/es6/util/ReactUtils.js [Client Component SSR]
+    ./node_modules/recharts/es6/cartesian/Line.js [Client Component SSR]
+    ./src/components/dashboard/IncomeExpenseChart.tsx [Client Component SSR]
+    ./src/app/(app)/page.tsx [Client Component SSR]
+    ./src/app/(app)/page.tsx [Server Component]
+
+https://nextjs.org/docs/messages/module-not-found
+
+
+[00:01:22.178] Server  ERROR   ⨯ ./node_modules/recharts/es6/util/ReactUtils.js:3:1
+Module not found: Can't resolve 'react-is'
+  1 | import get from 'es-toolkit/compat/get';
+  2 | import { Children } from 'react';
+> 3 | import { isFragment } from 'react-is';
+    | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  4 | import { isNullish } from './DataUtils';
+  5 | export var SCALE_TYPES = ['auto', 'linear', 'pow', 'sqrt', 'log', 'identity', 'time', 'band', 'point', 'ordinal', 'quantile', 'quantize', 'utc', 'sequential', 'threshold'];
+  6 |
+
+
+
+Import traces:
+  Client Component Browser:
+    ./node_modules/recharts/es6/util/ReactUtils.js [Client Component Browser]
+    ./node_modules/recharts/es6/cartesian/Line.js [Client Component Browser]
+    ./src/components/dashboard/IncomeExpenseChart.tsx [Client Component Browser]
+    ./src/app/(app)/page.tsx [Client Component Browser]
+    ./src/app/(app)/page.tsx [Server Component]
+
+  Client Component SSR:
+    ./node_modules/recharts/es6/util/ReactUtils.js [Client Component SSR]
+    ./node_modules/recharts/es6/cartesian/Line.js [Client Component SSR]
+    ./src/components/dashboard/IncomeExpenseChart.tsx [Client Component SSR]
+    ./src/app/(app)/page.tsx [Client Component SSR]
+    ./src/app/(app)/page.tsx [Server Component]
+
+https://nextjs.org/docs/messages/module-not-found
+
+
+[00:01:22.197] Server  ERROR   ⨯ ./node_modules/recharts/es6/util/ReactUtils.js:3:1
+Module not found: Can't resolve 'react-is'
+  1 | import get from 'es-toolkit/compat/get';
+  2 | import { Children } from 'react';
+> 3 | import { isFragment } from 'react-is';
+    | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  4 | import { isNullish } from './DataUtils';
+  5 | export var SCALE_TYPES = ['auto', 'linear', 'pow', 'sqrt', 'log', 'identity', 'time', 'band', 'point', 'ordinal', 'quantile', 'quantize', 'utc', 'sequential', 'threshold'];
+  6 |
+
+
+
+Import traces:
+  Client Component Browser:
+    ./node_modules/recharts/es6/util/ReactUtils.js [Client Component Browser]
+    ./node_modules/recharts/es6/cartesian/Line.js [Client Component Browser]
+    ./src/components/dashboard/IncomeExpenseChart.tsx [Client Component Browser]
+    ./src/app/(app)/page.tsx [Client Component Browser]
+    ./src/app/(app)/page.tsx [Server Component]
+
+  Client Component SSR:
+    ./node_modules/recharts/es6/util/ReactUtils.js [Client Component SSR]
+    ./node_modules/recharts/es6/cartesian/Line.js [Client Component SSR]
+    ./src/components/dashboard/IncomeExpenseChart.tsx [Client Component SSR]
+    ./src/app/(app)/page.tsx [Client Component SSR]
+    ./src/app/(app)/page.tsx [Server Component]
+
+https://nextjs.org/docs/messages/module-not-found
+
+
+[00:01:22.711] Browser ERROR   ./node_modules/recharts/es6/util/ReactUtils.js:3:1
+Module not found: Can't resolve 'react-is'
+  1 | import get from 'es-toolkit/compat/get';
+  2 | import { Children } from 'react';
+> 3 | import { isFragment } from 'react-is';
+    | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  4 | import { isNullish } from './DataUtils';
+  5 | export var SCALE_TYPES = ['auto', 'linear', 'pow', 'sqrt', 'log', 'identity', 'time', 'band', 'point', 'ordinal', 'quantile', 'quantize', 'utc', 'sequential', 'threshold'];
+  6 |
+
+Import traces:
+  Client Component Browser:
+    ./node_modules/recharts/es6/util/ReactUtils.js [Client Component Browser]
+    ./node_modules/recharts/es6/cartesian/Line.js [Client Component Browser]
+    ./src/components/dashboard/IncomeExpenseChart.tsx [Client Component Browser]
+    ./src/app/(app)/page.tsx [Client Component Browser]
+    ./src/app/(app)/page.tsx [Server Component]
+
+  Client Component SSR:
+    ./node_modules/recharts/es6/util/ReactUtils.js [Client Component SSR]
+    ./node_modules/recharts/es6/cartesian/Line.js [Client Component SSR]
+    ./src/components/dashboard/IncomeExpenseChart.tsx [Client Component SSR]
+    ./src/app/(app)/page.tsx [Client Component SSR]
+    ./src/app/(app)/page.tsx [Server Component]
+
+https://nextjs.org/docs/messages/module-not-found
+[00:01:22.711] Browser ERROR   ./node_modules/recharts/es6/util/ReactUtils.js:3:1
+Module not found: Can't resolve 'react-is'
+  1 | import get from 'es-toolkit/compat/get';
+  2 | import { Children } from 'react';
+> 3 | import { isFragment } from 'react-is';
+    | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  4 | import { isNullish } from './DataUtils';
+  5 | export var SCALE_TYPES = ['auto', 'linear', 'pow', 'sqrt', 'log', 'identity', 'time', 'band', 'point', 'ordinal', 'quantile', 'quantize', 'utc', 'sequential', 'threshold'];
+  6 |
+
+Import traces:
+  Client Component Browser:
+    ./node_modules/recharts/es6/util/ReactUtils.js [Client Component Browser]
+    ./node_modules/recharts/es6/cartesian/Line.js [Client Component Browser]
+    ./src/components/dashboard/IncomeExpenseChart.tsx [Client Component Browser]
+    ./src/app/(app)/page.tsx [Client Component Browser]
+    ./src/app/(app)/page.tsx [Server Component]
+
+  Client Component SSR:
+    ./node_modules/recharts/es6/util/ReactUtils.js [Client Component SSR]
+    ./node_modules/recharts/es6/cartesian/Line.js [Client Component SSR]
+    ./src/components/dashboard/IncomeExpenseChart.tsx [Client Component SSR]
+    ./src/app/(app)/page.tsx [Client Component SSR]
+    ./src/app/(app)/page.tsx [Server Component]
+
+https://nextjs.org/docs/messages/module-not-found
+[00:01:22.711] Browser ERROR   ./node_modules/recharts/es6/util/ReactUtils.js:3:1
+Module not found: Can't resolve 'react-is'
+  1 | import get from 'es-toolkit/compat/get';
+  2 | import { Children } from 'react';
+> 3 | import { isFragment } from 'react-is';
+    | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  4 | import { isNullish } from './DataUtils';
+  5 | export var SCALE_TYPES = ['auto', 'linear', 'pow', 'sqrt', 'log', 'identity', 'time', 'band', 'point', 'ordinal', 'quantile', 'quantize', 'utc', 'sequential', 'threshold'];
+  6 |
+
+Import traces:
+  Client Component Browser:
+    ./node_modules/recharts/es6/util/ReactUtils.js [Client Component Browser]
+    ./node_modules/recharts/es6/cartesian/Line.js [Client Component Browser]
+    ./src/components/dashboard/IncomeExpenseChart.tsx [Client Component Browser]
+    ./src/app/(app)/page.tsx [Client Component Browser]
+    ./src/app/(app)/page.tsx [Server Component]
+
+  Client Component SSR:
+    ./node_modules/recharts/es6/util/ReactUtils.js [Client Component SSR]
+    ./node_modules/recharts/es6/cartesian/Line.js [Client Component SSR]
+    ./src/components/dashboard/IncomeExpenseChart.tsx [Client Component SSR]
+    ./src/app/(app)/page.tsx [Client Component SSR]
+    ./src/app/(app)/page.tsx [Server Component]
+
+https://nextjs.org/docs/messages/module-not-found
+[00:01:23.713] Browser ERROR   ./node_modules/recharts/es6/util/ReactUtils.js:3:1
+Module not found: Can't resolve 'react-is'
+  1 | import get from 'es-toolkit/compat/get';
+  2 | import { Children } from 'react';
+> 3 | import { isFragment } from 'react-is';
+    | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  4 | import { isNullish } from './DataUtils';
+  5 | export var SCALE_TYPES = ['auto', 'linear', 'pow', 'sqrt', 'log', 'identity', 'time', 'band', 'point', 'ordinal', 'quantile', 'quantize', 'utc', 'sequential', 'threshold'];
+  6 |
+
+Import traces:
+  Client Component Browser:
+    ./node_modules/recharts/es6/util/ReactUtils.js [Client Component Browser]
+    ./node_modules/recharts/es6/cartesian/Line.js [Client Component Browser]
+    ./src/components/dashboard/IncomeExpenseChart.tsx [Client Component Browser]
+    ./src/app/(app)/page.tsx [Client Component Browser]
+    ./src/app/(app)/page.tsx [Server Component]
+
+  Client Component SSR:
+    ./node_modules/recharts/es6/util/ReactUtils.js [Client Component SSR]
+    ./node_modules/recharts/es6/cartesian/Line.js [Client Component SSR]
+    ./src/components/dashboard/IncomeExpenseChart.tsx [Client Component SSR]
+    ./src/app/(app)/page.tsx [Client Component SSR]
+    ./src/app/(app)/page.tsx [Server Component]
+
+https://nextjs.org/docs/messages/module-not-found
+[00:01:24.894] Browser ERROR   ./node_modules/recharts/es6/util/ReactUtils.js:3:1
+Module not found: Can't resolve 'react-is'
+  1 | import get from 'es-toolkit/compat/get';
+  2 | import { Children } from 'react';
+> 3 | import { isFragment } from 'react-is';
+    | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  4 | import { isNullish } from './DataUtils';
+  5 | export var SCALE_TYPES = ['auto', 'linear', 'pow', 'sqrt', 'log', 'identity', 'time', 'band', 'point', 'ordinal', 'quantile', 'quantize', 'utc', 'sequential', 'threshold'];
+  6 |
+
+Import traces:
+  Client Component Browser:
+    ./node_modules/recharts/es6/util/ReactUtils.js [Client Component Browser]
+    ./node_modules/recharts/es6/cartesian/Line.js [Client Component Browser]
+    ./src/components/dashboard/IncomeExpenseChart.tsx [Client Component Browser]
+    ./src/app/(app)/page.tsx [Client Component Browser]
+    ./src/app/(app)/page.tsx [Server Component]
+
+  Client Component SSR:
+    ./node_modules/recharts/es6/util/ReactUtils.js [Client Component SSR]
+    ./node_modules/recharts/es6/cartesian/Line.js [Client Component SSR]
+    ./src/components/dashboard/IncomeExpenseChart.tsx [Client Component SSR]
+    ./src/app/(app)/page.tsx [Client Component SSR]
+    ./src/app/(app)/page.tsx [Server Component]
+
+https://nextjs.org/docs/messages/module-not-found
+[00:01:25.779] Browser ERROR   ./node_modules/recharts/es6/util/ReactUtils.js:3:1
+Module not found: Can't resolve 'react-is'
+  1 | import get from 'es-toolkit/compat/get';
+  2 | import { Children } from 'react';
+> 3 | import { isFragment } from 'react-is';
+    | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  4 | import { isNullish } from './DataUtils';
+  5 | export var SCALE_TYPES = ['auto', 'linear', 'pow', 'sqrt', 'log', 'identity', 'time', 'band', 'point', 'ordinal', 'quantile', 'quantize', 'utc', 'sequential', 'threshold'];
+  6 |
+
+Import traces:
+  Client Component Browser:
+    ./node_modules/recharts/es6/util/ReactUtils.js [Client Component Browser]
+    ./node_modules/recharts/es6/cartesian/Line.js [Client Component Browser]
+    ./src/components/dashboard/IncomeExpenseChart.tsx [Client Component Browser]
+    ./src/app/(app)/page.tsx [Client Component Browser]
+    ./src/app/(app)/page.tsx [Server Component]
+
+  Client Component SSR:
+    ./node_modules/recharts/es6/util/ReactUtils.js [Client Component SSR]
+    ./node_modules/recharts/es6/cartesian/Line.js [Client Component SSR]
+    ./src/components/dashboard/IncomeExpenseChart.tsx [Client Component SSR]
+    ./src/app/(app)/page.tsx [Client Component SSR]
+    ./src/app/(app)/page.tsx [Server Component]
+
+https://nextjs.org/docs/messages/module-not-found
+[00:01:28.719] Browser ERROR   ./node_modules/recharts/es6/util/ReactUtils.js:3:1
+Module not found: Can't resolve 'react-is'
+  1 | import get from 'es-toolkit/compat/get';
+  2 | import { Children } from 'react';
+> 3 | import { isFragment } from 'react-is';
+    | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  4 | import { isNullish } from './DataUtils';
+  5 | export var SCALE_TYPES = ['auto', 'linear', 'pow', 'sqrt', 'log', 'identity', 'time', 'band', 'point', 'ordinal', 'quantile', 'quantize', 'utc', 'sequential', 'threshold'];
+  6 |
+
+Import traces:
+  Client Component Browser:
+    ./node_modules/recharts/es6/util/ReactUtils.js [Client Component Browser]
+    ./node_modules/recharts/es6/cartesian/Line.js [Client Component Browser]
+    ./src/components/dashboard/IncomeExpenseChart.tsx [Client Component Browser]
+    ./src/app/(app)/page.tsx [Client Component Browser]
+    ./src/app/(app)/page.tsx [Server Component]
+
+  Client Component SSR:
+    ./node_modules/recharts/es6/util/ReactUtils.js [Client Component SSR]
+    ./node_modules/recharts/es6/cartesian/Line.js [Client Component SSR]
+    ./src/components/dashboard/IncomeExpenseChart.tsx [Client Component SSR]
+    ./src/app/(app)/page.tsx [Client Component SSR]
+    ./src/app/(app)/page.tsx [Server Component]
+
+https://nextjs.org/docs/messages/module-not-found
+[00:01:46.893] Server  ERROR   ⨯ ./node_modules/recharts/es6/util/ReactUtils.js:3:1
+Module not found: Can't resolve 'react-is'
+  1 | import get from 'es-toolkit/compat/get';
+  2 | import { Children } from 'react';
+> 3 | import { isFragment } from 'react-is';
+    | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  4 | import { isNullish } from './DataUtils';
+  5 | export var SCALE_TYPES = ['auto', 'linear', 'pow', 'sqrt', 'log', 'identity', 'time', 'band', 'point', 'ordinal', 'quantile', 'quantize', 'utc', 'sequential', 'threshold'];
+  6 |
+
+
+
+Import traces:
+  Client Component Browser:
+    ./node_modules/recharts/es6/util/ReactUtils.js [Client Component Browser]
+    ./node_modules/recharts/es6/cartesian/Line.js [Client Component Browser]
+    ./src/components/dashboard/IncomeExpenseChart.tsx [Client Component Browser]
+    ./src/app/(app)/page.tsx [Client Component Browser]
+    ./src/app/(app)/page.tsx [Server Component]
+
+  Client Component SSR:
+    ./node_modules/recharts/es6/util/ReactUtils.js [Client Component SSR]
+    ./node_modules/recharts/es6/cartesian/Line.js [Client Component SSR]
+    ./src/components/dashboard/IncomeExpenseChart.tsx [Client Component SSR]
+    ./src/app/(app)/page.tsx [Client Component SSR]
+    ./src/app/(app)/page.tsx [Server Component]
+
+https://nextjs.org/docs/messages/module-not-found
+
+
+[00:01:47.054] Browser ERROR   uncaughtError: Error: ./node_modules/recharts/es6/util/ReactUtils.js:3:1
+Module not found: Can't resolve 'react-is'
+  1 | import get from 'es-toolkit/compat/get';
+  2 | import { Children } from 'react';
+> 3 | import { isFragment } from 'react-is';
+    | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  4 | import { isNullish } from './DataUtils';
+  5 | export var SCALE_TYPES = ['auto', 'linear', 'pow', 'sqrt', 'log', 'identity', 'time', 'band', 'point', 'ordinal', 'quantile', 'quantize', 'utc', 'sequential', 'threshold'];
+  6 |
+
+
+
+Import traces:
+  Client Component Browser:
+    ./node_modules/recharts/es6/util/ReactUtils.js [Client Component Browser]
+    ./node_modules/recharts/es6/cartesian/Line.js [Client Component Browser]
+    ./src/components/dashboard/IncomeExpenseChart.tsx [Client Component Browser]
+    ./src/app/(app)/page.tsx [Client Component Browser]
+    ./src/app/(app)/page.tsx [Server Component]
+
+  Client Component SSR:
+    ./node_modules/recharts/es6/util/ReactUtils.js [Client Component SSR]
+    ./node_modules/recharts/es6/cartesian/Line.js [Client Component SSR]
+    ./src/components/dashboard/IncomeExpenseChart.tsx [Client Component SSR]
+    ./src/app/(app)/page.tsx [Client Component SSR]
+    ./src/app/(app)/page.tsx [Server Component]
+
+https://nextjs.org/docs/messages/module-not-found
+
+
+[00:01:47.210] Browser ERROR   ./node_modules/recharts/es6/util/ReactUtils.js:3:1
+Module not found: Can't resolve 'react-is'
+  1 | import get from 'es-toolkit/compat/get';
+  2 | import { Children } from 'react';
+> 3 | import { isFragment } from 'react-is';
+    | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  4 | import { isNullish } from './DataUtils';
+  5 | export var SCALE_TYPES = ['auto', 'linear', 'pow', 'sqrt', 'log', 'identity', 'time', 'band', 'point', 'ordinal', 'quantile', 'quantize', 'utc', 'sequential', 'threshold'];
+  6 |
+
+Import traces:
+  Client Component Browser:
+    ./node_modules/recharts/es6/util/ReactUtils.js [Client Component Browser]
+    ./node_modules/recharts/es6/cartesian/Line.js [Client Component Browser]
+    ./src/components/dashboard/IncomeExpenseChart.tsx [Client Component Browser]
+    ./src/app/(app)/page.tsx [Client Component Browser]
+    ./src/app/(app)/page.tsx [Server Component]
+
+  Client Component SSR:
+    ./node_modules/recharts/es6/util/ReactUtils.js [Client Component SSR]
+    ./node_modules/recharts/es6/cartesian/Line.js [Client Component SSR]
+    ./src/components/dashboard/IncomeExpenseChart.tsx [Client Component SSR]
+    ./src/app/(app)/page.tsx [Client Component SSR]
+    ./src/app/(app)/page.tsx [Server Component]
+
+https://nextjs.org/docs/messages/module-not-found
+[00:01:47.210] Browser ERROR   ./node_modules/recharts/es6/util/ReactUtils.js:3:1
+Module not found: Can't resolve 'react-is'
+  1 | import get from 'es-toolkit/compat/get';
+  2 | import { Children } from 'react';
+> 3 | import { isFragment } from 'react-is';
+    | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  4 | import { isNullish } from './DataUtils';
+  5 | export var SCALE_TYPES = ['auto', 'linear', 'pow', 'sqrt', 'log', 'identity', 'time', 'band', 'point', 'ordinal', 'quantile', 'quantize', 'utc', 'sequential', 'threshold'];
+  6 |
+
+Import traces:
+  Client Component Browser:
+    ./node_modules/recharts/es6/util/ReactUtils.js [Client Component Browser]
+    ./node_modules/recharts/es6/cartesian/Line.js [Client Component Browser]
+    ./src/components/dashboard/IncomeExpenseChart.tsx [Client Component Browser]
+    ./src/app/(app)/page.tsx [Client Component Browser]
+    ./src/app/(app)/page.tsx [Server Component]
+
+  Client Component SSR:
+    ./node_modules/recharts/es6/util/ReactUtils.js [Client Component SSR]
+    ./node_modules/recharts/es6/cartesian/Line.js [Client Component SSR]
+    ./src/components/dashboard/IncomeExpenseChart.tsx [Client Component SSR]
+    ./src/app/(app)/page.tsx [Client Component SSR]
+    ./src/app/(app)/page.tsx [Server Component]
+
+https://nextjs.org/docs/messages/module-not-found
+[00:01:59.286] Server  ERROR   ⨯ ./node_modules/recharts/es6/util/ReactUtils.js:3:1
+Module not found: Can't resolve 'react-is'
+  1 | import get from 'es-toolkit/compat/get';
+  2 | import { Children } from 'react';
+> 3 | import { isFragment } from 'react-is';
+    | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  4 | import { isNullish } from './DataUtils';
+  5 | export var SCALE_TYPES = ['auto', 'linear', 'pow', 'sqrt', 'log', 'identity', 'time', 'band', 'point', 'ordinal', 'quantile', 'quantize', 'utc', 'sequential', 'threshold'];
+  6 |
+
+
+
+Import traces:
+  Client Component Browser:
+    ./node_modules/recharts/es6/util/ReactUtils.js [Client Component Browser]
+    ./node_modules/recharts/es6/cartesian/Line.js [Client Component Browser]
+    ./src/components/dashboard/IncomeExpenseChart.tsx [Client Component Browser]
+    ./src/app/(app)/page.tsx [Client Component Browser]
+    ./src/app/(app)/page.tsx [Server Component]
+
+  Client Component SSR:
+    ./node_modules/recharts/es6/util/ReactUtils.js [Client Component SSR]
+    ./node_modules/recharts/es6/cartesian/Line.js [Client Component SSR]
+    ./src/components/dashboard/IncomeExpenseChart.tsx [Client Component SSR]
+    ./src/app/(app)/page.tsx [Client Component SSR]
+    ./src/app/(app)/page.tsx [Server Component]
+
+https://nextjs.org/docs/messages/module-not-found
+
+
+[00:02:00.729] Server  ERROR   ⨯ ./node_modules/recharts/es6/util/ReactUtils.js:3:1
+Module not found: Can't resolve 'react-is'
+  1 | import get from 'es-toolkit/compat/get';
+  2 | import { Children } from 'react';
+> 3 | import { isFragment } from 'react-is';
+    | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  4 | import { isNullish } from './DataUtils';
+  5 | export var SCALE_TYPES = ['auto', 'linear', 'pow', 'sqrt', 'log', 'identity', 'time', 'band', 'point', 'ordinal', 'quantile', 'quantize', 'utc', 'sequential', 'threshold'];
+  6 |
+
+
+
+Import traces:
+  Client Component Browser:
+    ./node_modules/recharts/es6/util/ReactUtils.js [Client Component Browser]
+    ./node_modules/recharts/es6/cartesian/Line.js [Client Component Browser]
+    ./src/components/dashboard/IncomeExpenseChart.tsx [Client Component Browser]
+    ./src/app/(app)/page.tsx [Client Component Browser]
+    ./src/app/(app)/page.tsx [Server Component]
+
+  Client Component SSR:
+    ./node_modules/recharts/es6/util/ReactUtils.js [Client Component SSR]
+    ./node_modules/recharts/es6/cartesian/Line.js [Client Component SSR]
+    ./src/components/dashboard/IncomeExpenseChart.tsx [Client Component SSR]
+    ./src/app/(app)/page.tsx [Client Component SSR]
+    ./src/app/(app)/page.tsx [Server Component]
+
+https://nextjs.org/docs/messages/module-not-found
+
+
+[00:02:01.437] Browser ERROR   uncaughtError: Error: ./node_modules/recharts/es6/util/ReactUtils.js:3:1
+Module not found: Can't resolve 'react-is'
+  1 | import get from 'es-toolkit/compat/get';
+  2 | import { Children } from 'react';
+> 3 | import { isFragment } from 'react-is';
+    | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  4 | import { isNullish } from './DataUtils';
+  5 | export var SCALE_TYPES = ['auto', 'linear', 'pow', 'sqrt', 'log', 'identity', 'time', 'band', 'point', 'ordinal', 'quantile', 'quantize', 'utc', 'sequential', 'threshold'];
+  6 |
+
+
+
+Import traces:
+  Client Component Browser:
+    ./node_modules/recharts/es6/util/ReactUtils.js [Client Component Browser]
+    ./node_modules/recharts/es6/cartesian/Line.js [Client Component Browser]
+    ./src/components/dashboard/IncomeExpenseChart.tsx [Client Component Browser]
+    ./src/app/(app)/page.tsx [Client Component Browser]
+    ./src/app/(app)/page.tsx [Server Component]
+
+  Client Component SSR:
+    ./node_modules/recharts/es6/util/ReactUtils.js [Client Component SSR]
+    ./node_modules/recharts/es6/cartesian/Line.js [Client Component SSR]
+    ./src/components/dashboard/IncomeExpenseChart.tsx [Client Component SSR]
+    ./src/app/(app)/page.tsx [Client Component SSR]
+    ./src/app/(app)/page.tsx [Server Component]
+
+https://nextjs.org/docs/messages/module-not-found
+
+
+[00:02:01.634] Browser ERROR   ./node_modules/recharts/es6/util/ReactUtils.js:3:1
+Module not found: Can't resolve 'react-is'
+  1 | import get from 'es-toolkit/compat/get';
+  2 | import { Children } from 'react';
+> 3 | import { isFragment } from 'react-is';
+    | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  4 | import { isNullish } from './DataUtils';
+  5 | export var SCALE_TYPES = ['auto', 'linear', 'pow', 'sqrt', 'log', 'identity', 'time', 'band', 'point', 'ordinal', 'quantile', 'quantize', 'utc', 'sequential', 'threshold'];
+  6 |
+
+Import traces:
+  Client Component Browser:
+    ./node_modules/recharts/es6/util/ReactUtils.js [Client Component Browser]
+    ./node_modules/recharts/es6/cartesian/Line.js [Client Component Browser]
+    ./src/components/dashboard/IncomeExpenseChart.tsx [Client Component Browser]
+    ./src/app/(app)/page.tsx [Client Component Browser]
+    ./src/app/(app)/page.tsx [Server Component]
+
+  Client Component SSR:
+    ./node_modules/recharts/es6/util/ReactUtils.js [Client Component SSR]
+    ./node_modules/recharts/es6/cartesian/Line.js [Client Component SSR]
+    ./src/components/dashboard/IncomeExpenseChart.tsx [Client Component SSR]
+    ./src/app/(app)/page.tsx [Client Component SSR]
+    ./src/app/(app)/page.tsx [Server Component]
+
+https://nextjs.org/docs/messages/module-not-found
+[00:02:01.742] Browser ERROR   ./node_modules/recharts/es6/util/ReactUtils.js:3:1
+Module not found: Can't resolve 'react-is'
+  1 | import get from 'es-toolkit/compat/get';
+  2 | import { Children } from 'react';
+> 3 | import { isFragment } from 'react-is';
+    | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  4 | import { isNullish } from './DataUtils';
+  5 | export var SCALE_TYPES = ['auto', 'linear', 'pow', 'sqrt', 'log', 'identity', 'time', 'band', 'point', 'ordinal', 'quantile', 'quantize', 'utc', 'sequential', 'threshold'];
+  6 |
+
+Import traces:
+  Client Component Browser:
+    ./node_modules/recharts/es6/util/ReactUtils.js [Client Component Browser]
+    ./node_modules/recharts/es6/cartesian/Line.js [Client Component Browser]
+    ./src/components/dashboard/IncomeExpenseChart.tsx [Client Component Browser]
+    ./src/app/(app)/page.tsx [Client Component Browser]
+    ./src/app/(app)/page.tsx [Server Component]
+
+  Client Component SSR:
+    ./node_modules/recharts/es6/util/ReactUtils.js [Client Component SSR]
+    ./node_modules/recharts/es6/cartesian/Line.js [Client Component SSR]
+    ./src/components/dashboard/IncomeExpenseChart.tsx [Client Component SSR]
+    ./src/app/(app)/page.tsx [Client Component SSR]
+    ./src/app/(app)/page.tsx [Server Component]
+
+https://nextjs.org/docs/messages/module-not-found
+[00:02:30.720] Browser ERROR   ./node_modules/recharts/es6/util/ReactUtils.js:3:1
+Module not found: Can't resolve 'react-is'
+  1 | import get from 'es-toolkit/compat/get';
+  2 | import { Children } from 'react';
+> 3 | import { isFragment } from 'react-is';
+    | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  4 | import { isNullish } from './DataUtils';
+  5 | export var SCALE_TYPES = ['auto', 'linear', 'pow', 'sqrt', 'log', 'identity', 'time', 'band', 'point', 'ordinal', 'quantile', 'quantize', 'utc', 'sequential', 'threshold'];
+  6 |
+
+Import traces:
+  Client Component Browser:
+    ./node_modules/recharts/es6/util/ReactUtils.js [Client Component Browser]
+    ./node_modules/recharts/es6/cartesian/Line.js [Client Component Browser]
+    ./src/components/dashboard/IncomeExpenseChart.tsx [Client Component Browser]
+    ./src/app/(app)/page.tsx [Client Component Browser]
+    ./src/app/(app)/page.tsx [Server Component]
+
+  Client Component SSR:
+    ./node_modules/recharts/es6/util/ReactUtils.js [Client Component SSR]
+    ./node_modules/recharts/es6/cartesian/Line.js [Client Component SSR]
+    ./src/components/dashboard/IncomeExpenseChart.tsx [Client Component SSR]
+    ./src/app/(app)/page.tsx [Client Component SSR]
+    ./src/app/(app)/page.tsx [Server Component]
+
+https://nextjs.org/docs/messages/module-not-found
+[00:02:32.804] Server  LOG     ✓ Compiled in 2.6s
+[00:02:34.680] Browser INFO    %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold
+[00:02:41.157] Server  LOG     prisma:query "SELECT \"public\".\"Session\".\"id\", \"public\".\"Session\".\"sessionToken\", \"public\".\"Session\".\"userId\", \"public\".\"Session\".\"expires\" FROM \"public\".\"Session\" WHERE (\"public\".\"Session\".\"sessionToken\" = $1 AND 1=1) LIMIT $2 OFFSET $3"
+[00:02:41.675] Server  LOG     prisma:query "SELECT \"public\".\"User\".\"id\", \"public\".\"User\".\"name\", \"public\".\"User\".\"email\", \"public\".\"User\".\"emailVerified\", \"public\".\"User\".\"image\", \"public\".\"User\".\"gmailRefreshToken\", \"public\".\"User\".\"createdAt\", \"public\".\"User\".\"updatedAt\" FROM \"public\".\"User\" WHERE \"public\".\"User\".\"id\" IN ($1) OFFSET $2"
+[00:02:42.966] Server  LOG     prisma:query "SELECT \"public\".\"Session\".\"id\", \"public\".\"Session\".\"sessionToken\", \"public\".\"Session\".\"userId\", \"public\".\"Session\".\"expires\" FROM \"public\".\"Session\" WHERE (\"public\".\"Session\".\"sessionToken\" = $1 AND 1=1) LIMIT $2 OFFSET $3"
+[00:02:43.465] Server  LOG     prisma:query "SELECT \"public\".\"User\".\"id\", \"public\".\"User\".\"name\", \"public\".\"User\".\"email\", \"public\".\"User\".\"emailVerified\", \"public\".\"User\".\"image\", \"public\".\"User\".\"gmailRefreshToken\", \"public\".\"User\".\"createdAt\", \"public\".\"User\".\"updatedAt\" FROM \"public\".\"User\" WHERE \"public\".\"User\".\"id\" IN ($1) OFFSET $2"
+[00:02:44.014] Server  LOG     prisma:query "SELECT SUM(\"amount\") FROM (SELECT \"public\".\"Income\".\"amount\" FROM \"public\".\"Income\" WHERE (\"public\".\"Income\".\"userId\" = $1 AND \"public\".\"Income\".\"date\" >= $2) OFFSET $3) AS \"sub\""
+[00:02:44.258] Server  LOG     prisma:query "SELECT \"public\".\"Expense\".\"id\", \"public\".\"Expense\".\"amount\", \"public\".\"Expense\".\"date\" FROM \"public\".\"Expense\" WHERE (\"public\".\"Expense\".\"userId\" = $1 AND \"public\".\"Expense\".\"date\" >= $2) OFFSET $3"
+[00:02:44.765] Server  LOG     prisma:query "SELECT \"public\".\"Income\".\"id\", \"public\".\"Income\".\"amount\", \"public\".\"Income\".\"date\" FROM \"public\".\"Income\" WHERE (\"public\".\"Income\".\"userId\" = $1 AND \"public\".\"Income\".\"date\" >= $2) OFFSET $3"
+[00:02:45.418] Server  LOG     prisma:query "SELECT \"public\".\"Income\".\"id\", \"public\".\"Income\".\"amount\", \"public\".\"Income\".\"source\", \"public\".\"Income\".\"note\", \"public\".\"Income\".\"date\", \"public\".\"Income\".\"userId\", \"public\".\"Income\".\"categoryId\", \"public\".\"Income\".\"receiptUrl\", \"public\".\"Income\".\"createdAt\", \"public\".\"Income\".\"updatedAt\" FROM \"public\".\"Income\" WHERE \"public\".\"Income\".\"userId\" = $1 ORDER BY \"public\".\"Income\".\"date\" DESC LIMIT $2 OFFSET $3"
+[00:02:45.425] Server  LOG     prisma:query "SELECT \"public\".\"Budget\".\"id\", \"public\".\"Budget\".\"amount\", \"public\".\"Budget\".\"period\"::text, \"public\".\"Budget\".\"userId\", \"public\".\"Budget\".\"categoryId\", \"public\".\"Budget\".\"createdAt\", \"public\".\"Budget\".\"updatedAt\" FROM \"public\".\"Budget\" WHERE \"public\".\"Budget\".\"userId\" = $1 OFFSET $2"
+[00:02:45.636] Server  LOG     prisma:query "SELECT \"public\".\"Expense\".\"id\", \"public\".\"Expense\".\"amount\", \"public\".\"Expense\".\"merchant\", \"public\".\"Expense\".\"note\", \"public\".\"Expense\".\"date\", \"public\".\"Expense\".\"paymentMethod\"::text, \"public\".\"Expense\".\"userId\", \"public\".\"Expense\".\"categoryId\", \"public\".\"Expense\".\"receiptUrl\", \"public\".\"Expense\".\"createdAt\", \"public\".\"Expense\".\"updatedAt\" FROM \"public\".\"Expense\" WHERE \"public\".\"Expense\".\"userId\" = $1 ORDER BY \"public\".\"Expense\".\"date\" DESC LIMIT $2 OFFSET $3"
+[00:02:45.761] Server  LOG     prisma:query "SELECT SUM(\"amount\") FROM (SELECT \"public\".\"Expense\".\"amount\" FROM \"public\".\"Expense\" WHERE (\"public\".\"Expense\".\"userId\" = $1 AND \"public\".\"Expense\".\"date\" >= $2) OFFSET $3) AS \"sub\""
+[00:02:45.799] Server  LOG     prisma:query "SELECT SUM(\"public\".\"Expense\".\"amount\"), \"public\".\"Expense\".\"categoryId\" FROM \"public\".\"Expense\" WHERE (\"public\".\"Expense\".\"userId\" = $1 AND \"public\".\"Expense\".\"date\" >= $2 AND \"public\".\"Expense\".\"categoryId\" IS NOT NULL) GROUP BY \"public\".\"Expense\".\"categoryId\" OFFSET $3"
+[00:02:45.859] Server  LOG     prisma:query "SELECT \"public\".\"Category\".\"id\", \"public\".\"Category\".\"name\", \"public\".\"Category\".\"icon\", \"public\".\"Category\".\"color\", \"public\".\"Category\".\"userId\", \"public\".\"Category\".\"parentId\", \"public\".\"Category\".\"createdAt\" FROM \"public\".\"Category\" WHERE \"public\".\"Category\".\"id\" IN ($1) OFFSET $2"
+[00:02:45.859] Server  LOG     prisma:query "SELECT \"public\".\"Category\".\"id\", \"public\".\"Category\".\"name\", \"public\".\"Category\".\"icon\", \"public\".\"Category\".\"color\", \"public\".\"Category\".\"userId\", \"public\".\"Category\".\"parentId\", \"public\".\"Category\".\"createdAt\" FROM \"public\".\"Category\" WHERE \"public\".\"Category\".\"id\" IN ($1,$2) OFFSET $3"
+[00:02:46.065] Server  LOG     prisma:query "SELECT \"public\".\"Category\".\"id\", \"public\".\"Category\".\"name\", \"public\".\"Category\".\"icon\", \"public\".\"Category\".\"color\", \"public\".\"Category\".\"userId\", \"public\".\"Category\".\"parentId\", \"public\".\"Category\".\"createdAt\" FROM \"public\".\"Category\" WHERE \"public\".\"Category\".\"id\" IN ($1,$2,$3,$4,$5,$6,$7,$8) OFFSET $9"
+[00:02:46.297] Server  LOG     prisma:query "SELECT SUM(\"amount\") FROM (SELECT \"public\".\"Expense\".\"amount\" FROM \"public\".\"Expense\" WHERE (\"public\".\"Expense\".\"userId\" = $1 AND \"public\".\"Expense\".\"categoryId\" = $2 AND \"public\".\"Expense\".\"date\" >= $3) OFFSET $4) AS \"sub\""
+[00:02:46.298] Server  LOG     prisma:query "SELECT SUM(\"amount\") FROM (SELECT \"public\".\"Expense\".\"amount\" FROM \"public\".\"Expense\" WHERE (\"public\".\"Expense\".\"userId\" = $1 AND \"public\".\"Expense\".\"categoryId\" = $2 AND \"public\".\"Expense\".\"date\" >= $3) OFFSET $4) AS \"sub\""
+[00:02:46.316] Server  LOG     prisma:query "SELECT \"public\".\"Category\".\"id\", \"public\".\"Category\".\"name\", \"public\".\"Category\".\"color\" FROM \"public\".\"Category\" WHERE \"public\".\"Category\".\"id\" IN ($1,$2,$3,$4,$5,$6,$7,$8) OFFSET $9"
+[00:02:47.094] Browser WARN    The width(-1) and height(-1) of chart should be greater than 0,
+       please check the style of container, or the props width(100%) and height(100%),
+       or add a minWidth(0) or minHeight(undefined) or use aspect(undefined) to control the
+       height and width.
+[00:02:47.094] Browser WARN    The width(-1) and height(-1) of chart should be greater than 0,
+       please check the style of container, or the props width(100%) and height(100%),
+       or add a minWidth(0) or minHeight(undefined) or use aspect(undefined) to control the
+       height and width.
+[00:02:47.094] Browser WARN    The width(-1) and height(-1) of chart should be greater than 0,
+       please check the style of container, or the props width(100%) and height(100%),
+       or add a minWidth(0) or minHeight(undefined) or use aspect(undefined) to control the
+       height and width.
+[00:02:47.094] Browser WARN    The width(-1) and height(-1) of chart should be greater than 0,
+       please check the style of container, or the props width(100%) and height(100%),
+       or add a minWidth(0) or minHeight(undefined) or use aspect(undefined) to control the
+       height and width.
+[00:02:58.055] Server  LOG     prisma:query "SELECT \"public\".\"Session\".\"id\", \"public\".\"Session\".\"sessionToken\", \"public\".\"Session\".\"userId\", \"public\".\"Session\".\"expires\" FROM \"public\".\"Session\" WHERE (\"public\".\"Session\".\"sessionToken\" = $1 AND 1=1) LIMIT $2 OFFSET $3"
+[00:02:58.623] Server  LOG     prisma:query "SELECT \"public\".\"User\".\"id\", \"public\".\"User\".\"name\", \"public\".\"User\".\"email\", \"public\".\"User\".\"emailVerified\", \"public\".\"User\".\"image\", \"public\".\"User\".\"gmailRefreshToken\", \"public\".\"User\".\"createdAt\", \"public\".\"User\".\"updatedAt\" FROM \"public\".\"User\" WHERE \"public\".\"User\".\"id\" IN ($1) OFFSET $2"
+[00:03:01.997] Browser ERROR   `DialogContent` requires a `DialogTitle` for the component to be accessible for screen reader users.
+
+If you want to hide the `DialogTitle`, you can wrap it with our VisuallyHidden component.
+
+For more information, see https://radix-ui.com/primitives/docs/components/dialog
+[00:03:01.997] Browser WARN    Warning: Missing `Description` or `aria-describedby={undefined}` for {DialogContent}.
+[00:03:01.997] Browser ERROR   `DialogContent` requires a `DialogTitle` for the component to be accessible for screen reader users.
+
+If you want to hide the `DialogTitle`, you can wrap it with our VisuallyHidden component.
+
+For more information, see https://radix-ui.com/primitives/docs/components/dialog
+[00:03:01.997] Browser WARN    Warning: Missing `Description` or `aria-describedby={undefined}` for {DialogContent}.
+[00:03:14.367] Browser ERROR   `DialogContent` requires a `DialogTitle` for the component to be accessible for screen reader users.
+
+If you want to hide the `DialogTitle`, you can wrap it with our VisuallyHidden component.
+
+For more information, see https://radix-ui.com/primitives/docs/components/dialog
+[00:03:14.367] Browser WARN    Warning: Missing `Description` or `aria-describedby={undefined}` for {DialogContent}.
+[00:03:14.367] Browser ERROR   `DialogContent` requires a `DialogTitle` for the component to be accessible for screen reader users.
+
+If you want to hide the `DialogTitle`, you can wrap it with our VisuallyHidden component.
+
+For more information, see https://radix-ui.com/primitives/docs/components/dialog
+[00:03:14.367] Browser WARN    Warning: Missing `Description` or `aria-describedby={undefined}` for {DialogContent}.
+[00:03:21.041] Server  LOG     prisma:query "SELECT 1"
+[00:03:21.348] Server  LOG     prisma:query "SELECT \"public\".\"Session\".\"id\", \"public\".\"Session\".\"sessionToken\", \"public\".\"Session\".\"userId\", \"public\".\"Session\".\"expires\" FROM \"public\".\"Session\" WHERE (\"public\".\"Session\".\"sessionToken\" = $1 AND 1=1) LIMIT $2 OFFSET $3"
+[00:03:21.661] Server  LOG     prisma:query "SELECT \"public\".\"User\".\"id\", \"public\".\"User\".\"name\", \"public\".\"User\".\"email\", \"public\".\"User\".\"emailVerified\", \"public\".\"User\".\"image\", \"public\".\"User\".\"gmailRefreshToken\", \"public\".\"User\".\"createdAt\", \"public\".\"User\".\"updatedAt\" FROM \"public\".\"User\" WHERE \"public\".\"User\".\"id\" IN ($1) OFFSET $2"
+[00:03:21.964] Server  LOG     prisma:query "SELECT 1"
+[00:03:21.966] Server  LOG     prisma:query "SELECT 1"
+[00:03:22.273] Server  LOG     prisma:query "SELECT \"public\".\"Budget\".\"id\", \"public\".\"Budget\".\"amount\", \"public\".\"Budget\".\"period\"::text, \"public\".\"Budget\".\"userId\", \"public\".\"Budget\".\"categoryId\", \"public\".\"Budget\".\"createdAt\", \"public\".\"Budget\".\"updatedAt\" FROM \"public\".\"Budget\" WHERE \"public\".\"Budget\".\"userId\" = $1 OFFSET $2"
+[00:03:22.282] Server  LOG     prisma:query "SELECT \"public\".\"Expense\".\"id\", \"public\".\"Expense\".\"amount\", \"public\".\"Expense\".\"merchant\", \"public\".\"Expense\".\"note\", \"public\".\"Expense\".\"date\", \"public\".\"Expense\".\"paymentMethod\"::text, \"public\".\"Expense\".\"userId\", \"public\".\"Expense\".\"categoryId\", \"public\".\"Expense\".\"receiptUrl\", \"public\".\"Expense\".\"createdAt\", \"public\".\"Expense\".\"updatedAt\" FROM \"public\".\"Expense\" WHERE (\"public\".\"Expense\".\"userId\" = $1 AND \"public\".\"Expense\".\"date\" >= $2) ORDER BY \"public\".\"Expense\".\"date\" DESC OFFSET $3"
+[00:03:22.577] Server  LOG     prisma:query "SELECT \"public\".\"Category\".\"id\", \"public\".\"Category\".\"name\", \"public\".\"Category\".\"icon\", \"public\".\"Category\".\"color\", \"public\".\"Category\".\"userId\", \"public\".\"Category\".\"parentId\", \"public\".\"Category\".\"createdAt\" FROM \"public\".\"Category\" WHERE \"public\".\"Category\".\"id\" IN ($1,$2) OFFSET $3"
+[00:03:22.578] Server  LOG     prisma:query "SELECT \"public\".\"Income\".\"id\", \"public\".\"Income\".\"amount\", \"public\".\"Income\".\"source\", \"public\".\"Income\".\"note\", \"public\".\"Income\".\"date\", \"public\".\"Income\".\"userId\", \"public\".\"Income\".\"categoryId\", \"public\".\"Income\".\"receiptUrl\", \"public\".\"Income\".\"createdAt\", \"public\".\"Income\".\"updatedAt\" FROM \"public\".\"Income\" WHERE (\"public\".\"Income\".\"userId\" = $1 AND \"public\".\"Income\".\"date\" >= $2) ORDER BY \"public\".\"Income\".\"date\" DESC OFFSET $3"
+[00:03:22.899] Server  LOG     prisma:query "SELECT \"public\".\"Category\".\"id\", \"public\".\"Category\".\"name\", \"public\".\"Category\".\"icon\", \"public\".\"Category\".\"color\", \"public\".\"Category\".\"userId\", \"public\".\"Category\".\"parentId\", \"public\".\"Category\".\"createdAt\" FROM \"public\".\"Category\" WHERE \"public\".\"Category\".\"id\" IN ($1) OFFSET $2"
+[00:03:22.900] Server  LOG     prisma:query "SELECT \"public\".\"Category\".\"id\", \"public\".\"Category\".\"name\", \"public\".\"Category\".\"icon\", \"public\".\"Category\".\"color\", \"public\".\"Category\".\"userId\", \"public\".\"Category\".\"parentId\", \"public\".\"Category\".\"createdAt\" FROM \"public\".\"Category\" WHERE \"public\".\"Category\".\"id\" IN ($1,$2,$3,$4,$5,$6,$7,$8) OFFSET $9"
+[00:03:22.946] Server  ERROR   (node:26308) [DEP0169] DeprecationWarning: `url.parse()` behavior is not standardized and prone to errors that have security implications. Use the WHATWG URL API instead. CVEs are not issued for `url.parse()` vulnerabilities.
+(Use `node --trace-deprecation ...` to show where the warning was created)
+[00:03:54.117] Server  LOG     prisma:query "SELECT 1"
+[00:03:54.423] Server  LOG     prisma:query "SELECT \"public\".\"Session\".\"id\", \"public\".\"Session\".\"sessionToken\", \"public\".\"Session\".\"userId\", \"public\".\"Session\".\"expires\" FROM \"public\".\"Session\" WHERE (\"public\".\"Session\".\"sessionToken\" = $1 AND 1=1) LIMIT $2 OFFSET $3"
+[00:03:54.730] Server  LOG     prisma:query "SELECT \"public\".\"User\".\"id\", \"public\".\"User\".\"name\", \"public\".\"User\".\"email\", \"public\".\"User\".\"emailVerified\", \"public\".\"User\".\"image\", \"public\".\"User\".\"gmailRefreshToken\", \"public\".\"User\".\"createdAt\", \"public\".\"User\".\"updatedAt\" FROM \"public\".\"User\" WHERE \"public\".\"User\".\"id\" IN ($1) OFFSET $2"
+[00:03:55.039] Server  LOG     prisma:query "SELECT 1"
+[00:03:55.040] Server  LOG     prisma:query "SELECT 1"
+[00:03:55.040] Server  LOG     prisma:query "SELECT \"public\".\"Expense\".\"id\", \"public\".\"Expense\".\"amount\", \"public\".\"Expense\".\"merchant\", \"public\".\"Expense\".\"note\", \"public\".\"Expense\".\"date\", \"public\".\"Expense\".\"paymentMethod\"::text, \"public\".\"Expense\".\"userId\", \"public\".\"Expense\".\"categoryId\", \"public\".\"Expense\".\"receiptUrl\", \"public\".\"Expense\".\"createdAt\", \"public\".\"Expense\".\"updatedAt\" FROM \"public\".\"Expense\" WHERE (\"public\".\"Expense\".\"userId\" = $1 AND \"public\".\"Expense\".\"date\" >= $2) ORDER BY \"public\".\"Expense\".\"date\" DESC OFFSET $3"
+[00:03:55.346] Server  LOG     prisma:query "SELECT \"public\".\"Budget\".\"id\", \"public\".\"Budget\".\"amount\", \"public\".\"Budget\".\"period\"::text, \"public\".\"Budget\".\"userId\", \"public\".\"Budget\".\"categoryId\", \"public\".\"Budget\".\"createdAt\", \"public\".\"Budget\".\"updatedAt\" FROM \"public\".\"Budget\" WHERE \"public\".\"Budget\".\"userId\" = $1 OFFSET $2"
+[00:03:55.346] Server  LOG     prisma:query "SELECT \"public\".\"Income\".\"id\", \"public\".\"Income\".\"amount\", \"public\".\"Income\".\"source\", \"public\".\"Income\".\"note\", \"public\".\"Income\".\"date\", \"public\".\"Income\".\"userId\", \"public\".\"Income\".\"categoryId\", \"public\".\"Income\".\"receiptUrl\", \"public\".\"Income\".\"createdAt\", \"public\".\"Income\".\"updatedAt\" FROM \"public\".\"Income\" WHERE (\"public\".\"Income\".\"userId\" = $1 AND \"public\".\"Income\".\"date\" >= $2) ORDER BY \"public\".\"Income\".\"date\" DESC OFFSET $3"
+[00:03:55.348] Server  LOG     prisma:query "SELECT \"public\".\"Category\".\"id\", \"public\".\"Category\".\"name\", \"public\".\"Category\".\"icon\", \"public\".\"Category\".\"color\", \"public\".\"Category\".\"userId\", \"public\".\"Category\".\"parentId\", \"public\".\"Category\".\"createdAt\" FROM \"public\".\"Category\" WHERE \"public\".\"Category\".\"id\" IN ($1,$2,$3,$4,$5,$6,$7,$8) OFFSET $9"
+[00:03:55.664] Server  LOG     prisma:query "SELECT \"public\".\"Category\".\"id\", \"public\".\"Category\".\"name\", \"public\".\"Category\".\"icon\", \"public\".\"Category\".\"color\", \"public\".\"Category\".\"userId\", \"public\".\"Category\".\"parentId\", \"public\".\"Category\".\"createdAt\" FROM \"public\".\"Category\" WHERE \"public\".\"Category\".\"id\" IN ($1,$2) OFFSET $3"
+[00:03:55.665] Server  LOG     prisma:query "SELECT \"public\".\"Category\".\"id\", \"public\".\"Category\".\"name\", \"public\".\"Category\".\"icon\", \"public\".\"Category\".\"color\", \"public\".\"Category\".\"userId\", \"public\".\"Category\".\"parentId\", \"public\".\"Category\".\"createdAt\" FROM \"public\".\"Category\" WHERE \"public\".\"Category\".\"id\" IN ($1) OFFSET $2"
+[00:04:10.194] Server  LOG     prisma:query "SELECT \"public\".\"Session\".\"id\", \"public\".\"Session\".\"sessionToken\", \"public\".\"Session\".\"userId\", \"public\".\"Session\".\"expires\" FROM \"public\".\"Session\" WHERE (\"public\".\"Session\".\"sessionToken\" = $1 AND 1=1) LIMIT $2 OFFSET $3"
+[00:04:10.811] Server  LOG     prisma:query "SELECT \"public\".\"User\".\"id\", \"public\".\"User\".\"name\", \"public\".\"User\".\"email\", \"public\".\"User\".\"emailVerified\", \"public\".\"User\".\"image\", \"public\".\"User\".\"gmailRefreshToken\", \"public\".\"User\".\"createdAt\", \"public\".\"User\".\"updatedAt\" FROM \"public\".\"User\" WHERE \"public\".\"User\".\"id\" IN ($1) OFFSET $2"
+[00:04:11.115] Server  LOG     prisma:query "SELECT 1"
+[00:04:11.115] Server  LOG     prisma:query "SELECT 1"
+[00:04:11.116] Server  LOG     prisma:query "SELECT 1"
+[00:04:11.737] Server  LOG     prisma:query "SELECT \"public\".\"Income\".\"id\", \"public\".\"Income\".\"amount\", \"public\".\"Income\".\"source\", \"public\".\"Income\".\"note\", \"public\".\"Income\".\"date\", \"public\".\"Income\".\"userId\", \"public\".\"Income\".\"categoryId\", \"public\".\"Income\".\"receiptUrl\", \"public\".\"Income\".\"createdAt\", \"public\".\"Income\".\"updatedAt\" FROM \"public\".\"Income\" WHERE (\"public\".\"Income\".\"userId\" = $1 AND \"public\".\"Income\".\"date\" >= $2) ORDER BY \"public\".\"Income\".\"date\" DESC OFFSET $3"
+[00:04:11.738] Server  LOG     prisma:query "SELECT \"public\".\"Budget\".\"id\", \"public\".\"Budget\".\"amount\", \"public\".\"Budget\".\"period\"::text, \"public\".\"Budget\".\"userId\", \"public\".\"Budget\".\"categoryId\", \"public\".\"Budget\".\"createdAt\", \"public\".\"Budget\".\"updatedAt\" FROM \"public\".\"Budget\" WHERE \"public\".\"Budget\".\"userId\" = $1 OFFSET $2"
+[00:04:11.961] Server  LOG     prisma:query "SELECT \"public\".\"Expense\".\"id\", \"public\".\"Expense\".\"amount\", \"public\".\"Expense\".\"merchant\", \"public\".\"Expense\".\"note\", \"public\".\"Expense\".\"date\", \"public\".\"Expense\".\"paymentMethod\"::text, \"public\".\"Expense\".\"userId\", \"public\".\"Expense\".\"categoryId\", \"public\".\"Expense\".\"receiptUrl\", \"public\".\"Expense\".\"createdAt\", \"public\".\"Expense\".\"updatedAt\" FROM \"public\".\"Expense\" WHERE (\"public\".\"Expense\".\"userId\" = $1 AND \"public\".\"Expense\".\"date\" >= $2) ORDER BY \"public\".\"Expense\".\"date\" DESC OFFSET $3"
+[00:04:12.180] Server  LOG     prisma:query "SELECT \"public\".\"Category\".\"id\", \"public\".\"Category\".\"name\", \"public\".\"Category\".\"icon\", \"public\".\"Category\".\"color\", \"public\".\"Category\".\"userId\", \"public\".\"Category\".\"parentId\", \"public\".\"Category\".\"createdAt\" FROM \"public\".\"Category\" WHERE \"public\".\"Category\".\"id\" IN ($1) OFFSET $2"
+[00:04:12.249] Server  LOG     prisma:query "SELECT \"public\".\"Category\".\"id\", \"public\".\"Category\".\"name\", \"public\".\"Category\".\"icon\", \"public\".\"Category\".\"color\", \"public\".\"Category\".\"userId\", \"public\".\"Category\".\"parentId\", \"public\".\"Category\".\"createdAt\" FROM \"public\".\"Category\" WHERE \"public\".\"Category\".\"id\" IN ($1,$2) OFFSET $3"
+[00:04:12.458] Server  LOG     prisma:query "SELECT \"public\".\"Category\".\"id\", \"public\".\"Category\".\"name\", \"public\".\"Category\".\"icon\", \"public\".\"Category\".\"color\", \"public\".\"Category\".\"userId\", \"public\".\"Category\".\"parentId\", \"public\".\"Category\".\"createdAt\" FROM \"public\".\"Category\" WHERE \"public\".\"Category\".\"id\" IN ($1,$2,$3,$4,$5,$6,$7,$8) OFFSET $9"
+[00:04:43.202] Server  LOG     prisma:query "SELECT 1"
+[00:04:43.361] Server  LOG     prisma:query "SELECT 1"
+[00:04:43.446] Server  LOG     prisma:query "SELECT \"public\".\"Session\".\"id\", \"public\".\"Session\".\"sessionToken\", \"public\".\"Session\".\"userId\", \"public\".\"Session\".\"expires\" FROM \"public\".\"Session\" WHERE (\"public\".\"Session\".\"sessionToken\" = $1 AND 1=1) LIMIT $2 OFFSET $3"
+[00:04:43.664] Server  LOG     prisma:query "SELECT \"public\".\"Session\".\"id\", \"public\".\"Session\".\"sessionToken\", \"public\".\"Session\".\"userId\", \"public\".\"Session\".\"expires\" FROM \"public\".\"Session\" WHERE (\"public\".\"Session\".\"sessionToken\" = $1 AND 1=1) LIMIT $2 OFFSET $3"
+[00:04:43.667] Server  LOG     prisma:query "SELECT \"public\".\"User\".\"id\", \"public\".\"User\".\"name\", \"public\".\"User\".\"email\", \"public\".\"User\".\"emailVerified\", \"public\".\"User\".\"image\", \"public\".\"User\".\"gmailRefreshToken\", \"public\".\"User\".\"createdAt\", \"public\".\"User\".\"updatedAt\" FROM \"public\".\"User\" WHERE \"public\".\"User\".\"id\" IN ($1) OFFSET $2"
+[00:04:43.923] Server  LOG     prisma:query "SELECT \"public\".\"User\".\"id\", \"public\".\"User\".\"name\", \"public\".\"User\".\"email\", \"public\".\"User\".\"emailVerified\", \"public\".\"User\".\"image\", \"public\".\"User\".\"gmailRefreshToken\", \"public\".\"User\".\"createdAt\", \"public\".\"User\".\"updatedAt\" FROM \"public\".\"User\" WHERE \"public\".\"User\".\"id\" IN ($1) OFFSET $2"
+[00:04:44.146] Server  LOG     prisma:query "SELECT 1"
+[00:04:44.147] Server  LOG     prisma:query "SELECT 1"
+[00:04:44.187] Server  LOG     prisma:query "SELECT 1"
+[00:04:44.188] Server  LOG     prisma:query "SELECT 1"
+[00:04:44.234] Server  LOG     prisma:query "SELECT 1"
+[00:04:44.360] Server  LOG     prisma:query "SELECT \"public\".\"Budget\".\"id\", \"public\".\"Budget\".\"amount\", \"public\".\"Budget\".\"period\"::text, \"public\".\"Budget\".\"userId\", \"public\".\"Budget\".\"categoryId\", \"public\".\"Budget\".\"createdAt\", \"public\".\"Budget\".\"updatedAt\" FROM \"public\".\"Budget\" WHERE \"public\".\"Budget\".\"userId\" = $1 OFFSET $2"
+[00:04:44.365] Server  LOG     prisma:query "SELECT SUM(\"amount\") FROM (SELECT \"public\".\"Income\".\"amount\" FROM \"public\".\"Income\" WHERE (\"public\".\"Income\".\"userId\" = $1 AND \"public\".\"Income\".\"date\" >= $2) OFFSET $3) AS \"sub\""
+[00:04:44.478] Server  LOG     prisma:query "SELECT SUM(\"amount\") FROM (SELECT \"public\".\"Expense\".\"amount\" FROM \"public\".\"Expense\" WHERE (\"public\".\"Expense\".\"userId\" = $1 AND \"public\".\"Expense\".\"date\" >= $2) OFFSET $3) AS \"sub\""
+[00:04:44.491] Browser WARN    Warning: Missing `Description` or `aria-describedby={undefined}` for {DialogContent}.
+[00:04:44.491] Browser WARN    Warning: Missing `Description` or `aria-describedby={undefined}` for {DialogContent}.
+[00:04:44.588] Server  LOG     prisma:query "SELECT \"public\".\"Expense\".\"id\", \"public\".\"Expense\".\"amount\", \"public\".\"Expense\".\"date\" FROM \"public\".\"Expense\" WHERE (\"public\".\"Expense\".\"userId\" = $1 AND \"public\".\"Expense\".\"date\" >= $2) OFFSET $3"
+[00:04:44.595] Server  LOG     prisma:query "SELECT \"public\".\"Category\".\"id\", \"public\".\"Category\".\"name\", \"public\".\"Category\".\"icon\", \"public\".\"Category\".\"color\", \"public\".\"Category\".\"userId\", \"public\".\"Category\".\"parentId\", \"public\".\"Category\".\"createdAt\" FROM \"public\".\"Category\" WHERE \"public\".\"Category\".\"id\" IN ($1,$2) OFFSET $3"
+[00:04:44.685] Server  LOG     prisma:query "SELECT SUM(\"public\".\"Expense\".\"amount\"), \"public\".\"Expense\".\"categoryId\" FROM \"public\".\"Expense\" WHERE (\"public\".\"Expense\".\"userId\" = $1 AND \"public\".\"Expense\".\"date\" >= $2 AND \"public\".\"Expense\".\"categoryId\" IS NOT NULL) GROUP BY \"public\".\"Expense\".\"categoryId\" OFFSET $3"
+[00:04:44.698] Server  LOG     prisma:query "SELECT \"public\".\"Expense\".\"id\", \"public\".\"Expense\".\"amount\", \"public\".\"Expense\".\"merchant\", \"public\".\"Expense\".\"note\", \"public\".\"Expense\".\"date\", \"public\".\"Expense\".\"paymentMethod\"::text, \"public\".\"Expense\".\"userId\", \"public\".\"Expense\".\"categoryId\", \"public\".\"Expense\".\"receiptUrl\", \"public\".\"Expense\".\"createdAt\", \"public\".\"Expense\".\"updatedAt\" FROM \"public\".\"Expense\" WHERE \"public\".\"Expense\".\"userId\" = $1 ORDER BY \"public\".\"Expense\".\"date\" DESC LIMIT $2 OFFSET $3"
+[00:04:44.709] Server  LOG     prisma:query "SELECT \"public\".\"Income\".\"id\", \"public\".\"Income\".\"amount\", \"public\".\"Income\".\"source\", \"public\".\"Income\".\"note\", \"public\".\"Income\".\"date\", \"public\".\"Income\".\"userId\", \"public\".\"Income\".\"categoryId\", \"public\".\"Income\".\"receiptUrl\", \"public\".\"Income\".\"createdAt\", \"public\".\"Income\".\"updatedAt\" FROM \"public\".\"Income\" WHERE \"public\".\"Income\".\"userId\" = $1 ORDER BY \"public\".\"Income\".\"date\" DESC LIMIT $2 OFFSET $3"
+[00:04:45.026] Server  LOG     prisma:query "SELECT \"public\".\"Income\".\"id\", \"public\".\"Income\".\"amount\", \"public\".\"Income\".\"date\" FROM \"public\".\"Income\" WHERE (\"public\".\"Income\".\"userId\" = $1 AND \"public\".\"Income\".\"date\" >= $2) OFFSET $3"
+[00:04:45.027] Server  LOG     prisma:query "SELECT SUM(\"amount\") FROM (SELECT \"public\".\"Expense\".\"amount\" FROM \"public\".\"Expense\" WHERE (\"public\".\"Expense\".\"userId\" = $1 AND \"public\".\"Expense\".\"categoryId\" = $2 AND \"public\".\"Expense\".\"date\" >= $3) OFFSET $4) AS \"sub\""
+[00:04:45.120] Server  LOG     prisma:query "SELECT SUM(\"amount\") FROM (SELECT \"public\".\"Expense\".\"amount\" FROM \"public\".\"Expense\" WHERE (\"public\".\"Expense\".\"userId\" = $1 AND \"public\".\"Expense\".\"categoryId\" = $2 AND \"public\".\"Expense\".\"date\" >= $3) OFFSET $4) AS \"sub\""
+[00:04:45.192] Server  LOG     prisma:query "SELECT \"public\".\"Category\".\"id\", \"public\".\"Category\".\"name\", \"public\".\"Category\".\"color\" FROM \"public\".\"Category\" WHERE \"public\".\"Category\".\"id\" IN ($1,$2,$3,$4,$5,$6,$7,$8) OFFSET $9"
+[00:04:45.213] Server  LOG     prisma:query "SELECT \"public\".\"Category\".\"id\", \"public\".\"Category\".\"name\", \"public\".\"Category\".\"icon\", \"public\".\"Category\".\"color\", \"public\".\"Category\".\"userId\", \"public\".\"Category\".\"parentId\", \"public\".\"Category\".\"createdAt\" FROM \"public\".\"Category\" WHERE \"public\".\"Category\".\"id\" IN ($1,$2,$3,$4,$5,$6,$7,$8) OFFSET $9"
+[00:04:45.226] Server  LOG     prisma:query "SELECT \"public\".\"Category\".\"id\", \"public\".\"Category\".\"name\", \"public\".\"Category\".\"icon\", \"public\".\"Category\".\"color\", \"public\".\"Category\".\"userId\", \"public\".\"Category\".\"parentId\", \"public\".\"Category\".\"createdAt\" FROM \"public\".\"Category\" WHERE \"public\".\"Category\".\"id\" IN ($1) OFFSET $2"
+[00:04:56.047] Server  LOG     ✓ Compiled in 89ms
+[00:05:10.842] Server  LOG     ✓ Compiled in 60ms
+[00:05:21.593] Server  LOG     prisma:query "SELECT 1"
+[00:05:21.847] Server  LOG     prisma:query "SELECT \"public\".\"Session\".\"id\", \"public\".\"Session\".\"sessionToken\", \"public\".\"Session\".\"userId\", \"public\".\"Session\".\"expires\" FROM \"public\".\"Session\" WHERE (\"public\".\"Session\".\"sessionToken\" = $1 AND 1=1) LIMIT $2 OFFSET $3"
+[00:05:22.102] Server  LOG     prisma:query "SELECT \"public\".\"User\".\"id\", \"public\".\"User\".\"name\", \"public\".\"User\".\"email\", \"public\".\"User\".\"emailVerified\", \"public\".\"User\".\"image\", \"public\".\"User\".\"gmailRefreshToken\", \"public\".\"User\".\"createdAt\", \"public\".\"User\".\"updatedAt\" FROM \"public\".\"User\" WHERE \"public\".\"User\".\"id\" IN ($1) OFFSET $2"
+[00:05:26.183] Browser ERROR   `DialogContent` requires a `DialogTitle` for the component to be accessible for screen reader users.
+
+If you want to hide the `DialogTitle`, you can wrap it with our VisuallyHidden component.
+
+For more information, see https://radix-ui.com/primitives/docs/components/dialog
+[00:05:26.183] Browser WARN    Warning: Missing `Description` or `aria-describedby={undefined}` for {DialogContent}.
+[00:05:26.183] Browser ERROR   `DialogContent` requires a `DialogTitle` for the component to be accessible for screen reader users.
+
+If you want to hide the `DialogTitle`, you can wrap it with our VisuallyHidden component.
+
+For more information, see https://radix-ui.com/primitives/docs/components/dialog
+[00:05:26.183] Browser WARN    Warning: Missing `Description` or `aria-describedby={undefined}` for {DialogContent}.
+[00:06:01.780] Server  LOG     prisma:query "SELECT 1"
+[00:06:01.781] Server  LOG     prisma:query "SELECT 1"
+[00:06:02.126] Server  LOG     prisma:query "SELECT \"public\".\"Session\".\"id\", \"public\".\"Session\".\"sessionToken\", \"public\".\"Session\".\"userId\", \"public\".\"Session\".\"expires\" FROM \"public\".\"Session\" WHERE (\"public\".\"Session\".\"sessionToken\" = $1 AND 1=1) LIMIT $2 OFFSET $3"
+[00:06:02.127] Server  LOG     prisma:query "SELECT \"public\".\"Session\".\"id\", \"public\".\"Session\".\"sessionToken\", \"public\".\"Session\".\"userId\", \"public\".\"Session\".\"expires\" FROM \"public\".\"Session\" WHERE (\"public\".\"Session\".\"sessionToken\" = $1 AND 1=1) LIMIT $2 OFFSET $3"
+[00:06:02.437] Server  LOG     prisma:query "SELECT \"public\".\"User\".\"id\", \"public\".\"User\".\"name\", \"public\".\"User\".\"email\", \"public\".\"User\".\"emailVerified\", \"public\".\"User\".\"image\", \"public\".\"User\".\"gmailRefreshToken\", \"public\".\"User\".\"createdAt\", \"public\".\"User\".\"updatedAt\" FROM \"public\".\"User\" WHERE \"public\".\"User\".\"id\" IN ($1) OFFSET $2"
+[00:06:02.437] Server  LOG     prisma:query "SELECT \"public\".\"User\".\"id\", \"public\".\"User\".\"name\", \"public\".\"User\".\"email\", \"public\".\"User\".\"emailVerified\", \"public\".\"User\".\"image\", \"public\".\"User\".\"gmailRefreshToken\", \"public\".\"User\".\"createdAt\", \"public\".\"User\".\"updatedAt\" FROM \"public\".\"User\" WHERE \"public\".\"User\".\"id\" IN ($1) OFFSET $2"
+[00:06:02.763] Server  LOG     prisma:query "SELECT 1"
+[00:06:02.764] Server  LOG     prisma:query "SELECT 1"
+[00:06:02.765] Server  LOG     prisma:query "SELECT 1"
+[00:06:02.765] Server  LOG     prisma:query "SELECT 1"
+[00:06:02.766] Server  LOG     prisma:query "SELECT 1"
+[00:06:02.977] Server  LOG     prisma:query "SELECT \"public\".\"Income\".\"id\", \"public\".\"Income\".\"amount\", \"public\".\"Income\".\"source\", \"public\".\"Income\".\"note\", \"public\".\"Income\".\"date\", \"public\".\"Income\".\"userId\", \"public\".\"Income\".\"categoryId\", \"public\".\"Income\".\"receiptUrl\", \"public\".\"Income\".\"createdAt\", \"public\".\"Income\".\"updatedAt\" FROM \"public\".\"Income\" WHERE \"public\".\"Income\".\"userId\" = $1 ORDER BY \"public\".\"Income\".\"date\" DESC LIMIT $2 OFFSET $3"
+[00:06:03.041] Server  LOG     prisma:query "SELECT SUM(\"amount\") FROM (SELECT \"public\".\"Income\".\"amount\" FROM \"public\".\"Income\" WHERE (\"public\".\"Income\".\"userId\" = $1 AND \"public\".\"Income\".\"date\" >= $2) OFFSET $3) AS \"sub\""
+[00:06:03.042] Server  LOG     prisma:query "SELECT SUM(\"amount\") FROM (SELECT \"public\".\"Expense\".\"amount\" FROM \"public\".\"Expense\" WHERE (\"public\".\"Expense\".\"userId\" = $1 AND \"public\".\"Expense\".\"date\" >= $2) OFFSET $3) AS \"sub\""
+[00:06:03.245] Server  LOG     prisma:query "SELECT SUM(\"public\".\"Expense\".\"amount\"), \"public\".\"Expense\".\"categoryId\" FROM \"public\".\"Expense\" WHERE (\"public\".\"Expense\".\"userId\" = $1 AND \"public\".\"Expense\".\"date\" >= $2 AND \"public\".\"Expense\".\"categoryId\" IS NOT NULL) GROUP BY \"public\".\"Expense\".\"categoryId\" OFFSET $3"
+[00:06:03.246] Server  LOG     prisma:query "SELECT \"public\".\"Category\".\"id\", \"public\".\"Category\".\"name\", \"public\".\"Category\".\"icon\", \"public\".\"Category\".\"color\", \"public\".\"Category\".\"userId\", \"public\".\"Category\".\"parentId\", \"public\".\"Category\".\"createdAt\" FROM \"public\".\"Category\" WHERE \"public\".\"Category\".\"id\" IN ($1) OFFSET $2"
+[00:06:03.246] Server  LOG     prisma:query "SELECT \"public\".\"Expense\".\"id\", \"public\".\"Expense\".\"amount\", \"public\".\"Expense\".\"merchant\", \"public\".\"Expense\".\"note\", \"public\".\"Expense\".\"date\", \"public\".\"Expense\".\"paymentMethod\"::text, \"public\".\"Expense\".\"userId\", \"public\".\"Expense\".\"categoryId\", \"public\".\"Expense\".\"receiptUrl\", \"public\".\"Expense\".\"createdAt\", \"public\".\"Expense\".\"updatedAt\" FROM \"public\".\"Expense\" WHERE \"public\".\"Expense\".\"userId\" = $1 ORDER BY \"public\".\"Expense\".\"date\" DESC LIMIT $2 OFFSET $3"
+[00:06:03.294] Server  LOG     prisma:query "SELECT \"public\".\"Budget\".\"id\", \"public\".\"Budget\".\"amount\", \"public\".\"Budget\".\"period\"::text, \"public\".\"Budget\".\"userId\", \"public\".\"Budget\".\"categoryId\", \"public\".\"Budget\".\"createdAt\", \"public\".\"Budget\".\"updatedAt\" FROM \"public\".\"Budget\" WHERE \"public\".\"Budget\".\"userId\" = $1 OFFSET $2"
+[00:06:03.295] Server  LOG     prisma:query "SELECT \"public\".\"Expense\".\"id\", \"public\".\"Expense\".\"amount\", \"public\".\"Expense\".\"date\" FROM \"public\".\"Expense\" WHERE (\"public\".\"Expense\".\"userId\" = $1 AND \"public\".\"Expense\".\"date\" >= $2) OFFSET $3"
+[00:06:03.860] Server  LOG     prisma:query "SELECT \"public\".\"Category\".\"id\", \"public\".\"Category\".\"name\", \"public\".\"Category\".\"icon\", \"public\".\"Category\".\"color\", \"public\".\"Category\".\"userId\", \"public\".\"Category\".\"parentId\", \"public\".\"Category\".\"createdAt\" FROM \"public\".\"Category\" WHERE \"public\".\"Category\".\"id\" IN ($1,$2,$3,$4,$5,$6,$7,$8) OFFSET $9"
+[00:06:03.861] Server  LOG     prisma:query "SELECT \"public\".\"Income\".\"id\", \"public\".\"Income\".\"amount\", \"public\".\"Income\".\"date\" FROM \"public\".\"Income\" WHERE (\"public\".\"Income\".\"userId\" = $1 AND \"public\".\"Income\".\"date\" >= $2) OFFSET $3"
+[00:06:03.861] Server  LOG     prisma:query "SELECT \"public\".\"Category\".\"id\", \"public\".\"Category\".\"name\", \"public\".\"Category\".\"icon\", \"public\".\"Category\".\"color\", \"public\".\"Category\".\"userId\", \"public\".\"Category\".\"parentId\", \"public\".\"Category\".\"createdAt\" FROM \"public\".\"Category\" WHERE \"public\".\"Category\".\"id\" IN ($1,$2) OFFSET $3"
+[00:06:04.128] Server  LOG     prisma:query "SELECT SUM(\"amount\") FROM (SELECT \"public\".\"Expense\".\"amount\" FROM \"public\".\"Expense\" WHERE (\"public\".\"Expense\".\"userId\" = $1 AND \"public\".\"Expense\".\"categoryId\" = $2 AND \"public\".\"Expense\".\"date\" >= $3) OFFSET $4) AS \"sub\""
+[00:06:04.129] Server  LOG     prisma:query "SELECT \"public\".\"Category\".\"id\", \"public\".\"Category\".\"name\", \"public\".\"Category\".\"color\" FROM \"public\".\"Category\" WHERE \"public\".\"Category\".\"id\" IN ($1,$2,$3,$4,$5,$6,$7,$8) OFFSET $9"
+[00:06:04.322] Browser ERROR   `DialogContent` requires a `DialogTitle` for the component to be accessible for screen reader users.
+
+If you want to hide the `DialogTitle`, you can wrap it with our VisuallyHidden component.
+
+For more information, see https://radix-ui.com/primitives/docs/components/dialog
+[00:06:04.322] Browser WARN    Warning: Missing `Description` or `aria-describedby={undefined}` for {DialogContent}.
+[00:06:04.323] Browser ERROR   `DialogContent` requires a `DialogTitle` for the component to be accessible for screen reader users.
+
+If you want to hide the `DialogTitle`, you can wrap it with our VisuallyHidden component.
+
+For more information, see https://radix-ui.com/primitives/docs/components/dialog
+[00:06:04.323] Browser WARN    Warning: Missing `Description` or `aria-describedby={undefined}` for {DialogContent}.
+[00:06:04.376] Server  LOG     prisma:query "SELECT SUM(\"amount\") FROM (SELECT \"public\".\"Expense\".\"amount\" FROM \"public\".\"Expense\" WHERE (\"public\".\"Expense\".\"userId\" = $1 AND \"public\".\"Expense\".\"categoryId\" = $2 AND \"public\".\"Expense\".\"date\" >= $3) OFFSET $4) AS \"sub\""
+[00:06:07.348] Server  LOG     prisma:query "SELECT \"public\".\"Session\".\"id\", \"public\".\"Session\".\"sessionToken\", \"public\".\"Session\".\"userId\", \"public\".\"Session\".\"expires\" FROM \"public\".\"Session\" WHERE (\"public\".\"Session\".\"sessionToken\" = $1 AND 1=1) LIMIT $2 OFFSET $3"
+[00:06:07.953] Server  LOG     prisma:query "SELECT \"public\".\"User\".\"id\", \"public\".\"User\".\"name\", \"public\".\"User\".\"email\", \"public\".\"User\".\"emailVerified\", \"public\".\"User\".\"image\", \"public\".\"User\".\"gmailRefreshToken\", \"public\".\"User\".\"createdAt\", \"public\".\"User\".\"updatedAt\" FROM \"public\".\"User\" WHERE \"public\".\"User\".\"id\" IN ($1) OFFSET $2"
+[00:06:08.241] Server  LOG     prisma:query "SELECT \"public\".\"Income\".\"id\", \"public\".\"Income\".\"amount\", \"public\".\"Income\".\"source\", \"public\".\"Income\".\"note\", \"public\".\"Income\".\"date\", \"public\".\"Income\".\"userId\", \"public\".\"Income\".\"categoryId\", \"public\".\"Income\".\"receiptUrl\", \"public\".\"Income\".\"createdAt\", \"public\".\"Income\".\"updatedAt\" FROM \"public\".\"Income\" WHERE (\"public\".\"Income\".\"userId\" = $1 AND \"public\".\"Income\".\"date\" >= $2) ORDER BY \"public\".\"Income\".\"date\" DESC OFFSET $3"
+[00:06:08.242] Server  LOG     prisma:query "SELECT \"public\".\"Budget\".\"id\", \"public\".\"Budget\".\"amount\", \"public\".\"Budget\".\"period\"::text, \"public\".\"Budget\".\"userId\", \"public\".\"Budget\".\"categoryId\", \"public\".\"Budget\".\"createdAt\", \"public\".\"Budget\".\"updatedAt\" FROM \"public\".\"Budget\" WHERE \"public\".\"Budget\".\"userId\" = $1 OFFSET $2"
+[00:06:08.466] Server  LOG     prisma:query "SELECT \"public\".\"Category\".\"id\", \"public\".\"Category\".\"name\", \"public\".\"Category\".\"icon\", \"public\".\"Category\".\"color\", \"public\".\"Category\".\"userId\", \"public\".\"Category\".\"parentId\", \"public\".\"Category\".\"createdAt\" FROM \"public\".\"Category\" WHERE \"public\".\"Category\".\"id\" IN ($1) OFFSET $2"
+[00:06:08.496] Server  LOG     prisma:query "SELECT \"public\".\"Category\".\"id\", \"public\".\"Category\".\"name\", \"public\".\"Category\".\"icon\", \"public\".\"Category\".\"color\", \"public\".\"Category\".\"userId\", \"public\".\"Category\".\"parentId\", \"public\".\"Category\".\"createdAt\" FROM \"public\".\"Category\" WHERE \"public\".\"Category\".\"id\" IN ($1,$2) OFFSET $3"
+[00:06:08.747] Server  LOG     prisma:query "SELECT \"public\".\"Expense\".\"id\", \"public\".\"Expense\".\"amount\", \"public\".\"Expense\".\"merchant\", \"public\".\"Expense\".\"note\", \"public\".\"Expense\".\"date\", \"public\".\"Expense\".\"paymentMethod\"::text, \"public\".\"Expense\".\"userId\", \"public\".\"Expense\".\"categoryId\", \"public\".\"Expense\".\"receiptUrl\", \"public\".\"Expense\".\"createdAt\", \"public\".\"Expense\".\"updatedAt\" FROM \"public\".\"Expense\" WHERE (\"public\".\"Expense\".\"userId\" = $1 AND \"public\".\"Expense\".\"date\" >= $2) ORDER BY \"public\".\"Expense\".\"date\" DESC OFFSET $3"
+[00:06:09.387] Server  LOG     prisma:query "SELECT \"public\".\"Category\".\"id\", \"public\".\"Category\".\"name\", \"public\".\"Category\".\"icon\", \"public\".\"Category\".\"color\", \"public\".\"Category\".\"userId\", \"public\".\"Category\".\"parentId\", \"public\".\"Category\".\"createdAt\" FROM \"public\".\"Category\" WHERE \"public\".\"Category\".\"id\" IN ($1,$2,$3,$4,$5,$6,$7,$8) OFFSET $9"
+[00:06:16.787] Server  LOG     ✓ Compiled in 56ms
+[00:06:19.254] Server  LOG     ✓ Compiled in 78ms
+[00:06:21.425] Server  LOG     ✓ Compiled in 59ms
+[00:06:51.882] Server  LOG     prisma:query "SELECT 1"
+[00:06:52.199] Server  LOG     prisma:query "SELECT \"public\".\"Session\".\"id\", \"public\".\"Session\".\"sessionToken\", \"public\".\"Session\".\"userId\", \"public\".\"Session\".\"expires\" FROM \"public\".\"Session\" WHERE (\"public\".\"Session\".\"sessionToken\" = $1 AND 1=1) LIMIT $2 OFFSET $3"
+[00:06:52.498] Server  LOG     prisma:query "SELECT \"public\".\"User\".\"id\", \"public\".\"User\".\"name\", \"public\".\"User\".\"email\", \"public\".\"User\".\"emailVerified\", \"public\".\"User\".\"image\", \"public\".\"User\".\"gmailRefreshToken\", \"public\".\"User\".\"createdAt\", \"public\".\"User\".\"updatedAt\" FROM \"public\".\"User\" WHERE \"public\".\"User\".\"id\" IN ($1) OFFSET $2"
+[00:06:57.155] Browser WARN    Warning: Missing `Description` or `aria-describedby={undefined}` for {DialogContent}.
+[00:06:57.155] Browser WARN    Warning: Missing `Description` or `aria-describedby={undefined}` for {DialogContent}.
+[00:07:12.867] Browser WARN    Image with src "https://lh3.googleusercontent.com/a/ACg8ocLMYuLxYXfonJihJ1-VJoAVBDXUUPKjzEZfQdFMKRHkTF9RWcc0Zw=s96-c" has "fill" but is missing "sizes" prop. Please add it to improve page performance. Read more: https://nextjs.org/docs/api-reference/next/image#sizes
+[00:07:13.056] Server  LOG     prisma:query "SELECT 1"
+[00:07:13.304] Server  LOG     prisma:query "SELECT \"public\".\"Session\".\"id\", \"public\".\"Session\".\"sessionToken\", \"public\".\"Session\".\"userId\", \"public\".\"Session\".\"expires\" FROM \"public\".\"Session\" WHERE (\"public\".\"Session\".\"sessionToken\" = $1 AND 1=1) LIMIT $2 OFFSET $3"
+[00:07:13.551] Server  LOG     prisma:query "SELECT \"public\".\"User\".\"id\", \"public\".\"User\".\"name\", \"public\".\"User\".\"email\", \"public\".\"User\".\"emailVerified\", \"public\".\"User\".\"image\", \"public\".\"User\".\"gmailRefreshToken\", \"public\".\"User\".\"createdAt\", \"public\".\"User\".\"updatedAt\" FROM \"public\".\"User\" WHERE \"public\".\"User\".\"id\" IN ($1) OFFSET $2"
+[00:07:14.048] Server  LOG     prisma:query "SELECT \"public\".\"User\".\"id\", \"public\".\"User\".\"gmailRefreshToken\" FROM \"public\".\"User\" WHERE (\"public\".\"User\".\"id\" = $1 AND 1=1) LIMIT $2 OFFSET $3"
+[00:07:17.345] Browser WARN    The width(-1) and height(-1) of chart should be greater than 0,
+       please check the style of container, or the props width(100%) and height(100%),
+       or add a minWidth(0) or minHeight(undefined) or use aspect(undefined) to control the
+       height and width.
+[00:07:17.345] Browser WARN    The width(-1) and height(-1) of chart should be greater than 0,
+       please check the style of container, or the props width(100%) and height(100%),
+       or add a minWidth(0) or minHeight(undefined) or use aspect(undefined) to control the
+       height and width.
+[00:07:17.345] Browser WARN    The width(-1) and height(-1) of chart should be greater than 0,
+       please check the style of container, or the props width(100%) and height(100%),
+       or add a minWidth(0) or minHeight(undefined) or use aspect(undefined) to control the
+       height and width.
+[00:07:17.345] Browser WARN    The width(-1) and height(-1) of chart should be greater than 0,
+       please check the style of container, or the props width(100%) and height(100%),
+       or add a minWidth(0) or minHeight(undefined) or use aspect(undefined) to control the
+       height and width.
+[00:07:17.688] Server  LOG     prisma:query "SELECT \"public\".\"Session\".\"id\", \"public\".\"Session\".\"sessionToken\", \"public\".\"Session\".\"userId\", \"public\".\"Session\".\"expires\" FROM \"public\".\"Session\" WHERE (\"public\".\"Session\".\"sessionToken\" = $1 AND 1=1) LIMIT $2 OFFSET $3"
+[00:07:17.995] Server  LOG     prisma:query "SELECT \"public\".\"User\".\"id\", \"public\".\"User\".\"name\", \"public\".\"User\".\"email\", \"public\".\"User\".\"emailVerified\", \"public\".\"User\".\"image\", \"public\".\"User\".\"gmailRefreshToken\", \"public\".\"User\".\"createdAt\", \"public\".\"User\".\"updatedAt\" FROM \"public\".\"User\" WHERE \"public\".\"User\".\"id\" IN ($1) OFFSET $2"
+[00:07:18.253] Server  LOG     prisma:query "SELECT 1"
+[00:07:18.254] Server  LOG     prisma:query "SELECT 1"
+[00:07:18.254] Server  LOG     prisma:query "SELECT 1"
+[00:07:18.255] Server  LOG     prisma:query "SELECT 1"
+[00:07:18.256] Server  LOG     prisma:query "SELECT 1"
+[00:07:18.257] Server  LOG     prisma:query "SELECT 1"
+[00:07:18.518] Server  LOG     prisma:query "SELECT SUM(\"public\".\"Expense\".\"amount\"), \"public\".\"Expense\".\"categoryId\" FROM \"public\".\"Expense\" WHERE (\"public\".\"Expense\".\"userId\" = $1 AND \"public\".\"Expense\".\"date\" >= $2 AND \"public\".\"Expense\".\"categoryId\" IS NOT NULL) GROUP BY \"public\".\"Expense\".\"categoryId\" OFFSET $3"
+[00:07:18.829] Server  LOG     prisma:query "SELECT SUM(\"amount\") FROM (SELECT \"public\".\"Expense\".\"amount\" FROM \"public\".\"Expense\" WHERE (\"public\".\"Expense\".\"userId\" = $1 AND \"public\".\"Expense\".\"date\" >= $2) OFFSET $3) AS \"sub\""
+[00:07:18.830] Server  LOG     prisma:query "SELECT SUM(\"amount\") FROM (SELECT \"public\".\"Income\".\"amount\" FROM \"public\".\"Income\" WHERE (\"public\".\"Income\".\"userId\" = $1 AND \"public\".\"Income\".\"date\" >= $2) OFFSET $3) AS \"sub\""
+[00:07:18.831] Server  LOG     prisma:query "SELECT \"public\".\"Budget\".\"id\", \"public\".\"Budget\".\"amount\", \"public\".\"Budget\".\"period\"::text, \"public\".\"Budget\".\"userId\", \"public\".\"Budget\".\"categoryId\", \"public\".\"Budget\".\"createdAt\", \"public\".\"Budget\".\"updatedAt\" FROM \"public\".\"Budget\" WHERE \"public\".\"Budget\".\"userId\" = $1 OFFSET $2"
+[00:07:18.831] Server  LOG     prisma:query "SELECT \"public\".\"Category\".\"id\", \"public\".\"Category\".\"name\", \"public\".\"Category\".\"color\" FROM \"public\".\"Category\" WHERE \"public\".\"Category\".\"id\" IN ($1,$2,$3,$4,$5,$6,$7,$8) OFFSET $9"
+[00:07:18.832] Server  LOG     prisma:query "SELECT \"public\".\"Income\".\"id\", \"public\".\"Income\".\"amount\", \"public\".\"Income\".\"source\", \"public\".\"Income\".\"note\", \"public\".\"Income\".\"date\", \"public\".\"Income\".\"userId\", \"public\".\"Income\".\"categoryId\", \"public\".\"Income\".\"receiptUrl\", \"public\".\"Income\".\"createdAt\", \"public\".\"Income\".\"updatedAt\" FROM \"public\".\"Income\" WHERE \"public\".\"Income\".\"userId\" = $1 ORDER BY \"public\".\"Income\".\"date\" DESC LIMIT $2 OFFSET $3"
+[00:07:18.832] Server  LOG     prisma:query "SELECT \"public\".\"Expense\".\"id\", \"public\".\"Expense\".\"amount\", \"public\".\"Expense\".\"date\" FROM \"public\".\"Expense\" WHERE (\"public\".\"Expense\".\"userId\" = $1 AND \"public\".\"Expense\".\"date\" >= $2) OFFSET $3"
+[00:07:19.113] Server  LOG     prisma:query "SELECT \"public\".\"Expense\".\"id\", \"public\".\"Expense\".\"amount\", \"public\".\"Expense\".\"merchant\", \"public\".\"Expense\".\"note\", \"public\".\"Expense\".\"date\", \"public\".\"Expense\".\"paymentMethod\"::text, \"public\".\"Expense\".\"userId\", \"public\".\"Expense\".\"categoryId\", \"public\".\"Expense\".\"receiptUrl\", \"public\".\"Expense\".\"createdAt\", \"public\".\"Expense\".\"updatedAt\" FROM \"public\".\"Expense\" WHERE \"public\".\"Expense\".\"userId\" = $1 ORDER BY \"public\".\"Expense\".\"date\" DESC LIMIT $2 OFFSET $3"
+[00:07:19.326] Server  LOG     prisma:query "SELECT \"public\".\"Category\".\"id\", \"public\".\"Category\".\"name\", \"public\".\"Category\".\"icon\", \"public\".\"Category\".\"color\", \"public\".\"Category\".\"userId\", \"public\".\"Category\".\"parentId\", \"public\".\"Category\".\"createdAt\" FROM \"public\".\"Category\" WHERE \"public\".\"Category\".\"id\" IN ($1,$2) OFFSET $3"
+[00:07:19.379] Server  LOG     prisma:query "SELECT \"public\".\"Income\".\"id\", \"public\".\"Income\".\"amount\", \"public\".\"Income\".\"date\" FROM \"public\".\"Income\" WHERE (\"public\".\"Income\".\"userId\" = $1 AND \"public\".\"Income\".\"date\" >= $2) OFFSET $3"
+[00:07:19.380] Server  LOG     prisma:query "SELECT \"public\".\"Category\".\"id\", \"public\".\"Category\".\"name\", \"public\".\"Category\".\"icon\", \"public\".\"Category\".\"color\", \"public\".\"Category\".\"userId\", \"public\".\"Category\".\"parentId\", \"public\".\"Category\".\"createdAt\" FROM \"public\".\"Category\" WHERE \"public\".\"Category\".\"id\" IN ($1) OFFSET $2"
+[00:07:19.545] Server  LOG     prisma:query "SELECT SUM(\"amount\") FROM (SELECT \"public\".\"Expense\".\"amount\" FROM \"public\".\"Expense\" WHERE (\"public\".\"Expense\".\"userId\" = $1 AND \"public\".\"Expense\".\"categoryId\" = $2 AND \"public\".\"Expense\".\"date\" >= $3) OFFSET $4) AS \"sub\""
+[00:07:19.585] Server  LOG     prisma:query "SELECT SUM(\"amount\") FROM (SELECT \"public\".\"Expense\".\"amount\" FROM \"public\".\"Expense\" WHERE (\"public\".\"Expense\".\"userId\" = $1 AND \"public\".\"Expense\".\"categoryId\" = $2 AND \"public\".\"Expense\".\"date\" >= $3) OFFSET $4) AS \"sub\""
+[00:07:19.635] Server  LOG     prisma:query "SELECT \"public\".\"Category\".\"id\", \"public\".\"Category\".\"name\", \"public\".\"Category\".\"icon\", \"public\".\"Category\".\"color\", \"public\".\"Category\".\"userId\", \"public\".\"Category\".\"parentId\", \"public\".\"Category\".\"createdAt\" FROM \"public\".\"Category\" WHERE \"public\".\"Category\".\"id\" IN ($1,$2,$3,$4,$5,$6,$7,$8) OFFSET $9"
+[00:07:22.127] Browser ERROR   `DialogContent` requires a `DialogTitle` for the component to be accessible for screen reader users.
+
+If you want to hide the `DialogTitle`, you can wrap it with our VisuallyHidden component.
+
+For more information, see https://radix-ui.com/primitives/docs/components/dialog
+[00:07:22.127] Browser WARN    Warning: Missing `Description` or `aria-describedby={undefined}` for {DialogContent}.
+[00:07:22.127] Browser ERROR   `DialogContent` requires a `DialogTitle` for the component to be accessible for screen reader users.
+
+If you want to hide the `DialogTitle`, you can wrap it with our VisuallyHidden component.
+
+For more information, see https://radix-ui.com/primitives/docs/components/dialog
+[00:07:22.127] Browser WARN    Warning: Missing `Description` or `aria-describedby={undefined}` for {DialogContent}.
+[00:07:26.155] Browser WARN    Warning: Missing `Description` or `aria-describedby={undefined}` for {DialogContent}.
+[00:07:26.155] Browser WARN    Warning: Missing `Description` or `aria-describedby={undefined}` for {DialogContent}.
+[00:07:40.010] Server  LOG     prisma:query "SELECT 1"
+[00:07:40.319] Server  LOG     prisma:query "SELECT \"public\".\"Session\".\"id\", \"public\".\"Session\".\"sessionToken\", \"public\".\"Session\".\"userId\", \"public\".\"Session\".\"expires\" FROM \"public\".\"Session\" WHERE (\"public\".\"Session\".\"sessionToken\" = $1 AND 1=1) LIMIT $2 OFFSET $3"
+[00:07:40.625] Server  LOG     prisma:query "SELECT \"public\".\"User\".\"id\", \"public\".\"User\".\"name\", \"public\".\"User\".\"email\", \"public\".\"User\".\"emailVerified\", \"public\".\"User\".\"image\", \"public\".\"User\".\"gmailRefreshToken\", \"public\".\"User\".\"createdAt\", \"public\".\"User\".\"updatedAt\" FROM \"public\".\"User\" WHERE \"public\".\"User\".\"id\" IN ($1) OFFSET $2"
+[00:07:43.493] Server  LOG     prisma:query "SELECT \"public\".\"Income\".\"id\", \"public\".\"Income\".\"amount\", \"public\".\"Income\".\"source\", \"public\".\"Income\".\"note\", \"public\".\"Income\".\"date\", \"public\".\"Income\".\"userId\", \"public\".\"Income\".\"categoryId\", \"public\".\"Income\".\"receiptUrl\", \"public\".\"Income\".\"createdAt\", \"public\".\"Income\".\"updatedAt\" FROM \"public\".\"Income\" WHERE \"public\".\"Income\".\"userId\" = $1 ORDER BY \"public\".\"Income\".\"date\" DESC LIMIT $2 OFFSET $3"
+[00:07:44.074] Server  LOG     prisma:query "SELECT \"public\".\"Category\".\"id\", \"public\".\"Category\".\"name\", \"public\".\"Category\".\"icon\", \"public\".\"Category\".\"color\", \"public\".\"Category\".\"userId\", \"public\".\"Category\".\"parentId\", \"public\".\"Category\".\"createdAt\" FROM \"public\".\"Category\" WHERE \"public\".\"Category\".\"id\" IN ($1) OFFSET $2"
+[00:08:06.153] Server  LOG     ✓ Compiled in 74ms
+[00:09:02.348] Server  LOG     prisma:query "SELECT 1"
+[00:09:02.957] Server  LOG     prisma:query "SELECT \"public\".\"Session\".\"id\", \"public\".\"Session\".\"sessionToken\", \"public\".\"Session\".\"userId\", \"public\".\"Session\".\"expires\" FROM \"public\".\"Session\" WHERE (\"public\".\"Session\".\"sessionToken\" = $1 AND 1=1) LIMIT $2 OFFSET $3"
+[00:09:03.478] Server  LOG     prisma:query "SELECT \"public\".\"User\".\"id\", \"public\".\"User\".\"name\", \"public\".\"User\".\"email\", \"public\".\"User\".\"emailVerified\", \"public\".\"User\".\"image\", \"public\".\"User\".\"gmailRefreshToken\", \"public\".\"User\".\"createdAt\", \"public\".\"User\".\"updatedAt\" FROM \"public\".\"User\" WHERE \"public\".\"User\".\"id\" IN ($1) OFFSET $2"
+[00:09:04.456] Server  LOG     prisma:query "SELECT \"public\".\"Session\".\"id\", \"public\".\"Session\".\"sessionToken\", \"public\".\"Session\".\"userId\", \"public\".\"Session\".\"expires\" FROM \"public\".\"Session\" WHERE (\"public\".\"Session\".\"sessionToken\" = $1 AND 1=1) LIMIT $2 OFFSET $3"
+[00:09:04.554] Server  LOG     prisma:query "SELECT \"public\".\"Session\".\"id\", \"public\".\"Session\".\"sessionToken\", \"public\".\"Session\".\"userId\", \"public\".\"Session\".\"expires\" FROM \"public\".\"Session\" WHERE (\"public\".\"Session\".\"sessionToken\" = $1 AND 1=1) LIMIT $2 OFFSET $3"
+[00:09:04.809] Server  LOG     prisma:query "SELECT \"public\".\"User\".\"id\", \"public\".\"User\".\"name\", \"public\".\"User\".\"email\", \"public\".\"User\".\"emailVerified\", \"public\".\"User\".\"image\", \"public\".\"User\".\"gmailRefreshToken\", \"public\".\"User\".\"createdAt\", \"public\".\"User\".\"updatedAt\" FROM \"public\".\"User\" WHERE \"public\".\"User\".\"id\" IN ($1) OFFSET $2"
+[00:09:04.887] Server  LOG     prisma:query "SELECT \"public\".\"User\".\"id\", \"public\".\"User\".\"name\", \"public\".\"User\".\"email\", \"public\".\"User\".\"emailVerified\", \"public\".\"User\".\"image\", \"public\".\"User\".\"gmailRefreshToken\", \"public\".\"User\".\"createdAt\", \"public\".\"User\".\"updatedAt\" FROM \"public\".\"User\" WHERE \"public\".\"User\".\"id\" IN ($1) OFFSET $2"
+[00:09:05.321] Server  LOG     prisma:query "SELECT \"public\".\"User\".\"id\", \"public\".\"User\".\"gmailRefreshToken\" FROM \"public\".\"User\" WHERE (\"public\".\"User\".\"id\" = $1 AND 1=1) LIMIT $2 OFFSET $3"
+[00:09:05.325] Server  LOG     prisma:query "SELECT \"public\".\"Income\".\"id\", \"public\".\"Income\".\"amount\", \"public\".\"Income\".\"source\", \"public\".\"Income\".\"note\", \"public\".\"Income\".\"date\", \"public\".\"Income\".\"userId\", \"public\".\"Income\".\"categoryId\", \"public\".\"Income\".\"receiptUrl\", \"public\".\"Income\".\"createdAt\", \"public\".\"Income\".\"updatedAt\" FROM \"public\".\"Income\" WHERE \"public\".\"Income\".\"userId\" = $1 ORDER BY \"public\".\"Income\".\"date\" DESC LIMIT $2 OFFSET $3"
+[00:09:05.762] Server  LOG     prisma:query "SELECT \"public\".\"Category\".\"id\", \"public\".\"Category\".\"name\", \"public\".\"Category\".\"icon\", \"public\".\"Category\".\"color\", \"public\".\"Category\".\"userId\", \"public\".\"Category\".\"parentId\", \"public\".\"Category\".\"createdAt\" FROM \"public\".\"Category\" WHERE \"public\".\"Category\".\"id\" IN ($1) OFFSET $2"
+[00:09:10.125] Browser WARN    Warning: Missing `Description` or `aria-describedby={undefined}` for {DialogContent}.
+[00:09:10.125] Browser WARN    Warning: Missing `Description` or `aria-describedby={undefined}` for {DialogContent}.
+[00:11:43.130] Server  LOG     ✓ Compiled in 93ms
+[00:11:43.383] Server  LOG     prisma:query "SELECT 1"
+[00:11:43.594] Server  LOG     prisma:query "SELECT \"public\".\"Session\".\"id\", \"public\".\"Session\".\"sessionToken\", \"public\".\"Session\".\"userId\", \"public\".\"Session\".\"expires\" FROM \"public\".\"Session\" WHERE (\"public\".\"Session\".\"sessionToken\" = $1 AND 1=1) LIMIT $2 OFFSET $3"
+[00:11:43.810] Server  LOG     prisma:query "SELECT \"public\".\"User\".\"id\", \"public\".\"User\".\"name\", \"public\".\"User\".\"email\", \"public\".\"User\".\"emailVerified\", \"public\".\"User\".\"image\", \"public\".\"User\".\"gmailRefreshToken\", \"public\".\"User\".\"createdAt\", \"public\".\"User\".\"updatedAt\" FROM \"public\".\"User\" WHERE \"public\".\"User\".\"id\" IN ($1) OFFSET $2"
+[00:11:44.245] Server  LOG     prisma:query "SELECT \"public\".\"User\".\"id\", \"public\".\"User\".\"gmailRefreshToken\" FROM \"public\".\"User\" WHERE (\"public\".\"User\".\"id\" = $1 AND 1=1) LIMIT $2 OFFSET $3"
+[00:14:57.904] Server  LOG     prisma:query "SELECT \"public\".\"Session\".\"id\", \"public\".\"Session\".\"sessionToken\", \"public\".\"Session\".\"userId\", \"public\".\"Session\".\"expires\" FROM \"public\".\"Session\" WHERE (\"public\".\"Session\".\"sessionToken\" = $1 AND 1=1) LIMIT $2 OFFSET $3"
+[00:14:58.175] Server  LOG     prisma:query "SELECT \"public\".\"Session\".\"id\", \"public\".\"Session\".\"sessionToken\", \"public\".\"Session\".\"userId\", \"public\".\"Session\".\"expires\" FROM \"public\".\"Session\" WHERE (\"public\".\"Session\".\"sessionToken\" = $1 AND 1=1) LIMIT $2 OFFSET $3"
+[00:14:58.323] Server  LOG     prisma:query "SELECT \"public\".\"User\".\"id\", \"public\".\"User\".\"name\", \"public\".\"User\".\"email\", \"public\".\"User\".\"emailVerified\", \"public\".\"User\".\"image\", \"public\".\"User\".\"gmailRefreshToken\", \"public\".\"User\".\"createdAt\", \"public\".\"User\".\"updatedAt\" FROM \"public\".\"User\" WHERE \"public\".\"User\".\"id\" IN ($1) OFFSET $2"
+[00:14:58.666] Server  LOG     prisma:query "SELECT \"public\".\"User\".\"id\", \"public\".\"User\".\"name\", \"public\".\"User\".\"email\", \"public\".\"User\".\"emailVerified\", \"public\".\"User\".\"image\", \"public\".\"User\".\"gmailRefreshToken\", \"public\".\"User\".\"createdAt\", \"public\".\"User\".\"updatedAt\" FROM \"public\".\"User\" WHERE \"public\".\"User\".\"id\" IN ($1) OFFSET $2"
+[00:14:59.155] Server  LOG     prisma:query "SELECT \"public\".\"User\".\"id\", \"public\".\"User\".\"gmailRefreshToken\" FROM \"public\".\"User\" WHERE (\"public\".\"User\".\"id\" = $1 AND 1=1) LIMIT $2 OFFSET $3"
+[00:15:32.309] Server  LOG     prisma:query "SELECT 1"
+[00:15:32.588] Server  LOG     prisma:query "SELECT \"public\".\"Session\".\"id\", \"public\".\"Session\".\"sessionToken\", \"public\".\"Session\".\"userId\", \"public\".\"Session\".\"expires\" FROM \"public\".\"Session\" WHERE (\"public\".\"Session\".\"sessionToken\" = $1 AND 1=1) LIMIT $2 OFFSET $3"
+[00:15:32.835] Server  LOG     prisma:query "SELECT \"public\".\"User\".\"id\", \"public\".\"User\".\"name\", \"public\".\"User\".\"email\", \"public\".\"User\".\"emailVerified\", \"public\".\"User\".\"image\", \"public\".\"User\".\"gmailRefreshToken\", \"public\".\"User\".\"createdAt\", \"public\".\"User\".\"updatedAt\" FROM \"public\".\"User\" WHERE \"public\".\"User\".\"id\" IN ($1) OFFSET $2"
+[00:15:38.348] Server  LOG     prisma:query "SELECT \"public\".\"Session\".\"id\", \"public\".\"Session\".\"sessionToken\", \"public\".\"Session\".\"userId\", \"public\".\"Session\".\"expires\" FROM \"public\".\"Session\" WHERE (\"public\".\"Session\".\"sessionToken\" = $1 AND 1=1) LIMIT $2 OFFSET $3"
+[00:15:38.593] Server  LOG     prisma:query "SELECT \"public\".\"User\".\"id\", \"public\".\"User\".\"name\", \"public\".\"User\".\"email\", \"public\".\"User\".\"emailVerified\", \"public\".\"User\".\"image\", \"public\".\"User\".\"gmailRefreshToken\", \"public\".\"User\".\"createdAt\", \"public\".\"User\".\"updatedAt\" FROM \"public\".\"User\" WHERE \"public\".\"User\".\"id\" IN ($1) OFFSET $2"
+[00:15:39.419] Server  LOG     ✓ Compiled in 284ms
+[00:15:41.776] Server  LOG     ✓ Compiled in 258ms
+[00:15:43.978] Server  LOG     ✓ Compiled in 215ms
+[00:16:52.784] Server  LOG     prisma:query "SELECT 1"
+[00:16:52.807] Server  LOG     prisma:query "SELECT 1"
+[00:16:53.077] Server  LOG     prisma:query "SELECT \"public\".\"Session\".\"id\", \"public\".\"Session\".\"sessionToken\", \"public\".\"Session\".\"userId\", \"public\".\"Session\".\"expires\" FROM \"public\".\"Session\" WHERE (\"public\".\"Session\".\"sessionToken\" = $1 AND 1=1) LIMIT $2 OFFSET $3"
+[00:16:53.078] Server  LOG     prisma:query "SELECT \"public\".\"Session\".\"id\", \"public\".\"Session\".\"sessionToken\", \"public\".\"Session\".\"userId\", \"public\".\"Session\".\"expires\" FROM \"public\".\"Session\" WHERE (\"public\".\"Session\".\"sessionToken\" = $1 AND 1=1) LIMIT $2 OFFSET $3"
+[00:16:53.284] Server  LOG     prisma:query "SELECT \"public\".\"User\".\"id\", \"public\".\"User\".\"name\", \"public\".\"User\".\"email\", \"public\".\"User\".\"emailVerified\", \"public\".\"User\".\"image\", \"public\".\"User\".\"gmailRefreshToken\", \"public\".\"User\".\"createdAt\", \"public\".\"User\".\"updatedAt\" FROM \"public\".\"User\" WHERE \"public\".\"User\".\"id\" IN ($1) OFFSET $2"
+[00:16:53.381] Server  LOG     prisma:query "SELECT \"public\".\"User\".\"id\", \"public\".\"User\".\"name\", \"public\".\"User\".\"email\", \"public\".\"User\".\"emailVerified\", \"public\".\"User\".\"image\", \"public\".\"User\".\"gmailRefreshToken\", \"public\".\"User\".\"createdAt\", \"public\".\"User\".\"updatedAt\" FROM \"public\".\"User\" WHERE \"public\".\"User\".\"id\" IN ($1) OFFSET $2"
+[00:16:53.803] Server  LOG     prisma:query "SELECT \"public\".\"User\".\"id\", \"public\".\"User\".\"gmailRefreshToken\" FROM \"public\".\"User\" WHERE (\"public\".\"User\".\"id\" = $1 AND 1=1) LIMIT $2 OFFSET $3"
+[00:16:55.340] Browser WARN    Warning: Missing `Description` or `aria-describedby={undefined}` for {DialogContent}.
+[00:16:55.340] Browser WARN    Warning: Missing `Description` or `aria-describedby={undefined}` for {DialogContent}.
+[00:17:09.378] Server  LOG     prisma:query "SELECT 1"
+[00:17:09.663] Server  LOG     prisma:query "SELECT \"public\".\"Session\".\"id\", \"public\".\"Session\".\"sessionToken\", \"public\".\"Session\".\"userId\", \"public\".\"Session\".\"expires\" FROM \"public\".\"Session\" WHERE (\"public\".\"Session\".\"sessionToken\" = $1 AND 1=1) LIMIT $2 OFFSET $3"
+[00:17:09.873] Server  LOG     prisma:query "SELECT \"public\".\"User\".\"id\", \"public\".\"User\".\"name\", \"public\".\"User\".\"email\", \"public\".\"User\".\"emailVerified\", \"public\".\"User\".\"image\", \"public\".\"User\".\"gmailRefreshToken\", \"public\".\"User\".\"createdAt\", \"public\".\"User\".\"updatedAt\" FROM \"public\".\"User\" WHERE \"public\".\"User\".\"id\" IN ($1) OFFSET $2"
+[00:17:10.316] Server  LOG     prisma:query "SELECT \"public\".\"Budget\".\"id\", \"public\".\"Budget\".\"amount\", \"public\".\"Budget\".\"period\"::text, \"public\".\"Budget\".\"userId\", \"public\".\"Budget\".\"categoryId\", \"public\".\"Budget\".\"createdAt\", \"public\".\"Budget\".\"updatedAt\" FROM \"public\".\"Budget\" WHERE \"public\".\"Budget\".\"userId\" = $1 OFFSET $2"
+[00:17:10.741] Server  LOG     prisma:query "SELECT \"public\".\"Category\".\"id\", \"public\".\"Category\".\"name\", \"public\".\"Category\".\"icon\", \"public\".\"Category\".\"color\", \"public\".\"Category\".\"userId\", \"public\".\"Category\".\"parentId\", \"public\".\"Category\".\"createdAt\" FROM \"public\".\"Category\" WHERE \"public\".\"Category\".\"id\" IN ($1,$2) OFFSET $3"
+[00:17:10.985] Server  LOG     prisma:query "SELECT 1"
+[00:17:11.162] Server  LOG     prisma:query "SELECT SUM(\"amount\") FROM (SELECT \"public\".\"Expense\".\"amount\" FROM \"public\".\"Expense\" WHERE (\"public\".\"Expense\".\"userId\" = $1 AND \"public\".\"Expense\".\"categoryId\" = $2 AND \"public\".\"Expense\".\"date\" >= $3) OFFSET $4) AS \"sub\""
+[00:17:11.470] Server  LOG     prisma:query "SELECT SUM(\"amount\") FROM (SELECT \"public\".\"Expense\".\"amount\" FROM \"public\".\"Expense\" WHERE (\"public\".\"Expense\".\"userId\" = $1 AND \"public\".\"Expense\".\"categoryId\" = $2 AND \"public\".\"Expense\".\"date\" >= $3) OFFSET $4) AS \"sub\""

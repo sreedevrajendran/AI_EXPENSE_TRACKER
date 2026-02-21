@@ -1,0 +1,15 @@
+{
+  "/(app)/budgets/page": "/budgets",
+  "/(app)/expenses/page": "/expenses",
+  "/(app)/incomes/page": "/incomes",
+  "/(app)/page": "/",
+  "/(app)/settings/page": "/settings",
+  "/_global-error/page": "/_global-error",
+  "/_not-found/page": "/_not-found",
+  "/api/auth/[...nextauth]/route": "/api/auth/[...nextauth]",
+  "/api/gmail/auth/route": "/api/gmail/auth",
+  "/api/gmail/callback/route": "/api/gmail/callback",
+  "/api/trpc/[trpc]/route": "/api/trpc/[trpc]",
+  "/api/upload/route": "/api/upload",
+  "/login/page": "/login"
+}
