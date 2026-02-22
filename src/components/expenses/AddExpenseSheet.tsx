@@ -163,27 +163,47 @@ export function AddExpenseSheet({ open, onOpenChange, onSuccess, editData }: Add
         setFile(selectedFile); // Set as attachment too
         setIsScanning(true);
         try {
-            const reader = new FileReader();
-            reader.onload = async () => {
-                const base64 = (reader.result as string).split(",")[1];
-                const result = await scanReceipt.mutateAsync({
-                    imageBase64: base64,
-                    mimeType: selectedFile.type,
-                });
-                if (result.amount) setAmount(String(result.amount));
-                if (result.merchant) setMerchant(result.merchant);
-                if (result.note) setNote(result.note);
-                // try to match category
-                if (result.category && categories) {
-                    const match = categories.find((c: { id: string; name: string }) =>
-                        c.name.toLowerCase().includes(result.category.toLowerCase())
-                    );
-                    if (match) setSelectedCategory(match.id);
-                }
-                setIsScanning(false);
-            };
-            reader.readAsDataURL(selectedFile);
-        } catch {
+            // Compress image to prevent Vercel/Netlify 4.5MB payload limit errors
+            const imageBitmap = await window.createImageBitmap(selectedFile);
+            const canvas = document.createElement('canvas');
+            let { width, height } = imageBitmap;
+            const MAX_DIMENSION = 1200;
+
+            if (width > height && width > MAX_DIMENSION) {
+                height *= MAX_DIMENSION / width;
+                width = MAX_DIMENSION;
+            } else if (height > MAX_DIMENSION) {
+                width *= MAX_DIMENSION / height;
+                height = MAX_DIMENSION;
+            }
+
+            canvas.width = width;
+            canvas.height = height;
+            const ctx = canvas.getContext('2d');
+            ctx?.drawImage(imageBitmap, 0, 0, width, height);
+
+            // Convert to highly optimized JPEG
+            const compressedBase64 = canvas.toDataURL('image/jpeg', 0.7).split(",")[1];
+
+            const result = await scanReceipt.mutateAsync({
+                imageBase64: compressedBase64,
+                mimeType: "image/jpeg",
+            });
+
+            if (result.amount) setAmount(String(result.amount));
+            if (result.merchant) setMerchant(result.merchant);
+            if (result.note) setNote(result.note);
+            // try to match category
+            if (result.category && categories) {
+                const match = categories.find((c: { id: string; name: string }) =>
+                    c.name.toLowerCase().includes(result.category.toLowerCase())
+                );
+                if (match) setSelectedCategory(match.id);
+            }
+            setIsScanning(false);
+        } catch (error) {
+            console.error("Receipt scan failed:", error);
+            setError("Failed to scan receipt. The image might be too blurry or obscure.");
             setIsScanning(false);
         }
     };
