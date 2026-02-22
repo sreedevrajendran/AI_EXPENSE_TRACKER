@@ -1,8 +1,8 @@
 "use client";
 
-import { useState, useRef, useEffect } from "react";
-import { motion, AnimatePresence } from "framer-motion";
-import { Plus, Loader2, PiggyBank, MoreVertical, Edit2, Trash2, MoreHorizontal } from "lucide-react";
+import { useState, useEffect } from "react";
+import { motion } from "framer-motion";
+import { Plus, Loader2, PiggyBank, MoreHorizontal } from "lucide-react";
 import { Drawer } from "vaul";
 import { trpc } from "@/trpc/client";
 import { formatCurrency, getBudgetColor, getBudgetStatus } from "@/lib/utils";
@@ -19,31 +19,12 @@ function BudgetCard({ budget, onEdit }: { budget: BudgetWithSpent, onEdit: (b: B
     const pct = budget.amount > 0 ? Math.min((budget.spent / budget.amount) * 100, 100) : 0;
     const Icon = getLucideIcon(budget.category?.icon ?? "circle");
 
-    const [menuOpen, setMenuOpen] = useState(false);
-    const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
-    const menuRef = useRef<HTMLDivElement>(null);
-    const utils = trpc.useUtils();
-
-    const deleteBudget = trpc.budget.delete.useMutation({
-        onSuccess: () => utils.budget.list.invalidate()
-    });
-
-    useEffect(() => {
-        const handleClickOutside = (e: MouseEvent) => {
-            if (menuRef.current && !menuRef.current.contains(e.target as Node)) {
-                setMenuOpen(false);
-            }
-        };
-        document.addEventListener("mousedown", handleClickOutside);
-        return () => document.removeEventListener("mousedown", handleClickOutside);
-    }, []);
-
-    const handleDelete = () => {
-        setShowDeleteConfirm(true);
-    };
-
     return (
-        <div className="ios-card p-4 space-y-3 relative">
+        <motion.div
+            whileTap={{ scale: 0.98 }}
+            onClick={() => onEdit(budget)}
+            className="ios-card p-4 space-y-3 relative cursor-pointer active:opacity-80 transition-opacity"
+        >
             <div className="flex items-start justify-between">
                 <div className="flex items-center gap-2.5">
                     <div
@@ -71,64 +52,7 @@ function BudgetCard({ budget, onEdit }: { budget: BudgetWithSpent, onEdit: (b: B
                 </div>
             </div>
 
-            {/* Options Menu */}
-            <div className="absolute top-[16px] right-[14px]" ref={menuRef}>
-                <button
-                    onClick={() => setMenuOpen(!menuOpen)}
-                    className="p-1.5 -m-1.5 text-[#C7C7CC] dark:text-[#636366] hover:text-ios-primary transition-colors focus:outline-none"
-                    aria-label="Budget options"
-                >
-                    <MoreVertical size={20} />
-                </button>
-                <AnimatePresence>
-                    {menuOpen && (
-                        <motion.div
-                            initial={{ opacity: 0, scale: 0.95, y: -10 }}
-                            animate={{ opacity: 1, scale: 1, y: 0 }}
-                            exit={{ opacity: 0, scale: 0.95, y: -10 }}
-                            transition={{ duration: 0.15 }}
-                            className="absolute right-0 top-10 w-40 bg-white dark:bg-[#2C2C2E] rounded-xl shadow-lg border border-[#E5E5EA] dark:border-[#3A3A3C] overflow-hidden z-20"
-                        >
-                            {!showDeleteConfirm ? (
-                                <>
-                                    <button
-                                        onClick={() => { setMenuOpen(false); onEdit(budget); }}
-                                        className="w-full flex items-center gap-2 px-4 py-3 text-sm ios-text-primary hover:bg-[#F2F2F7] dark:hover:bg-[#1C1C1E] transition-colors"
-                                    >
-                                        <Edit2 size={16} /> Edit Budget
-                                    </button>
-                                    <div className="h-[1px] bg-[#E5E5EA] dark:bg-[#3A3A3C]" />
-                                    <button
-                                        onClick={handleDelete}
-                                        className="w-full flex items-center gap-2 px-4 py-3 text-sm text-[#FF3B30] hover:bg-[#F2F2F7] dark:hover:bg-[#1C1C1E] transition-colors"
-                                    >
-                                        <Trash2 size={16} /> Delete
-                                    </button>
-                                </>
-                            ) : (
-                                <div className="p-3 w-48">
-                                    <p className="text-[13px] text-center font-medium text-ios-red mb-3">Delete budget?</p>
-                                    <div className="flex gap-2">
-                                        <button
-                                            onClick={() => setShowDeleteConfirm(false)}
-                                            className="flex-1 py-1.5 text-[13px] bg-[#E5E5EA] dark:bg-[#3A3A3C] rounded-md ios-text-primary font-medium"
-                                        >
-                                            Cancel
-                                        </button>
-                                        <button
-                                            onClick={() => { deleteBudget.mutate({ id: budget.id }); setMenuOpen(false); setShowDeleteConfirm(false); }}
-                                            disabled={deleteBudget.isPending}
-                                            className="flex-1 flex justify-center py-1.5 text-[13px] bg-ios-red text-white rounded-md font-medium"
-                                        >
-                                            {deleteBudget.isPending ? <Loader2 size={14} className="animate-spin" /> : "Delete"}
-                                        </button>
-                                    </div>
-                                </div>
-                            )}
-                        </motion.div>
-                    )}
-                </AnimatePresence>
-            </div>
+
 
             <div className="h-2.5 rounded-full bg-[#E5E5EA] dark:bg-[#3A3A3C] overflow-hidden">
                 <motion.div
@@ -145,7 +69,7 @@ function BudgetCard({ budget, onEdit }: { budget: BudgetWithSpent, onEdit: (b: B
                 </span>
                 <span>Budget: <PrivacyWrapper>{formatCurrency(budget.amount)}</PrivacyWrapper></span>
             </div>
-        </div>
+        </motion.div>
     );
 }
 
@@ -154,6 +78,7 @@ function BudgetSheet({ open, onOpenChange, existingBudget }: { open: boolean; on
     const [categoryId, setCategoryId] = useState<string | undefined>(existingBudget?.categoryId || undefined);
     const [isCustom, setIsCustom] = useState(false);
     const [customCategoryName, setCustomCategoryName] = useState("");
+    const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
 
     // Automatically keep state in sync when editing a different budget
     useEffect(() => {
@@ -162,6 +87,7 @@ function BudgetSheet({ open, onOpenChange, existingBudget }: { open: boolean; on
             setCategoryId(existingBudget?.categoryId || undefined);
             setIsCustom(false);
             setCustomCategoryName("");
+            setShowDeleteConfirm(false);
         }
     }, [open, existingBudget]);
 
@@ -177,8 +103,9 @@ function BudgetSheet({ open, onOpenChange, existingBudget }: { open: boolean; on
 
     const create = trpc.budget.create.useMutation({ onSuccess: handleSuccess });
     const update = trpc.budget.update.useMutation({ onSuccess: handleSuccess });
+    const deleteBudget = trpc.budget.delete.useMutation({ onSuccess: handleSuccess });
     const createCategory = trpc.category.create.useMutation();
-    const isPending = create.isPending || update.isPending || createCategory.isPending;
+    const isPending = create.isPending || update.isPending || createCategory.isPending || deleteBudget.isPending;
 
     const handleSave = async () => {
         if (!amount) return;
@@ -282,6 +209,46 @@ function BudgetSheet({ open, onOpenChange, existingBudget }: { open: boolean; on
                                     </motion.div>
                                 )}
                             </div>
+
+                            {/* Delete Button (Editing only) */}
+                            {existingBudget && (
+                                !showDeleteConfirm ? (
+                                    <motion.button
+                                        type="button"
+                                        whileTap={{ scale: 0.98 }}
+                                        onClick={() => setShowDeleteConfirm(true)}
+                                        disabled={deleteBudget.isPending}
+                                        className="w-full py-3.5 mt-4 rounded-ios-sm bg-ios-red/10 text-ios-red font-semibold flex items-center justify-center gap-2"
+                                    >
+                                        {deleteBudget.isPending ? <Loader2 size={18} className="animate-spin" /> : "Delete Budget"}
+                                    </motion.button>
+                                ) : (
+                                    <motion.div
+                                        initial={{ opacity: 0, y: -10 }}
+                                        animate={{ opacity: 1, y: 0 }}
+                                        className="mt-4 p-4 rounded-ios-sm bg-ios-red/10 border border-ios-red/20 space-y-3"
+                                    >
+                                        <p className="text-[15px] font-medium text-ios-red text-center">Are you sure you want to delete this budget?</p>
+                                        <div className="flex items-center gap-3">
+                                            <button
+                                                type="button"
+                                                onClick={() => setShowDeleteConfirm(false)}
+                                                className="flex-1 py-2.5 rounded-lg bg-white dark:bg-[#2C2C2E] text-ios-text-primary text-[15px] font-medium shadow-sm border border-[#E5E5EA] dark:border-[#3A3A3C] active:opacity-70 transition-opacity"
+                                            >
+                                                Cancel
+                                            </button>
+                                            <button
+                                                type="button"
+                                                onClick={() => deleteBudget.mutate({ id: existingBudget.id })}
+                                                disabled={deleteBudget.isPending}
+                                                className="flex-1 py-2.5 rounded-lg bg-ios-red text-white text-[15px] font-medium shadow-sm flex justify-center items-center gap-2 active:opacity-80 transition-opacity"
+                                            >
+                                                {deleteBudget.isPending ? <Loader2 size={18} className="animate-spin" /> : "Delete"}
+                                            </button>
+                                        </div>
+                                    </motion.div>
+                                )
+                            )}
                         </div>
                     </div>
                 </Drawer.Content>

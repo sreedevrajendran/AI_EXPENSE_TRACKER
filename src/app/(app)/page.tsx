@@ -30,6 +30,8 @@ export default function HomePage() {
     const [addExpenseOpen, setAddExpenseOpen] = useState(false);
     const [addIncomeOpen, setAddIncomeOpen] = useState(false);
     const [actionMenuOpen, setActionMenuOpen] = useState(false);
+    const [editExpenseId, setEditExpenseId] = useState<string | null>(null);
+    const [editIncomeId, setEditIncomeId] = useState<string | null>(null);
 
     // Modal State
     const [modalOpen, setModalOpen] = useState(false);
@@ -274,7 +276,16 @@ export default function HomePage() {
                                                     initial={{ opacity: 0, x: -20 }}
                                                     animate={{ opacity: 1, x: 0 }}
                                                     transition={{ delay: i * 0.05 }}
-                                                    className="flex items-center gap-3 px-4 py-3.5 flex-shrink-0"
+                                                    onClick={() => {
+                                                        if (isIncome) {
+                                                            setEditIncomeId(t.id);
+                                                            setAddIncomeOpen(true);
+                                                        } else {
+                                                            setEditExpenseId(t.id);
+                                                            setAddExpenseOpen(true);
+                                                        }
+                                                    }}
+                                                    className="flex items-center gap-3 px-4 py-3.5 flex-shrink-0 cursor-pointer active:bg-black/5 dark:active:bg-white/5 transition-colors"
                                                 >
                                                     <div
                                                         className="w-10 h-10 rounded-[10px] flex items-center justify-center flex-shrink-0"
@@ -400,8 +411,8 @@ export default function HomePage() {
                 )}
             </AnimatePresence>
 
-            <AddExpenseSheet open={addExpenseOpen} onOpenChange={setAddExpenseOpen} />
-            <AddIncomeSheet open={addIncomeOpen} onOpenChange={setAddIncomeOpen} />
+            <AddExpenseSheet open={addExpenseOpen} onOpenChange={(open) => { setAddExpenseOpen(open); if (!open) setTimeout(() => setEditExpenseId(null), 300); }} editId={editExpenseId} />
+            <AddIncomeSheet open={addIncomeOpen} onOpenChange={(open) => { setAddIncomeOpen(open); if (!open) setTimeout(() => setEditIncomeId(null), 300); }} editId={editIncomeId} />
 
             {/* Detailed Transaction Modals */}
             <TransactionsModal

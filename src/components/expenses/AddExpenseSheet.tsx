@@ -25,6 +25,7 @@ interface AddExpenseSheetProps {
     onOpenChange: (o: boolean) => void;
     onSuccess?: () => void;
     editData?: ExpenseEditData;
+    editId?: string | null;
 }
 
 const PAYMENT_METHODS: { value: PaymentMethod; label: string; icon: React.ElementType }[] = [
@@ -36,7 +37,7 @@ const PAYMENT_METHODS: { value: PaymentMethod; label: string; icon: React.Elemen
 ];
 
 
-export function AddExpenseSheet({ open, onOpenChange, onSuccess, editData }: AddExpenseSheetProps) {
+export function AddExpenseSheet({ open, onOpenChange, onSuccess, editData, editId }: AddExpenseSheetProps) {
     const [amount, setAmount] = useState("");
     const [merchant, setMerchant] = useState("");
     const [note, setNote] = useState("");
@@ -55,19 +56,34 @@ export function AddExpenseSheet({ open, onOpenChange, onSuccess, editData }: Add
     const attachmentRef = useRef<HTMLInputElement>(null);
     const hasSeededRef = useRef(false);
 
+    const { data: allExpenses } = trpc.expense.list.useQuery(
+        { limit: 100 },
+        { enabled: open && !!editId }
+    );
+
     // Populate edit data
     useEffect(() => {
-        if (open && editData) {
+        if (open && editId && allExpenses) {
+            const expense = allExpenses.find((e: any) => e.id === editId);
+            if (expense) {
+                setAmount(expense.amount.toString());
+                setMerchant(expense.merchant);
+                setNote(expense.note || "");
+                setSelectedCategory(expense.categoryId || undefined);
+                setPaymentMethod(expense.paymentMethod);
+                setExistingReceiptUrl(expense.receiptUrl || null);
+            }
+        } else if (open && editData) {
             setAmount(editData.amount.toString());
             setMerchant(editData.merchant);
             setNote(editData.note || "");
             setSelectedCategory(editData.categoryId || undefined);
             setPaymentMethod(editData.paymentMethod);
             setExistingReceiptUrl(editData.receiptUrl || null);
-        } else if (open && !editData) {
+        } else if (open && !editData && !editId) {
             resetForm();
         }
-    }, [open, editData]);
+    }, [open, editData, editId, allExpenses]);
 
     const utils = trpc.useUtils();
     const invalidateAll = () => {

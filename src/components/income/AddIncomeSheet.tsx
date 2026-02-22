@@ -22,9 +22,10 @@ interface AddIncomeSheetProps {
     onOpenChange: (o: boolean) => void;
     onSuccess?: () => void;
     editData?: IncomeEditData;
+    editId?: string | null;
 }
 
-export function AddIncomeSheet({ open, onOpenChange, onSuccess, editData }: AddIncomeSheetProps) {
+export function AddIncomeSheet({ open, onOpenChange, onSuccess, editData, editId }: AddIncomeSheetProps) {
     const [amount, setAmount] = useState("");
     const [source, setSource] = useState("");
     const [note, setNote] = useState("");
@@ -34,19 +35,32 @@ export function AddIncomeSheet({ open, onOpenChange, onSuccess, editData }: AddI
     const [error, setError] = useState<string | null>(null);
     const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
 
+    const utils = trpc.useUtils();
+
+    const { data: allIncomes } = trpc.income.list.useQuery(
+        { limit: 100 },
+        { enabled: open && !!editId }
+    );
+
     // Populate edit data
     useEffect(() => {
-        if (open && editData) {
+        if (open && editId && allIncomes) {
+            const income = allIncomes.find((i: any) => i.id === editId);
+            if (income) {
+                setAmount(income.amount.toString());
+                setSource(income.source);
+                setNote(income.note || "");
+                setExistingReceiptUrl(income.receiptUrl || null);
+            }
+        } else if (open && editData) {
             setAmount(editData.amount.toString());
             setSource(editData.source);
             setNote(editData.note || "");
             setExistingReceiptUrl(editData.receiptUrl || null);
-        } else if (open && !editData) {
+        } else if (open && !editData && !editId) {
             resetForm();
         }
-    }, [open, editData]);
-
-    const utils = trpc.useUtils();
+    }, [open, editData, editId, allIncomes]);
 
     const invalidateAll = () => {
         utils.income.list.invalidate();
