@@ -25,7 +25,10 @@ type IncomeItem = {
 export default function IncomesPage() {
     const [addOpen, setAddOpen] = useState(false);
     const [editIncome, setEditIncome] = useState<IncomeItem | null>(null);
-    const { data: incomes, isLoading } = trpc.income.list.useQuery({ limit: 100 });
+    const { data: incomes, isLoading: isListLoading } = trpc.income.list.useQuery({ limit: 100 });
+    const { data: monthTotal, isLoading: isTotalLoading } = trpc.income.getMonthTotal.useQuery();
+
+    const isLoading = isListLoading || isTotalLoading;
 
     // Group by date
     const grouped = (incomes ?? []).reduce(
@@ -46,7 +49,20 @@ export default function IncomesPage() {
     return (
         <>
             <PullToRefresh onRefresh={handleRefresh}>
-                <div className="px-4 pt-4 pb-6 space-y-2">
+                <div className="px-4 pt-3 pb-6 space-y-4">
+
+                    {monthTotal !== undefined && monthTotal > 0 && (
+                        <div className="ios-card p-4 flex items-center justify-between">
+                            <div>
+                                <p className="text-xs ios-text-secondary">Total Income</p>
+                                <PrivacyWrapper><p className="text-2xl font-bold text-[#34C759] dark:text-[#32D74B]">+{formatCurrency(monthTotal)}</p></PrivacyWrapper>
+                            </div>
+                            <div className="w-10 h-10 rounded-full bg-[#34C759]/10 flex items-center justify-center">
+                                <Wallet size={20} className="text-[#34C759]" />
+                            </div>
+                        </div>
+                    )}
+
                     {isLoading ? (
                         Array.from({ length: 6 }).map((_, i) => (
                             <div key={i} className="h-16 rounded-ios bg-[#F2F2F7] dark:bg-[#1C1C1E] animate-pulse" />

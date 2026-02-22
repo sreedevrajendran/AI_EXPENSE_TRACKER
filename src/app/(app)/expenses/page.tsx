@@ -26,7 +26,10 @@ const PM_LABELS: Record<string, string> = {
 export default function ExpensesPage() {
     const [addOpen, setAddOpen] = useState(false);
     const [editExpense, setEditExpense] = useState<ExpenseItem | null>(null);
-    const { data: expenses, isLoading } = trpc.expense.list.useQuery({ limit: 100 });
+    const { data: expenses, isLoading: isListLoading } = trpc.expense.list.useQuery({ limit: 100 });
+    const { data: monthTotal, isLoading: isTotalLoading } = trpc.expense.getMonthTotal.useQuery();
+
+    const isLoading = isListLoading || isTotalLoading;
 
     // Group by date
     const grouped = (expenses ?? []).reduce(
@@ -47,7 +50,20 @@ export default function ExpensesPage() {
     return (
         <>
             <PullToRefresh onRefresh={handleRefresh}>
-                <div className="px-4 pt-4 pb-6 space-y-2">
+                <div className="px-4 pt-3 pb-6 space-y-4">
+
+                    {monthTotal !== undefined && monthTotal > 0 && (
+                        <div className="ios-card p-4 flex items-center justify-between">
+                            <div>
+                                <p className="text-xs ios-text-secondary">Total Expenses</p>
+                                <PrivacyWrapper><p className="text-2xl font-bold text-[#FF3B30] dark:text-[#FF453A]">-{formatCurrency(monthTotal)}</p></PrivacyWrapper>
+                            </div>
+                            <div className="w-10 h-10 rounded-full bg-[#FF3B30]/10 flex items-center justify-center">
+                                <Receipt size={20} className="text-[#FF3B30]" />
+                            </div>
+                        </div>
+                    )}
+
                     {isLoading ? (
                         Array.from({ length: 6 }).map((_, i) => (
                             <div key={i} className="h-16 rounded-ios bg-[#F2F2F7] dark:bg-[#1C1C1E] animate-pulse" />
