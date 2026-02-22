@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { cookies } from "next/headers";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/auth";
 
@@ -18,6 +19,17 @@ export async function GET(request: Request) {
 
     const baseUrl = rawBaseUrl.replace(/\/$/, ""); // Remove any trailing slash to avoid double slashes
     const redirectUri = `${baseUrl}/api/gmail/callback`;
+
+    // Cross-site cookie issues sometimes drop the NextAuth session when returning 
+    // from Google. Let's store a secure HttpOnly cookie just for this flow.
+    const cookieStore = await cookies();
+    cookieStore.set("gmail_oauth_state", session.user.id, {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === "production",
+        sameSite: "lax",
+        maxAge: 60 * 10, // 10 minutes
+        path: "/",
+    });
 
     const params = new URLSearchParams({
         client_id: process.env.GOOGLE_CLIENT_ID!,

@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { cookies } from "next/headers";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/auth";
 import { db } from "@/lib/db";
@@ -18,7 +19,12 @@ export async function GET(request: Request) {
     }
 
     const session = await getServerSession(authOptions);
-    if (!session?.user?.id || session.user.id !== state) {
+    const cookieStore = await cookies();
+    const backupStateId = cookieStore.get("gmail_oauth_state")?.value;
+
+    const finalUserId = session?.user?.id || backupStateId;
+
+    if (!finalUserId || finalUserId !== state) {
         return NextResponse.redirect(new URL("/login?error=unauthorized_callback", request.url));
     }
 
@@ -54,10 +60,13 @@ export async function GET(request: Request) {
         // granted consent before but we lost tracking. We forced `prompt=consent` so it should be there.
         if (data.refresh_token) {
             await db.user.update({
-                where: { id: session.user.id },
+                where: { id: finalUserId },
                 data: { gmailRefreshToken: data.refresh_token },
             });
         }
+
+        // Clean up cookie
+        cookieStore.delete("gmail_oauth_state");
 
         // Redirect back to settings with success param
         return NextResponse.redirect(new URL("/settings?gmail_connected=true", request.url));
