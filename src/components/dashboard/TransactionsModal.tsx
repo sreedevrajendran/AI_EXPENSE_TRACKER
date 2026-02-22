@@ -44,92 +44,91 @@ export function TransactionsModal({ open, onOpenChange, title, transactions }: T
         <Drawer.Root open={open} onOpenChange={onOpenChange}>
             <Drawer.Portal>
                 <Drawer.Overlay className="fixed inset-0 bg-black/50 z-50 backdrop-blur-sm" />
-                <Drawer.Content className="fixed bottom-0 left-0 right-0 z-50 max-h-[85dvh] outline-none">
+                <Drawer.Content className="fixed bottom-0 left-0 right-0 z-50 max-h-[85dvh] outline-none bg-white dark:bg-[#1C1C1E] rounded-t-[28px] flex flex-col overflow-hidden">
                     <Drawer.Title className="sr-only">{title}</Drawer.Title>
-                    <div className="bg-white dark:bg-[#1C1C1E] rounded-t-[28px] flex flex-col h-full overflow-hidden">
-                        {/* Handle */}
-                        <div className="flex justify-center pt-3 pb-0">
-                            <div className="w-10 h-1 rounded-full bg-[#E5E5EA] dark:bg-[#3A3A3C]" />
-                        </div>
 
-                        {/* Header */}
-                        <div className="flex items-center justify-between px-6 py-4 border-b border-[#E5E5EA] dark:border-[#3A3A3C]">
-                            <h2 className="text-[17px] font-semibold ios-text-primary">{title}</h2>
-                            <button
-                                type="button"
-                                onClick={() => onOpenChange(false)}
-                                className="ios-text-secondary text-[15px] font-medium bg-[#F2F2F7] dark:bg-[#2C2C2E] px-3 py-1 rounded-full"
-                            >
-                                Done
-                            </button>
-                        </div>
+                    {/* Handle */}
+                    <div className="flex justify-center pt-3 pb-0 flex-shrink-0">
+                        <div className="w-10 h-1 rounded-full bg-[#E5E5EA] dark:bg-[#3A3A3C]" />
+                    </div>
 
-                        {/* Content */}
-                        <div className="overflow-y-auto flex-1 p-4 pb-[env(safe-area-inset-bottom,20px)]">
-                            {transactions.length === 0 ? (
-                                <div className="py-12 text-center">
-                                    <TrendingDown size={32} className="mx-auto mb-3 ios-text-secondary opacity-50" />
-                                    <p className="ios-text-secondary text-sm">No transactions found.</p>
-                                </div>
-                            ) : (
-                                <div className="space-y-3">
-                                    {transactions.map((t, i) => {
-                                        const isIncome = t.type === 'income';
-                                        const Icon = getIcon(t.category?.icon ?? "circle");
-                                        const color = isIncome ? "#34C759" : (t.category?.color ?? "#007AFF");
+                    {/* Header */}
+                    <div className="flex items-center justify-between px-6 py-4 border-b border-[#E5E5EA] dark:border-[#3A3A3C] flex-shrink-0">
+                        <h2 className="text-[17px] font-semibold ios-text-primary">{title}</h2>
+                        <button
+                            type="button"
+                            onClick={() => onOpenChange(false)}
+                            className="ios-text-secondary text-[15px] font-medium bg-[#F2F2F7] dark:bg-[#2C2C2E] px-3 py-1 rounded-full"
+                        >
+                            Done
+                        </button>
+                    </div>
 
-                                        return (
-                                            <motion.button
-                                                type="button"
-                                                onClick={() => {
-                                                    setSelectedTx(t);
-                                                    if (isIncome) {
-                                                        setEditIncomeOpen(true);
-                                                    } else {
-                                                        setEditExpenseOpen(true);
-                                                    }
-                                                }}
-                                                key={`${t.type}-${t.id}`}
-                                                initial={{ opacity: 0, x: -10 }}
-                                                animate={{ opacity: 1, x: 0 }}
-                                                transition={{ delay: Math.min(i * 0.05, 0.5) }}
-                                                className="w-full text-left ios-card flex items-center justify-between p-3.5 focus:outline-none active:bg-[#F2F2F7] dark:active:bg-[#2C2C2E] transition-colors"
-                                            >
-                                                <div className="flex items-center gap-3 min-w-0 flex-1">
-                                                    <div
-                                                        className="w-10 h-10 rounded-[10px] flex items-center justify-center flex-shrink-0"
-                                                        style={{ backgroundColor: `${color}20` }}
-                                                    >
-                                                        <Icon size={18} style={{ color }} />
-                                                    </div>
-                                                    <div className="flex-1 min-w-0">
-                                                        <div className="flex items-center gap-2">
-                                                            <p className="text-[15px] font-medium ios-text-primary truncate">{t.title}</p>
-                                                            {t.receiptUrl && (
-                                                                <div className="text-ios-blue flex-shrink-0" title="Has Attachment">
-                                                                    <Paperclip size={14} />
-                                                                </div>
-                                                            )}
-                                                        </div>
-                                                        <p className="text-xs ios-text-secondary">
-                                                            {isIncome ? "Income" : (t.category?.name ?? "Uncategorized")} · {formatDate(t.date)}
-                                                        </p>
-                                                    </div>
+                    {/* Content */}
+                    <div className="overflow-y-auto flex-1 p-4 pb-[env(safe-area-inset-bottom,20px)]">
+                        {transactions.length === 0 ? (
+                            <div className="py-12 text-center">
+                                <TrendingDown size={32} className="mx-auto mb-3 ios-text-secondary opacity-50" />
+                                <p className="ios-text-secondary text-sm">No transactions found.</p>
+                            </div>
+                        ) : (
+                            <div className="space-y-3">
+                                {transactions.map((t, i) => {
+                                    const isIncome = t.type === 'income';
+                                    const Icon = getIcon(t.category?.icon ?? "circle");
+                                    const color = isIncome ? "#34C759" : (t.category?.color ?? "#007AFF");
+
+                                    return (
+                                        <motion.button
+                                            type="button"
+                                            onClick={() => {
+                                                setSelectedTx(t);
+                                                if (isIncome) {
+                                                    setEditIncomeOpen(true);
+                                                } else {
+                                                    setEditExpenseOpen(true);
+                                                }
+                                            }}
+                                            key={`${t.type}-${t.id}`}
+                                            initial={{ opacity: 0, x: -10 }}
+                                            animate={{ opacity: 1, x: 0 }}
+                                            transition={{ delay: Math.min(i * 0.05, 0.5) }}
+                                            className="w-full text-left ios-card flex items-center justify-between p-3.5 focus:outline-none active:bg-[#F2F2F7] dark:active:bg-[#2C2C2E] transition-colors"
+                                        >
+                                            <div className="flex items-center gap-3 min-w-0 flex-1">
+                                                <div
+                                                    className="w-10 h-10 rounded-[10px] flex items-center justify-center flex-shrink-0"
+                                                    style={{ backgroundColor: `${color}20` }}
+                                                >
+                                                    <Icon size={18} style={{ color }} />
                                                 </div>
-                                                <PrivacyWrapper>
-                                                    <p className={cn(
-                                                        "text-[15px] font-semibold whitespace-nowrap",
-                                                        isIncome ? "text-[#34C759] dark:text-[#32D74B]" : "ios-text-primary"
-                                                    )}>
-                                                        {isIncome ? "+" : "-"}{formatCurrency(t.amount)}
+                                                <div className="flex-1 min-w-0">
+                                                    <div className="flex items-center gap-2">
+                                                        <p className="text-[15px] font-medium ios-text-primary truncate">{t.title}</p>
+                                                        {t.receiptUrl && (
+                                                            <div className="text-ios-blue flex-shrink-0" title="Has Attachment">
+                                                                <Paperclip size={14} />
+                                                            </div>
+                                                        )}
+                                                    </div>
+                                                    <p className="text-xs ios-text-secondary">
+                                                        {isIncome ? "Income" : (t.category?.name ?? "Uncategorized")} · {formatDate(t.date)}
                                                     </p>
-                                                </PrivacyWrapper>
-                                            </motion.button>
-                                        );
-                                    })}
-                                </div>
-                            )}
-                        </div>
+                                                </div>
+                                            </div>
+                                            <PrivacyWrapper>
+                                                <p className={cn(
+                                                    "text-[15px] font-semibold whitespace-nowrap",
+                                                    isIncome ? "text-[#34C759] dark:text-[#32D74B]" : "ios-text-primary"
+                                                )}>
+                                                    {isIncome ? "+" : "-"}{formatCurrency(t.amount)}
+                                                </p>
+                                            </PrivacyWrapper>
+                                        </motion.button>
+                                    );
+                                })}
+                            </div>
+                        )}
                     </div>
                 </Drawer.Content>
 
