@@ -411,7 +411,7 @@ export function AddExpenseSheet({ open, onOpenChange, onSuccess, editData }: Add
                                     <input
                                         type="file"
                                         className="hidden"
-                                        accept="image/jpeg,image/png,image/webp,application/pdf"
+                                        accept=".jpg,.jpeg,.png,.webp,.pdf"
                                         onChange={(e) => {
                                             if (e.target.files && e.target.files[0]) {
                                                 setFile(e.target.files[0]);
