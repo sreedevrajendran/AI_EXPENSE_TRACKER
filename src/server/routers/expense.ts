@@ -181,6 +181,33 @@ export const expenseRouter = router({
             });
         }),
 
+    getDailyExpenses: protectedProcedure.query(async ({ ctx }) => {
+        const userId = ctx.session.user.id!;
+        const now = new Date();
+        const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+        const daysInMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0).getDate();
+
+        const expenses = await ctx.db.expense.findMany({
+            where: { userId, date: { gte: startOfMonth } },
+            select: { amount: true, date: true },
+        });
+
+        // Build a map: day number → total amount
+        const dayMap: Record<number, number> = {};
+        expenses.forEach((e) => {
+            const day = e.date.getDate();
+            dayMap[day] = (dayMap[day] ?? 0) + e.amount;
+        });
+
+        // Fill all days up to today with 0 for missing days
+        const today = now.getDate();
+        return Array.from({ length: today }, (_, i) => ({
+            day: i + 1,
+            label: `${i + 1}`,
+            amount: dayMap[i + 1] ?? 0,
+        }));
+    }),
+
     getYearlyIncomeExpenseChart: protectedProcedure.query(async ({ ctx }) => {
         const userId = ctx.session.user.id!;
         const now = new Date();

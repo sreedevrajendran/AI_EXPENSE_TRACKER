@@ -11,6 +11,7 @@ import { AddExpenseSheet } from "@/components/expenses/AddExpenseSheet";
 import { ExpenseChart } from "@/components/expenses/ExpenseChart";
 import { CategoryChart } from "@/components/expenses/CategoryChart";
 import { IncomeExpenseChart } from "@/components/dashboard/IncomeExpenseChart";
+import { DailyExpenseChart } from "@/components/expenses/DailyExpenseChart";
 import { AddIncomeSheet } from "@/components/income/AddIncomeSheet";
 import toast from "react-hot-toast";
 import { TransactionsModal, ModalTransaction } from "@/components/dashboard/TransactionsModal";
@@ -232,6 +233,7 @@ export default function HomePage() {
                                 </div>
                             )}
                             <IncomeExpenseChart />
+                            <DailyExpenseChart />
                             <CategoryChart />
                         </div> {/* End Left Column */}
 
