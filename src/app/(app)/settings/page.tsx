@@ -39,10 +39,30 @@ function SettingsContent() {
     }, []);
 
     useEffect(() => {
+        const errorParam = searchParams?.get("error");
         if (searchParams?.get("gmail_connected") === "true") {
             toast.success("Gmail connected successfully for AI Sync!");
             refetchGmailStatus();
-        } else if (searchParams?.get("error")) {
+        } else if (errorParam === "access_denied") {
+            toast.error(
+                (t) => (
+                    <span>
+                        <strong>Gmail access blocked.</strong> Your Google account isn\'t added as a test user yet.{" "}
+                        <a
+                            href="https://console.cloud.google.com/apis/credentials/consent"
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="underline font-bold"
+                            onClick={() => toast.dismiss(t.id)}
+                        >
+                            Add yourself here
+                        </a>
+                        {" "}under Test Users, then try again.
+                    </span>
+                ),
+                { duration: 10000 }
+            );
+        } else if (errorParam) {
             toast.error("Failed to connect Gmail. Please try again.");
         }
     }, [searchParams, refetchGmailStatus]);

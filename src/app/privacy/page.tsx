@@ -1,0 +1,192 @@
+import Link from "next/link";
+
+export const metadata = {
+    title: "Privacy Policy | AI Expense Tracker",
+    description: "Privacy Policy for AI Expense Tracker — how we collect, use, and protect your data.",
+};
+
+export default function PrivacyPage() {
+    const lastUpdated = "February 22, 2025";
+    const appName = "AI Expense Tracker";
+    const contactEmail = "sreerajar40@gmail.com";
+    const appUrl = "https://ai-expense-tracker.netlify.app";
+
+    return (
+        <div className="min-h-screen bg-[#F2F2F7] dark:bg-black">
+            {/* Header */}
+            <div className="bg-white dark:bg-[#1C1C1E] border-b border-[#E5E5EA] dark:border-[#3A3A3C]">
+                <div className="max-w-3xl mx-auto px-6 py-6">
+                    <Link href="/login" className="text-[#007AFF] text-sm font-medium mb-4 inline-block">
+                        ← Back to App
+                    </Link>
+                    <h1 className="text-3xl font-bold text-[#1C1C1E] dark:text-white">Privacy Policy</h1>
+                    <p className="text-sm text-[#8E8E93] mt-1">Last updated: {lastUpdated}</p>
+                </div>
+            </div>
+
+            <div className="max-w-3xl mx-auto px-6 py-10 space-y-8">
+
+                {/* Intro */}
+                <section className="bg-white dark:bg-[#1C1C1E] rounded-2xl p-6 space-y-3">
+                    <p className="text-[#1C1C1E] dark:text-white leading-relaxed">
+                        {appName} (&quot;we&quot;, &quot;us&quot;, &quot;our&quot;) is committed to protecting your privacy. This Privacy Policy explains
+                        how we collect, use, disclose, and safeguard your information when you use our web application
+                        available at <a href={appUrl} className="text-[#007AFF] underline">{appUrl}</a>.
+                        Please read this carefully. By using the app, you consent to this policy.
+                    </p>
+                </section>
+
+                {/* Section: Information we collect */}
+                <section className="bg-white dark:bg-[#1C1C1E] rounded-2xl p-6 space-y-4">
+                    <h2 className="text-xl font-semibold text-[#1C1C1E] dark:text-white">1. Information We Collect</h2>
+
+                    <div className="space-y-3 text-[#3A3A3C] dark:text-[#EBEBF5]">
+                        <div>
+                            <h3 className="font-semibold text-[#1C1C1E] dark:text-white mb-1">Account Information</h3>
+                            <p className="leading-relaxed text-sm">
+                                When you sign in with Google, we receive your name, email address, and profile picture from Google's OAuth service.
+                                We use this solely for authentication and to personalise your experience.
+                            </p>
+                        </div>
+                        <div>
+                            <h3 className="font-semibold text-[#1C1C1E] dark:text-white mb-1">Financial Data</h3>
+                            <p className="leading-relaxed text-sm">
+                                Expense, income, and budget data you enter is stored securely in our database. This data belongs to you
+                                and is never sold or shared with third parties.
+                            </p>
+                        </div>
+                        <div>
+                            <h3 className="font-semibold text-[#1C1C1E] dark:text-white mb-1">Gmail Data (Optional)</h3>
+                            <p className="leading-relaxed text-sm">
+                                If you choose to connect your Gmail account, we request read-only access (<code className="text-xs bg-[#F2F2F7] dark:bg-[#2C2C2E] px-1.5 py-0.5 rounded">gmail.readonly</code>)
+                                to scan purchase confirmation emails and automatically create expense entries. We access only email subjects
+                                and bodies that match purchase receipt patterns. We do not store, read, or retain your full Gmail inbox.
+                                Gmail data is processed in real time and only the extracted expense information (merchant, amount, date) is saved.
+                            </p>
+                        </div>
+                        <div>
+                            <h3 className="font-semibold text-[#1C1C1E] dark:text-white mb-1">Receipt Images</h3>
+                            <p className="leading-relaxed text-sm">
+                                If you upload a receipt image, it is temporarily processed by our AI (Groq API) to extract transaction details
+                                and then stored in Cloudinary for your reference. You can delete it at any time.
+                            </p>
+                        </div>
+                        <div>
+                            <h3 className="font-semibold text-[#1C1C1E] dark:text-white mb-1">Usage Data</h3>
+                            <p className="leading-relaxed text-sm">
+                                We may collect anonymised usage data (e.g., page views) to improve the app. We do not use third-party advertising trackers.
+                            </p>
+                        </div>
+                    </div>
+                </section>
+
+                {/* Section: How we use information */}
+                <section className="bg-white dark:bg-[#1C1C1E] rounded-2xl p-6 space-y-3">
+                    <h2 className="text-xl font-semibold text-[#1C1C1E] dark:text-white">2. How We Use Your Information</h2>
+                    <ul className="list-disc list-inside space-y-2 text-sm text-[#3A3A3C] dark:text-[#EBEBF5] leading-relaxed">
+                        <li>To authenticate you and maintain your account session</li>
+                        <li>To display your financial data, charts, and insights within the app</li>
+                        <li>To process Gmail emails to automatically extract and log expenses (only when you explicitly enable Gmail Sync)</li>
+                        <li>To scan receipt images with AI to pre-fill expense forms</li>
+                        <li>To provide AI-powered spending insights and chatbot answers about your own data</li>
+                        <li>To improve the app&apos;s features and performance</li>
+                    </ul>
+                </section>
+
+                {/* Section: Google API */}
+                <section className="bg-white dark:bg-[#1C1C1E] rounded-2xl p-6 space-y-3">
+                    <h2 className="text-xl font-semibold text-[#1C1C1E] dark:text-white">3. Google API Services</h2>
+                    <p className="text-sm text-[#3A3A3C] dark:text-[#EBEBF5] leading-relaxed">
+                        {appName}&apos;s use of information received from Google APIs adheres to the{" "}
+                        <a
+                            href="https://developers.google.com/terms/api-services-user-data-policy"
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="text-[#007AFF] underline"
+                        >
+                            Google API Services User Data Policy
+                        </a>
+                        , including the Limited Use requirements.
+                    </p>
+                    <p className="text-sm text-[#3A3A3C] dark:text-[#EBEBF5] leading-relaxed">
+                        Specifically: We only request Gmail read access when you explicitly connect Gmail in Settings.
+                        We use this access solely to identify purchase-related emails and extract expense data for your account.
+                        We do not transfer Gmail data to third parties except as necessary to provide the service,
+                        and we do not use Gmail data for advertising.
+                    </p>
+                    <p className="text-sm text-[#3A3A3C] dark:text-[#EBEBF5] leading-relaxed">
+                        You can revoke Gmail access at any time from the Settings page, or directly from your{" "}
+                        <a href="https://myaccount.google.com/permissions" target="_blank" rel="noopener noreferrer" className="text-[#007AFF] underline">
+                            Google Account permissions
+                        </a>.
+                    </p>
+                </section>
+
+                {/* Section: Data sharing */}
+                <section className="bg-white dark:bg-[#1C1C1E] rounded-2xl p-6 space-y-3">
+                    <h2 className="text-xl font-semibold text-[#1C1C1E] dark:text-white">4. Data Sharing & Third Parties</h2>
+                    <p className="text-sm text-[#3A3A3C] dark:text-[#EBEBF5] leading-relaxed">
+                        We do not sell your personal data. We use the following third-party services strictly to provide app functionality:
+                    </p>
+                    <ul className="list-disc list-inside space-y-1.5 text-sm text-[#3A3A3C] dark:text-[#EBEBF5]">
+                        <li><strong>Google OAuth</strong> — authentication</li>
+                        <li><strong>Supabase (PostgreSQL)</strong> — secure database hosting</li>
+                        <li><strong>Groq (LLaMA AI)</strong> — receipt scanning and AI chatbot responses</li>
+                        <li><strong>Cloudinary</strong> — receipt image storage</li>
+                        <li><strong>Netlify</strong> — app hosting and deployment</li>
+                    </ul>
+                    <p className="text-sm text-[#3A3A3C] dark:text-[#EBEBF5] leading-relaxed">
+                        Each of these providers has their own privacy policy and handles data according to their terms.
+                    </p>
+                </section>
+
+                {/* Section: Data retention */}
+                <section className="bg-white dark:bg-[#1C1C1E] rounded-2xl p-6 space-y-3">
+                    <h2 className="text-xl font-semibold text-[#1C1C1E] dark:text-white">5. Data Retention & Deletion</h2>
+                    <p className="text-sm text-[#3A3A3C] dark:text-[#EBEBF5] leading-relaxed">
+                        Your data is retained as long as your account is active. You may request deletion of your account and all
+                        associated data at any time by contacting us at{" "}
+                        <a href={`mailto:${contactEmail}`} className="text-[#007AFF] underline">{contactEmail}</a>.
+                        We will process the request within 30 days.
+                    </p>
+                </section>
+
+                {/* Section: Security */}
+                <section className="bg-white dark:bg-[#1C1C1E] rounded-2xl p-6 space-y-3">
+                    <h2 className="text-xl font-semibold text-[#1C1C1E] dark:text-white">6. Security</h2>
+                    <p className="text-sm text-[#3A3A3C] dark:text-[#EBEBF5] leading-relaxed">
+                        We implement industry-standard security measures including encrypted connections (HTTPS),
+                        secure session tokens, and protected database access. Gmail refresh tokens are stored encrypted
+                        and are only used to fetch purchase-related emails when you trigger a sync.
+                    </p>
+                </section>
+
+                {/* Section: Children */}
+                <section className="bg-white dark:bg-[#1C1C1E] rounded-2xl p-6 space-y-3">
+                    <h2 className="text-xl font-semibold text-[#1C1C1E] dark:text-white">7. Children&apos;s Privacy</h2>
+                    <p className="text-sm text-[#3A3A3C] dark:text-[#EBEBF5] leading-relaxed">
+                        This service is not directed to children under the age of 13. We do not knowingly collect
+                        personal data from children. If you believe a child has provided us with personal information,
+                        please contact us and we will delete it.
+                    </p>
+                </section>
+
+                {/* Section: Contact */}
+                <section className="bg-white dark:bg-[#1C1C1E] rounded-2xl p-6 space-y-3">
+                    <h2 className="text-xl font-semibold text-[#1C1C1E] dark:text-white">8. Contact Us</h2>
+                    <p className="text-sm text-[#3A3A3C] dark:text-[#EBEBF5] leading-relaxed">
+                        If you have any questions about this Privacy Policy, please contact us at:{" "}
+                        <a href={`mailto:${contactEmail}`} className="text-[#007AFF] underline font-medium">{contactEmail}</a>
+                    </p>
+                </section>
+
+                {/* Footer links */}
+                <div className="flex gap-4 text-sm text-[#8E8E93] pb-4">
+                    <Link href="/terms" className="text-[#007AFF]">Terms of Service</Link>
+                    <span>·</span>
+                    <Link href="/login" className="hover:text-[#007AFF] transition-colors">Back to App</Link>
+                </div>
+            </div>
+        </div>
+    );
+}
