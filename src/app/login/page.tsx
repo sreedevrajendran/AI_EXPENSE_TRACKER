@@ -194,6 +194,13 @@ export default function LoginPage() {
                         <p className="flex items-center justify-center gap-1.5 text-white/30 text-[11px]">
                             <Shield size={11} /> End-to-end Secure
                         </p>
+
+                        {/* Legal links */}
+                        <p className="flex items-center justify-center gap-2 text-white/30 text-[11px] mt-1">
+                            <a href="/privacy" target="_blank" rel="noopener noreferrer" className="hover:text-white/60 underline transition-colors">Privacy Policy</a>
+                            <span>·</span>
+                            <a href="/terms" target="_blank" rel="noopener noreferrer" className="hover:text-white/60 underline transition-colors">Terms of Service</a>
+                        </p>
                     </motion.div>
                 </div>
             </div>
