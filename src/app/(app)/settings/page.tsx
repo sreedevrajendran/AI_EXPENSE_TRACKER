@@ -7,7 +7,7 @@ import { motion } from "framer-motion";
 import Image from "next/image";
 import { Suspense, useEffect, useState } from "react";
 import { trpc } from "@/trpc/client";
-import { Eye, EyeOff, Moon, Sun, LogOut, Check } from "lucide-react";
+import { Eye, EyeOff, Moon, Sun, LogOut, Check, Shield, Mail } from "lucide-react";
 import toast from "react-hot-toast";
 import { useSearchParams } from "next/navigation";
 
@@ -158,6 +158,67 @@ function SettingsContent() {
                         <LogOut size={20} className="text-ios-red" />
                         <p className="text-[15px] text-ios-red font-medium">Sign Out</p>
                     </button>
+                </div>
+            </div>
+
+            {/* About Oasis */}
+            <div className="pt-4">
+                <p className="text-xs font-semibold ios-text-secondary uppercase tracking-wider mb-2 px-1">About Oasis</p>
+                <div className="ios-card overflow-hidden">
+                    <div className="p-5 flex flex-col items-center text-center space-y-3 border-b ios-separator">
+                        <Image
+                            src="/logo.png?v=2"
+                            alt="Oasis Logo"
+                            width={80}
+                            height={80}
+                            className="rounded-[20px] shadow-sm"
+                            unoptimized
+                        />
+                        <div>
+                            <h3 className="text-[19px] font-bold ios-text-primary tracking-tight">Oasis Expense Tracker</h3>
+                            <p className="text-[13px] ios-text-secondary mt-0.5">Version 1.0.0</p>
+                        </div>
+                        <p className="text-[14px] leading-relaxed ios-text-primary px-2 pt-2">
+                            Oasis is an intelligent personal finance manager built to give you total clarity over your spending habits. By combining manual tracking with smart AI insights and automated email receipt parsing, Oasis helps you stay on top of your budgets effortlessly.
+                        </p>
+                    </div>
+
+                    <div className="divide-y ios-separator">
+                        {/* Privacy Policy */}
+                        <div className="p-5 space-y-3">
+                            <div className="flex items-center gap-2 text-ios-blue dark:text-ios-blue-dark font-medium">
+                                <Shield size={18} strokeWidth={2.5} />
+                                <h4 className="text-[15px]">Privacy Policy</h4>
+                            </div>
+                            <div className="space-y-2 text-[13px] leading-relaxed ios-text-secondary">
+                                <p>
+                                    Your data is securely stored and private by default. Oasis does not share or sell your financial data to third parties.
+                                </p>
+                                <p>
+                                    <strong>Gmail Sync:</strong> When you connect your Gmail account, Oasis only requests read-only access to parse digital receipts. We do not read personal communications, insert emails, or store copies of your emails. The AI parsing is done securely using our trusted LLM providers (Google Gemini / Groq Llama) strictly for extracting expense amounts, merchants, and dates.
+                                </p>
+                                <p>
+                                    <strong>AI Chatbot:</strong> Conversations with Agent Oasis are restricted to your own financial context. Contextual data sent to the AI is transient and not used to train global models.
+                                </p>
+                            </div>
+                        </div>
+
+                        {/* Contact Support */}
+                        <a
+                            href="mailto:sreerajar40@gmail.com"
+                            className="flex items-center justify-between px-5 py-4 active:bg-[#F2F2F7] dark:active:bg-[#2C2C2E] transition-colors group"
+                        >
+                            <div className="flex items-center gap-3">
+                                <div className="w-8 h-8 rounded-full bg-ios-blue/10 dark:bg-ios-blue-dark/20 flex items-center justify-center text-ios-blue dark:text-ios-blue-dark">
+                                    <Mail size={16} strokeWidth={2.5} />
+                                </div>
+                                <div>
+                                    <p className="text-[15px] ios-text-primary font-medium">Contact Support</p>
+                                    <p className="text-[13px] ios-text-secondary group-hover:text-ios-blue transition-colors">sreerajar40@gmail.com</p>
+                                </div>
+                            </div>
+                        </a>
+                    </div>
                 </div>
             </div>
 

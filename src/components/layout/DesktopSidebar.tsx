@@ -2,11 +2,10 @@
 
 import { usePathname } from "next/navigation";
 import Link from "next/link";
-import { Home, List, PiggyBank, Settings, Info, Sparkles } from "lucide-react";
+import { Home, List, PiggyBank, Settings, Sparkles } from "lucide-react";
 import { motion } from "framer-motion";
 import { cn } from "@/lib/utils";
 import { useState } from "react";
-import { AppInfoSheet } from "@/components/ui/AppInfoSheet";
 import { AgentOasisChatSheet } from "@/components/ai/AgentOasisChatSheet";
 
 const tabs = [
@@ -18,7 +17,6 @@ const tabs = [
 
 export function DesktopSidebar() {
     const pathname = usePathname();
-    const [infoOpen, setInfoOpen] = useState(false);
     const [chatOpen, setChatOpen] = useState(false);
 
     return (
@@ -73,21 +71,9 @@ export function DesktopSidebar() {
                         {/* Shimmer effect */}
                         <div className="absolute inset-0 -translate-x-full group-hover:animate-[shimmer_1.5s_infinite] bg-gradient-to-r from-transparent via-ios-blue/10 to-transparent skew-x-12" />
                     </motion.button>
-
-                    {/* App Info Button */}
-                    <motion.button
-                        whileHover={{ scale: 1.02 }}
-                        whileTap={{ scale: 0.98 }}
-                        onClick={() => setInfoOpen(true)}
-                        className="w-full relative flex items-center justify-center gap-2 py-3 rounded-ios-sm bg-[#F2F2F7] dark:bg-[#2C2C2E] ios-text-secondary hover:text-ios-primary transition-colors font-medium text-[15px]"
-                    >
-                        <Info size={18} strokeWidth={2.5} />
-                        About Oasis
-                    </motion.button>
                 </div>
             </aside>
 
-            <AppInfoSheet open={infoOpen} onOpenChange={setInfoOpen} />
             <AgentOasisChatSheet open={chatOpen} onOpenChange={setChatOpen} />
         </>
     );

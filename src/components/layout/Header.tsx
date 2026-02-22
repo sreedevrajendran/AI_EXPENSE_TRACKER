@@ -2,9 +2,8 @@
 
 import { useState } from "react";
 import { motion } from "framer-motion";
-import { Eye, EyeOff, Info, Sparkles } from "lucide-react";
+import { Eye, EyeOff, Sparkles } from "lucide-react";
 import { usePrivacy } from "@/context/PrivacyContext";
-import { AppInfoSheet } from "@/components/ui/AppInfoSheet";
 import { AgentOasisChatSheet } from "@/components/ai/AgentOasisChatSheet";
 
 interface HeaderProps {
@@ -13,7 +12,6 @@ interface HeaderProps {
 
 export function Header({ title = "Expense Tracker" }: HeaderProps) {
     const { isPrivate, togglePrivacy } = usePrivacy();
-    const [infoOpen, setInfoOpen] = useState(false);
     const [chatOpen, setChatOpen] = useState(false);
 
     return (
@@ -49,15 +47,6 @@ export function Header({ title = "Expense Tracker" }: HeaderProps) {
                     <div className="flex flex-1 items-center justify-end gap-3 md:flex-none">
                         <motion.button
                             whileTap={{ scale: 0.9 }}
-                            onClick={() => setInfoOpen(true)}
-                            className="w-9 h-9 flex items-center justify-center rounded-full bg-[#F2F2F7] dark:bg-[#2C2C2E] ios-text-secondary md:hidden"
-                            aria-label="App Info"
-                        >
-                            <Info size={17} />
-                        </motion.button>
-
-                        <motion.button
-                            whileTap={{ scale: 0.9 }}
                             onClick={togglePrivacy}
                             className="w-9 h-9 flex items-center justify-center rounded-full bg-[#F2F2F7] dark:bg-[#2C2C2E] ios-text-secondary"
                             aria-label={isPrivate ? "Show balances" : "Hide balances"}
@@ -68,7 +57,6 @@ export function Header({ title = "Expense Tracker" }: HeaderProps) {
                 </div>
             </header>
 
-            <AppInfoSheet open={infoOpen} onOpenChange={setInfoOpen} />
             <AgentOasisChatSheet open={chatOpen} onOpenChange={setChatOpen} />
         </>
     );
