@@ -217,10 +217,17 @@ export function AddExpenseSheet({ open, onOpenChange, onSuccess, editData }: Add
         // If custom category is selected and name provided
         if (isCustom && customCategoryName.trim()) {
             try {
+                // Auto-map icon and color based on name for custom category
+                let customIcon = "circle";
+                try {
+                    const iconResult = await mapIcon.mutateAsync({ query: customCategoryName.trim() });
+                    if (iconResult.icon) customIcon = iconResult.icon;
+                } catch { /* fallback to circle */ }
+
                 const newCat = await createCategory.mutateAsync({
                     name: customCategoryName.trim(),
-                    icon: "circle",
-                    color: "#8E8E93"
+                    icon: customIcon,
+                    color: "#007AFF" // Better default than gray for new mapped categories
                 });
                 categoryId = newCat.id;
                 utils.category.listAll.invalidate();
@@ -342,6 +349,7 @@ export function AddExpenseSheet({ open, onOpenChange, onSuccess, editData }: Add
                                     placeholder="0"
                                     value={amount}
                                     onChange={(e) => setAmount(e.target.value)}
+                                    onBlur={() => window.scrollTo(0, 0)}
                                     className={cn(
                                         "text-5xl font-semibold bg-transparent outline-none text-center w-52 placeholder-[#E5E5EA] dark:placeholder-[#3A3A3C] transition-colors ios-text-primary"
                                     )}
@@ -380,6 +388,7 @@ export function AddExpenseSheet({ open, onOpenChange, onSuccess, editData }: Add
                                 placeholder="Merchant / Store name"
                                 value={merchant}
                                 onChange={(e) => setMerchant(e.target.value)}
+                                onBlur={() => window.scrollTo(0, 0)}
                                 className="w-full px-4 py-3.5 text-[17px] ios-text-primary bg-transparent outline-none placeholder-[#C7C7CC] dark:placeholder-[#636366]"
                             />
                             <div className="h-px bg-[#E5E5EA] dark:bg-[#3A3A3C] mx-4" />
@@ -388,6 +397,7 @@ export function AddExpenseSheet({ open, onOpenChange, onSuccess, editData }: Add
                                 placeholder="Note (optional)"
                                 value={note}
                                 onChange={(e) => setNote(e.target.value)}
+                                onBlur={() => window.scrollTo(0, 0)}
                                 className="w-full px-4 py-3.5 text-[17px] ios-text-primary bg-transparent outline-none placeholder-[#C7C7CC] dark:placeholder-[#636366]"
                             />
                         </div>
@@ -490,6 +500,7 @@ export function AddExpenseSheet({ open, onOpenChange, onSuccess, editData }: Add
                                         placeholder="Enter custom category name"
                                         value={customCategoryName}
                                         onChange={(e) => setCustomCategoryName(e.target.value)}
+                                        onBlur={() => window.scrollTo(0, 0)}
                                         className="w-full px-4 py-3 rounded-ios-sm bg-ios-surface-light dark:bg-ios-surface-dark border border-[#E5E5EA] dark:border-[#3A3A3C] outline-none ios-text-primary placeholder-[#C7C7CC] dark:placeholder-[#636366]"
                                     />
                                 </motion.div>

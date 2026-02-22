@@ -206,6 +206,7 @@ export function AddIncomeSheet({ open, onOpenChange, onSuccess, editData }: AddI
                                     placeholder="0"
                                     value={amount}
                                     onChange={(e) => setAmount(e.target.value)}
+                                    onBlur={() => window.scrollTo(0, 0)}
                                     className={cn(
                                         "text-5xl font-semibold bg-transparent outline-none text-center w-52 placeholder-[#E5E5EA] dark:placeholder-[#3A3A3C] transition-colors text-[#FF9500]"
                                     )}
@@ -220,6 +221,7 @@ export function AddIncomeSheet({ open, onOpenChange, onSuccess, editData }: AddI
                                 placeholder="Source (e.g. Salary, Freelance)"
                                 value={source}
                                 onChange={(e) => setSource(e.target.value)}
+                                onBlur={() => window.scrollTo(0, 0)}
                                 className="w-full px-4 py-3.5 text-[17px] ios-text-primary bg-transparent outline-none placeholder-[#C7C7CC] dark:placeholder-[#636366]"
                             />
                             <div className="h-px bg-[#E5E5EA] dark:bg-[#3A3A3C] mx-4" />
@@ -228,6 +230,7 @@ export function AddIncomeSheet({ open, onOpenChange, onSuccess, editData }: AddI
                                 placeholder="Note (optional)"
                                 value={note}
                                 onChange={(e) => setNote(e.target.value)}
+                                onBlur={() => window.scrollTo(0, 0)}
                                 className="w-full px-4 py-3.5 text-[17px] ios-text-primary bg-transparent outline-none placeholder-[#C7C7CC] dark:placeholder-[#636366]"
                             />
                         </div>
