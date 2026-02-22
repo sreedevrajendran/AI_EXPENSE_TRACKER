@@ -23,6 +23,13 @@ export async function GET(request: Request) {
     }
 
     try {
+        // Construct the EXACT same redirect URI using HTTP headers
+        const protocol = request.headers.get("x-forwarded-proto") || "https";
+        const host = request.headers.get("x-forwarded-host") || request.headers.get("host");
+        const rawBaseUrl = host ? `${protocol}://${host}` : (process.env.NEXT_PUBLIC_APP_URL || process.env.NEXTAUTH_URL || process.env.URL || url.origin);
+        const baseUrl = rawBaseUrl.replace(/\/$/, "");
+        const redirectUri = `${baseUrl}/api/gmail/callback`;
+
         // Exchange authorization code for refresh token
         const response = await fetch("https://oauth2.googleapis.com/token", {
             method: "POST",
@@ -31,7 +38,7 @@ export async function GET(request: Request) {
                 code,
                 client_id: process.env.GOOGLE_CLIENT_ID!,
                 client_secret: process.env.GOOGLE_CLIENT_SECRET!,
-                redirect_uri: `${url.origin}/api/gmail/callback`,
+                redirect_uri: redirectUri,
                 grant_type: "authorization_code",
             }),
         });

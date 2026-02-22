@@ -11,9 +11,11 @@ export async function GET(request: Request) {
     // Official Google OAuth 2.0 endpoint
     const oauth2Endpoint = "https://accounts.google.com/o/oauth2/v2/auth";
 
-    // Prioritize explicitly set environment URLs because Netlify/Vercel edge functions 
-    // sometimes evaluate request.url to internal deploy preview domains or http.
-    const rawBaseUrl = process.env.NEXT_PUBLIC_APP_URL || process.env.NEXTAUTH_URL || process.env.URL || new URL(request.url).origin;
+    // Highly reliable way to get the true external URL from Netlify edge functions
+    const protocol = request.headers.get("x-forwarded-proto") || "https";
+    const host = request.headers.get("x-forwarded-host") || request.headers.get("host");
+    const rawBaseUrl = host ? `${protocol}://${host}` : (process.env.NEXT_PUBLIC_APP_URL || process.env.NEXTAUTH_URL || process.env.URL || new URL(request.url).origin);
+
     const baseUrl = rawBaseUrl.replace(/\/$/, ""); // Remove any trailing slash to avoid double slashes
     const redirectUri = `${baseUrl}/api/gmail/callback`;
 
