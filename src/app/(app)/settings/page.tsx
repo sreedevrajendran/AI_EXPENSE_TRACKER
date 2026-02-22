@@ -195,7 +195,7 @@ function SettingsContent() {
                                     Your data is securely stored and private by default. Oasis does not share or sell your financial data to third parties.
                                 </p>
                                 <p>
-                                    <strong>Gmail Sync:</strong> When you connect your Gmail account, Oasis only requests read-only access to parse digital receipts. We do not read personal communications, insert emails, or store copies of your emails. The AI parsing is done securely using our trusted LLM providers (Google Gemini / Groq Llama) strictly for extracting expense amounts, merchants, and dates.
+                                    <strong>Gmail Sync:</strong> When you connect your Gmail account, Oasis only requests read-only access to parse digital receipts. We do not read personal communications, insert emails, or store copies of your emails. The AI parsing is done securely using our trusted LLM providers (Groq Llama 3) strictly for extracting expense amounts, merchants, and dates.
                                 </p>
                                 <p>
                                     <strong>AI Chatbot:</strong> Conversations with Agent Oasis are restricted to your own financial context. Contextual data sent to the AI is transient and not used to train global models.
