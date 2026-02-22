@@ -219,4 +219,12 @@ Here are the emails:\n${emailContents.join("\n---\n")}`;
 
         return { added: addedCount, message: `Successfully synced ${addedCount} transactions from Gmail.` };
     }),
+
+    disconnect: protectedProcedure.mutation(async ({ ctx }) => {
+        await ctx.db.user.update({
+            where: { id: ctx.session.user.id },
+            data: { gmailRefreshToken: null }
+        });
+        return { success: true };
+    }),
 });

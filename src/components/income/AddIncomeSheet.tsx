@@ -32,6 +32,7 @@ export function AddIncomeSheet({ open, onOpenChange, onSuccess, editData }: AddI
     const [existingReceiptUrl, setExistingReceiptUrl] = useState<string | null>(null);
     const [uploading, setUploading] = useState(false);
     const [error, setError] = useState<string | null>(null);
+    const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
 
     // Populate edit data
     useEffect(() => {
@@ -99,6 +100,7 @@ export function AddIncomeSheet({ open, onOpenChange, onSuccess, editData }: AddI
         setNote("");
         setFile(null);
         setError(null);
+        setShowDeleteConfirm(false);
     };
 
     const handleSubmit = async () => {
@@ -287,19 +289,42 @@ export function AddIncomeSheet({ open, onOpenChange, onSuccess, editData }: AddI
 
                         {/* Delete Button (Editing only) */}
                         {editData && (
-                            <motion.button
-                                type="button"
-                                whileTap={{ scale: 0.98 }}
-                                onClick={() => {
-                                    if (confirm("Are you sure you want to delete this income?")) {
-                                        deleteIncome.mutate({ id: editData.id });
-                                    }
-                                }}
-                                disabled={deleteIncome.isPending}
-                                className="w-full py-3.5 mt-4 rounded-ios-sm bg-ios-red/10 text-ios-red font-semibold flex items-center justify-center gap-2"
-                            >
-                                {deleteIncome.isPending ? <Loader2 size={18} className="animate-spin" /> : "Delete Income"}
-                            </motion.button>
+                            !showDeleteConfirm ? (
+                                <motion.button
+                                    type="button"
+                                    whileTap={{ scale: 0.98 }}
+                                    onClick={() => setShowDeleteConfirm(true)}
+                                    disabled={deleteIncome.isPending}
+                                    className="w-full py-3.5 mt-4 rounded-ios-sm bg-ios-red/10 text-ios-red font-semibold flex items-center justify-center gap-2"
+                                >
+                                    {deleteIncome.isPending ? <Loader2 size={18} className="animate-spin" /> : "Delete Income"}
+                                </motion.button>
+                            ) : (
+                                <motion.div
+                                    initial={{ opacity: 0, y: -10 }}
+                                    animate={{ opacity: 1, y: 0 }}
+                                    className="mt-4 p-4 rounded-ios-sm bg-ios-red/10 border border-ios-red/20 space-y-3"
+                                >
+                                    <p className="text-[15px] font-medium text-ios-red text-center">Are you sure you want to delete this income?</p>
+                                    <div className="flex items-center gap-3">
+                                        <button
+                                            type="button"
+                                            onClick={() => setShowDeleteConfirm(false)}
+                                            className="flex-1 py-2.5 rounded-lg bg-white dark:bg-[#2C2C2E] text-ios-text-primary text-[15px] font-medium shadow-sm border border-[#E5E5EA] dark:border-[#3A3A3C] active:opacity-70 transition-opacity"
+                                        >
+                                            Cancel
+                                        </button>
+                                        <button
+                                            type="button"
+                                            onClick={() => deleteIncome.mutate({ id: editData.id })}
+                                            disabled={deleteIncome.isPending}
+                                            className="flex-1 py-2.5 rounded-lg bg-ios-red text-white text-[15px] font-medium shadow-sm flex justify-center items-center gap-2 active:opacity-80 transition-opacity"
+                                        >
+                                            {deleteIncome.isPending ? <Loader2 size={18} className="animate-spin" /> : "Delete"}
+                                        </button>
+                                    </div>
+                                </motion.div>
+                            )
                         )}
                     </div>
                 </Drawer.Content>

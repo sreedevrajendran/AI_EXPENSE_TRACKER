@@ -17,10 +17,21 @@ function SettingsContent() {
     const { isPrivate, togglePrivacy } = usePrivacy();
     const searchParams = useSearchParams();
     const [mounted, setMounted] = useState(false);
+    const [showDisconnectConfirm, setShowDisconnectConfirm] = useState(false);
 
     // Fetch Gmail connection status
     const { data: gmailStatus, refetch: refetchGmailStatus } = trpc.gmail.getStatus.useQuery(undefined, {
         enabled: mounted && !!session?.user
+    });
+
+    const disconnectGmail = trpc.gmail.disconnect.useMutation({
+        onSuccess: () => {
+            toast.success("Gmail disconnected successfully.");
+            refetchGmailStatus();
+        },
+        onError: () => {
+            toast.error("Failed to disconnect Gmail.");
+        }
     });
 
     useEffect(() => {
@@ -131,9 +142,41 @@ function SettingsContent() {
                             </div>
                         </div>
                         {gmailStatus?.isConnected ? (
-                            <div className="flex items-center gap-1.5 px-3 py-1.5 bg-[#34C759]/10 dark:bg-[#32D74B]/15 text-[#34C759] dark:text-[#32D74B] text-[13px] font-medium rounded-full">
-                                <Check size={14} strokeWidth={3} />
-                                Connected
+                            <div className="flex items-center gap-3">
+                                {!showDisconnectConfirm ? (
+                                    <>
+                                        <span className="flex items-center gap-1 text-[#34C759] dark:text-[#32D74B] text-[13px] font-medium">
+                                            <Check size={14} strokeWidth={3} />
+                                            Connected
+                                        </span>
+                                        <button
+                                            onClick={() => setShowDisconnectConfirm(true)}
+                                            className="px-3 py-1.5 bg-[#E5E5EA] dark:bg-[#3A3A3C] text-ios-text-primary text-[13px] font-medium rounded-full active:opacity-70 transition-opacity"
+                                        >
+                                            Disconnect
+                                        </button>
+                                    </>
+                                ) : (
+                                    <div className="flex items-center gap-2">
+                                        <span className="text-[12px] ios-text-secondary">Are you sure?</span>
+                                        <button
+                                            onClick={() => setShowDisconnectConfirm(false)}
+                                            className="px-3 py-1.5 bg-[#E5E5EA] dark:bg-[#3A3A3C] text-ios-text-primary text-[13px] font-medium rounded-full active:opacity-70 transition-opacity"
+                                        >
+                                            Cancel
+                                        </button>
+                                        <button
+                                            onClick={() => {
+                                                setShowDisconnectConfirm(false);
+                                                disconnectGmail.mutate();
+                                            }}
+                                            disabled={disconnectGmail.isPending}
+                                            className="px-3 py-1.5 bg-ios-red/10 text-ios-red text-[13px] font-medium rounded-full active:opacity-70 transition-opacity"
+                                        >
+                                            {disconnectGmail.isPending ? "..." : "Yes, Disconnect"}
+                                        </button>
+                                    </div>
+                                )}
                             </div>
                         ) : (
                             <a
