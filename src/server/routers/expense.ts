@@ -136,6 +136,7 @@ export const expenseRouter = router({
                 paymentMethod: z.nativeEnum(PaymentMethod).default("CASH"),
                 categoryId: z.string().optional(),
                 receiptUrl: z.string().optional(),
+                icon: z.string().optional(),
             })
         )
         .mutation(async ({ ctx, input }) => {
@@ -160,6 +161,7 @@ export const expenseRouter = router({
                 paymentMethod: z.nativeEnum(PaymentMethod).optional(),
                 categoryId: z.string().optional(),
                 receiptUrl: z.string().optional(),
+                icon: z.string().optional(),
             })
         )
         .mutation(async ({ ctx, input }) => {

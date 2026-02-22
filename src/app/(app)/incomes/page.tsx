@@ -19,6 +19,7 @@ type IncomeItem = {
     date: Date;
     category?: Category;
     note?: string | null;
+    icon?: string | null;
     receiptUrl?: string | null
 };
 
@@ -73,7 +74,7 @@ export default function IncomesPage() {
                                 <p className="text-xs font-semibold ios-text-secondary uppercase tracking-wider mb-2 px-1">{date}</p>
                                 <div className="ios-card overflow-hidden divide-y ios-separator">
                                     {(grouped[date] ?? []).map((income: IncomeItem, i: number) => {
-                                        const Icon = getLucideIcon(income.category?.icon ?? "circle");
+                                        const Icon = getLucideIcon(income.category?.icon ?? income.icon ?? "circle");
                                         return (
                                             <motion.button
                                                 type="button"

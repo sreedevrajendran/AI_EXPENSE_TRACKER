@@ -91,6 +91,8 @@ export function AddIncomeSheet({ open, onOpenChange, onSuccess, editData }: AddI
         }
     });
 
+    const mapIcon = trpc.ai.mapIcon.useMutation();
+
     const resetForm = () => {
         setAmount("");
         setSource("");
@@ -127,6 +129,12 @@ export function AddIncomeSheet({ open, onOpenChange, onSuccess, editData }: AddI
             }
         }
 
+        let mappedIcon: string | undefined = undefined;
+        try {
+            const mapRes = await mapIcon.mutateAsync({ query: source.trim() });
+            mappedIcon = mapRes.icon;
+        } catch { /* ignore */ }
+
         if (editData) {
             updateIncome.mutate({
                 id: editData.id,
@@ -135,6 +143,7 @@ export function AddIncomeSheet({ open, onOpenChange, onSuccess, editData }: AddI
                 note: note.trim() || undefined,
                 date: new Date(),
                 receiptUrl: receiptUrl || existingReceiptUrl || undefined,
+                icon: mappedIcon,
             });
         } else {
             createIncome.mutate({
@@ -143,6 +152,7 @@ export function AddIncomeSheet({ open, onOpenChange, onSuccess, editData }: AddI
                 note: note.trim() || undefined,
                 date: new Date(),
                 receiptUrl,
+                icon: mappedIcon,
             });
         }
         setUploading(false);

@@ -93,6 +93,7 @@ model Income {
   userId        String
   categoryId    String?
   receiptUrl    String?
+  icon          String?
   createdAt     DateTime      @default(now())
   updatedAt     DateTime      @updatedAt
 
@@ -119,6 +120,7 @@ model Expense {
   userId        String
   categoryId    String?
   receiptUrl    String?
+  icon          String?
   createdAt     DateTime      @default(now())
   updatedAt     DateTime      @updatedAt
 

@@ -12,7 +12,7 @@ import { PullToRefresh } from "@/components/ui/PullToRefresh";
 import { cn } from "@/lib/utils";
 
 type Category = { name: string; icon: string; color: string } | null;
-type ExpenseItem = { id: string; merchant: string; amount: number; date: Date; paymentMethod: string; category: Category; note: string | null; receiptUrl?: string | null };
+type ExpenseItem = { id: string; merchant: string; amount: number; date: Date; paymentMethod: string; category: Category; note: string | null; icon?: string | null; receiptUrl?: string | null };
 
 const PM_COLORS: Record<string, string> = {
     CASH: "#34C759", CARD: "#007AFF", UPI: "#FF2D55",
@@ -74,7 +74,7 @@ export default function ExpensesPage() {
                                 <p className="text-xs font-semibold ios-text-secondary uppercase tracking-wider mb-2 px-1">{date}</p>
                                 <div className="ios-card overflow-hidden divide-y ios-separator">
                                     {(grouped[date] ?? []).map((expense: ExpenseItem, i: number) => {
-                                        const Icon = getLucideIcon(expense.category?.icon ?? "circle");
+                                        const Icon = getLucideIcon(expense.category?.icon ?? expense.icon ?? "circle");
                                         return (
                                             <motion.button
                                                 type="button"

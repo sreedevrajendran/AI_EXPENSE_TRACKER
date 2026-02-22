@@ -68,6 +68,7 @@ export const incomeRouter = router({
                 date: z.date().default(() => new Date()),
                 categoryId: z.string().optional(),
                 receiptUrl: z.string().optional(),
+                icon: z.string().optional(),
             })
         )
         .mutation(async ({ ctx, input }) => {
@@ -89,6 +90,7 @@ export const incomeRouter = router({
                 date: z.date().optional(),
                 categoryId: z.string().optional(),
                 receiptUrl: z.string().optional(),
+                icon: z.string().optional(),
             })
         )
         .mutation(async ({ ctx, input }) => {

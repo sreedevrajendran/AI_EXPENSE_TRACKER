@@ -82,7 +82,8 @@ export default function HomePage() {
             title: 'merchant' in t ? t.merchant : t.source,
             date: t.date,
             receiptUrl: t.receiptUrl,
-            category: t.category
+            category: t.category,
+            icon: (t as any).icon,
         }))
         .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
 
@@ -264,7 +265,7 @@ export default function HomePage() {
                                         {recentTransactions.map((t, i) => {
                                             const isIncome = t.type === 'income';
                                             const title = isIncome ? (t as any).source : (t as any).merchant;
-                                            const Icon = getIcon(t.category?.icon ?? "circle");
+                                            const Icon = getIcon(t.category?.icon ?? t.icon ?? "circle");
                                             const color = isIncome ? "#34C759" : (t.category?.color ?? "#007AFF");
 
                                             return (

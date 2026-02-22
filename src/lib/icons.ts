@@ -12,7 +12,7 @@ export function getLucideIcon(name: string): LucideIcon {
         .join("") as keyof typeof LucideIcons;
 
     const icon = LucideIcons[key];
-    if (icon && typeof icon === "function") {
+    if (icon) {
         return icon as LucideIcon;
     }
     return LucideIcons.Circle;

@@ -237,9 +237,11 @@ export function AddExpenseSheet({ open, onOpenChange, onSuccess, editData }: Add
         }
 
         // If no category selected and merchant provided, auto-map icon
+        let mappedIcon: string | undefined = undefined;
         if (!categoryId && merchant && !isCustom) {
             try {
-                await mapIcon.mutateAsync({ query: merchant });
+                const mapRes = await mapIcon.mutateAsync({ query: merchant });
+                mappedIcon = mapRes.icon;
             } catch { /* ignore */ }
         }
 
@@ -277,6 +279,7 @@ export function AddExpenseSheet({ open, onOpenChange, onSuccess, editData }: Add
                 categoryId,
                 date: new Date(), // We keep current date or could allow editing date later
                 receiptUrl: receiptUrl || existingReceiptUrl || undefined,
+                icon: categoryId ? undefined : mappedIcon,
             });
         } else {
             createExpense.mutate({
@@ -287,6 +290,7 @@ export function AddExpenseSheet({ open, onOpenChange, onSuccess, editData }: Add
                 categoryId,
                 date: new Date(),
                 receiptUrl,
+                icon: categoryId ? undefined : mappedIcon,
             });
         }
         setUploading(false);

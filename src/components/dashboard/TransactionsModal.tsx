@@ -26,6 +26,7 @@ export type ModalTransaction = {
         icon: string;
         color: string;
     } | null;
+    icon?: string | null;
 };
 
 interface TransactionsModalProps {
@@ -75,7 +76,7 @@ export function TransactionsModal({ open, onOpenChange, title, transactions }: T
                             <div className="space-y-3">
                                 {transactions.map((t, i) => {
                                     const isIncome = t.type === 'income';
-                                    const Icon = getIcon(t.category?.icon ?? "circle");
+                                    const Icon = getIcon(t.category?.icon ?? t.icon ?? "circle");
                                     const color = isIncome ? "#34C759" : (t.category?.color ?? "#007AFF");
 
                                     return (
