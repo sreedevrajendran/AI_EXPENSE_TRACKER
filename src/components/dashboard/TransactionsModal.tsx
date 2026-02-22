@@ -93,26 +93,28 @@ export function TransactionsModal({ open, onOpenChange, title, transactions }: T
                                                 initial={{ opacity: 0, x: -10 }}
                                                 animate={{ opacity: 1, x: 0 }}
                                                 transition={{ delay: Math.min(i * 0.05, 0.5) }}
-                                                className="w-full text-left ios-card flex items-center gap-3 p-3.5 focus:outline-none active:bg-[#F2F2F7] dark:active:bg-[#2C2C2E] transition-colors"
+                                                className="w-full text-left ios-card flex items-center justify-between p-3.5 focus:outline-none active:bg-[#F2F2F7] dark:active:bg-[#2C2C2E] transition-colors"
                                             >
-                                                <div
-                                                    className="w-10 h-10 rounded-[10px] flex items-center justify-center flex-shrink-0"
-                                                    style={{ backgroundColor: `${color}20` }}
-                                                >
-                                                    <Icon size={18} style={{ color }} />
-                                                </div>
-                                                <div className="flex-1 min-w-0">
-                                                    <div className="flex items-center gap-2">
-                                                        <p className="text-[15px] font-medium ios-text-primary truncate">{t.title}</p>
-                                                        {t.receiptUrl && (
-                                                            <div className="text-ios-blue flex-shrink-0" title="Has Attachment">
-                                                                <Paperclip size={14} />
-                                                            </div>
-                                                        )}
+                                                <div className="flex items-center gap-3 min-w-0 flex-1">
+                                                    <div
+                                                        className="w-10 h-10 rounded-[10px] flex items-center justify-center flex-shrink-0"
+                                                        style={{ backgroundColor: `${color}20` }}
+                                                    >
+                                                        <Icon size={18} style={{ color }} />
                                                     </div>
-                                                    <p className="text-xs ios-text-secondary">
-                                                        {isIncome ? "Income" : (t.category?.name ?? "Uncategorized")} · {formatDate(t.date)}
-                                                    </p>
+                                                    <div className="flex-1 min-w-0">
+                                                        <div className="flex items-center gap-2">
+                                                            <p className="text-[15px] font-medium ios-text-primary truncate">{t.title}</p>
+                                                            {t.receiptUrl && (
+                                                                <div className="text-ios-blue flex-shrink-0" title="Has Attachment">
+                                                                    <Paperclip size={14} />
+                                                                </div>
+                                                            )}
+                                                        </div>
+                                                        <p className="text-xs ios-text-secondary">
+                                                            {isIncome ? "Income" : (t.category?.name ?? "Uncategorized")} · {formatDate(t.date)}
+                                                        </p>
+                                                    </div>
                                                 </div>
                                                 <PrivacyWrapper>
                                                     <p className={cn(
