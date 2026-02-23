@@ -460,7 +460,14 @@ export function AddExpenseSheet({ open, onOpenChange, onSuccess, editData, editI
                                 <div className="px-4 pb-3.5 flex justify-end">
                                     <button
                                         type="button"
-                                        onClick={() => setFile(null)}
+                                        onClick={() => {
+                                            setFile(null);
+                                            setAmount("");
+                                            setMerchant("");
+                                            setNote("");
+                                            setSelectedCategory(undefined);
+                                            setPaymentMethod("UPI");
+                                        }}
                                         className="text-[13px] text-ios-red font-medium"
                                     >
                                         Remove
