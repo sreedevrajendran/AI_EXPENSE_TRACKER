@@ -1,57 +1,65 @@
 "use client";
 
 import { signIn } from "next-auth/react";
-import { motion } from "framer-motion";
-import { Sparkles, Brain, Mail, Camera, PieChart, Shield, TrendingUp } from "lucide-react";
-import { useState } from "react";
+import { motion, useMotionValue, useSpring, AnimatePresence } from "framer-motion";
+import { Camera, Brain, PieChart, Shield, TrendingUp, Sparkles, ArrowRight, Check } from "lucide-react";
+import { useState, useEffect, useRef } from "react";
 
 const features = [
-    {
-        icon: Camera,
-        title: "AI Receipt Scanner",
-        desc: "Snap a photo — AI extracts amount, merchant & category instantly",
-        color: "#007AFF",
-        gradient: "from-blue-500/20 to-cyan-500/20",
-    },
-    {
-        icon: Mail,
-        title: "Gmail Auto-Sync",
-        desc: "AI reads your emails to find & log transactions automatically",
-        color: "#5856D6",
-        gradient: "from-violet-500/20 to-purple-500/20",
-    },
-    {
-        icon: Brain,
-        title: "AI Finance Coach",
-        desc: "Get personalized spending insights & a financial health score",
-        color: "#FF9F0A",
-        gradient: "from-amber-500/20 to-orange-500/20",
-    },
-    {
-        icon: PieChart,
-        title: "Smart Budgets",
-        desc: "Set category budgets with real-time tracking & visual progress",
-        color: "#34C759",
-        gradient: "from-green-500/20 to-emerald-500/20",
-    },
-    {
-        icon: Shield,
-        title: "Privacy Mode",
-        desc: "Blur all amounts with one tap — perfect for public use",
-        color: "#FF2D55",
-        gradient: "from-pink-500/20 to-rose-500/20",
-    },
-    {
-        icon: TrendingUp,
-        title: "Income & Expense Charts",
-        desc: "Beautiful visual breakdowns of where your money goes",
-        color: "#5AC8FA",
-        gradient: "from-sky-500/20 to-blue-500/20",
-    },
+    { icon: Camera, label: "AI Receipt Scanner", color: "#007AFF" },
+    { icon: Brain, label: "AI Finance Coach", color: "#FF9F0A" },
+    { icon: PieChart, label: "Smart Budgets", color: "#34C759" },
+    { icon: Shield, label: "Privacy Mode", color: "#FF2D55" },
+    { icon: TrendingUp, label: "Spending Insights", color: "#5AC8FA" },
+    { icon: Sparkles, label: "Auto Categorization", color: "#5856D6" },
+];
+
+const stats = [
+    { value: "100%", label: "Free to use" },
+    { value: "AI", label: "Powered" },
+    { value: "0", label: "Ads ever" },
+    { value: "∞", label: "Expense tracking" },
+];
+
+const taglines = [
+    "Think smarter about money.",
+    "Track every rupee effortlessly.",
+    "Snap receipts. Done.",
+    "Your AI finance coach.",
+];
+
+const highlights = [
+    "No manual entry needed",
+    "AI extracts receipt data instantly",
+    "Smart budget alerts",
+    "Beautiful spending charts",
+    "Privacy mode for public use",
 ];
 
 export default function LoginPage() {
     const [isLoading, setIsLoading] = useState(false);
+    const [taglineIdx, setTaglineIdx] = useState(0);
+    const [displayed, setDisplayed] = useState("");
+    const [isDeleting, setIsDeleting] = useState(false);
+    const tickerRef = useRef<HTMLDivElement>(null);
+
+    // Typewriter effect
+    useEffect(() => {
+        const current = taglines[taglineIdx];
+        let timeout: ReturnType<typeof setTimeout>;
+
+        if (!isDeleting && displayed.length < current.length) {
+            timeout = setTimeout(() => setDisplayed(current.slice(0, displayed.length + 1)), 60);
+        } else if (!isDeleting && displayed.length === current.length) {
+            timeout = setTimeout(() => setIsDeleting(true), 2200);
+        } else if (isDeleting && displayed.length > 0) {
+            timeout = setTimeout(() => setDisplayed(displayed.slice(0, -1)), 30);
+        } else if (isDeleting && displayed.length === 0) {
+            setIsDeleting(false);
+            setTaglineIdx((prev) => (prev + 1) % taglines.length);
+        }
+        return () => clearTimeout(timeout);
+    }, [displayed, isDeleting, taglineIdx]);
 
     const handleSignIn = () => {
         setIsLoading(true);
@@ -59,148 +67,230 @@ export default function LoginPage() {
     };
 
     return (
-        <div className="min-h-dvh relative overflow-hidden">
-            {/* Animated Background */}
-            <div className="fixed inset-0 bg-gradient-to-br from-slate-950 via-slate-900 to-indigo-950" />
+        <div className="min-h-dvh relative overflow-hidden bg-[#050714]">
 
-            {/* Floating Orbs */}
-            <motion.div
-                className="fixed top-[-10%] left-[-5%] w-[500px] h-[500px] rounded-full opacity-30"
-                style={{ background: "radial-gradient(circle, rgba(0,122,255,0.4) 0%, transparent 70%)" }}
-                animate={{ x: [0, 30, 0], y: [0, -20, 0] }}
-                transition={{ duration: 8, repeat: Infinity, ease: "easeInOut" }}
-            />
-            <motion.div
-                className="fixed bottom-[-15%] right-[-10%] w-[600px] h-[600px] rounded-full opacity-25"
-                style={{ background: "radial-gradient(circle, rgba(88,86,214,0.5) 0%, transparent 70%)" }}
-                animate={{ x: [0, -25, 0], y: [0, 15, 0] }}
-                transition={{ duration: 10, repeat: Infinity, ease: "easeInOut" }}
-            />
-            <motion.div
-                className="fixed top-[40%] right-[10%] w-[300px] h-[300px] rounded-full opacity-20"
-                style={{ background: "radial-gradient(circle, rgba(52,199,89,0.4) 0%, transparent 70%)" }}
-                animate={{ x: [0, 15, 0], y: [0, 25, 0] }}
-                transition={{ duration: 12, repeat: Infinity, ease: "easeInOut" }}
-            />
+            {/* ─── Animated Background ─────────────────────────── */}
+            <div className="fixed inset-0">
+                {/* Deep static gradient */}
+                <div className="absolute inset-0 bg-gradient-to-br from-[#050714] via-[#0a0f2e] to-[#06081a]" />
 
-            {/* Grid Pattern Overlay */}
-            <div
-                className="fixed inset-0 opacity-[0.03]"
-                style={{
-                    backgroundImage: `linear-gradient(rgba(255,255,255,0.1) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.1) 1px, transparent 1px)`,
-                    backgroundSize: "60px 60px",
-                }}
-            />
+                {/* Animated mesh orbs */}
+                <motion.div
+                    className="absolute top-[-20%] left-[-10%] w-[700px] h-[700px] rounded-full"
+                    style={{ background: "radial-gradient(circle, rgba(0,122,255,0.18) 0%, transparent 65%)" }}
+                    animate={{ x: [0, 40, 0], y: [0, -30, 0], scale: [1, 1.05, 1] }}
+                    transition={{ duration: 12, repeat: Infinity, ease: "easeInOut" }}
+                />
+                <motion.div
+                    className="absolute bottom-[-20%] right-[-10%] w-[700px] h-[700px] rounded-full"
+                    style={{ background: "radial-gradient(circle, rgba(88,86,214,0.2) 0%, transparent 65%)" }}
+                    animate={{ x: [0, -30, 0], y: [0, 20, 0], scale: [1, 1.08, 1] }}
+                    transition={{ duration: 15, repeat: Infinity, ease: "easeInOut" }}
+                />
+                <motion.div
+                    className="absolute top-[30%] right-[-5%] w-[400px] h-[400px] rounded-full"
+                    style={{ background: "radial-gradient(circle, rgba(255,159,10,0.12) 0%, transparent 65%)" }}
+                    animate={{ x: [0, 20, 0], y: [0, -30, 0] }}
+                    transition={{ duration: 10, repeat: Infinity, ease: "easeInOut" }}
+                />
 
-            {/* Content */}
-            <div className="relative z-10 min-h-dvh flex flex-col items-center justify-center px-5 py-6 safe-top safe-bottom">
-                <div className="w-full max-w-md space-y-6">
+                {/* Fine grid */}
+                <div
+                    className="absolute inset-0 opacity-[0.025]"
+                    style={{
+                        backgroundImage: `linear-gradient(rgba(255,255,255,0.15) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.15) 1px, transparent 1px)`,
+                        backgroundSize: "48px 48px",
+                    }}
+                />
 
-                    {/* Logo & Branding */}
+                {/* Noise texture */}
+                <div
+                    className="absolute inset-0 opacity-[0.04]"
+                    style={{
+                        backgroundImage: "url(\"data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E\")",
+                    }}
+                />
+            </div>
+
+            {/* ─── Page Content ─────────────────────────────────── */}
+            <div className="relative z-10 min-h-dvh flex flex-col items-center justify-center px-5 py-8">
+                <div className="w-full max-w-[420px] flex flex-col gap-7">
+
+                    {/* ── Logo & Brand ─────────────────────────── */}
                     <motion.div
-                        initial={{ opacity: 0, y: -20 }}
+                        initial={{ opacity: 0, y: -24 }}
                         animate={{ opacity: 1, y: 0 }}
-                        transition={{ type: "spring", duration: 0.8 }}
-                        className="flex flex-col items-center gap-3"
+                        transition={{ type: "spring", duration: 0.9 }}
+                        className="flex flex-col items-center gap-4"
                     >
-                        {/* Logo with glow effect */}
+                        {/* Logo */}
                         <div className="relative">
-                            <div className="absolute inset-0 w-20 h-20 rounded-[24px] bg-blue-500/30 blur-2xl" />
                             <motion.div
-                                className="relative w-20 h-20 rounded-[24px] overflow-hidden shadow-2xl ring-1 ring-white/10"
-                                animate={{ rotateY: [0, 5, -5, 0] }}
-                                transition={{ duration: 6, repeat: Infinity, ease: "easeInOut" }}
+                                className="absolute inset-0 rounded-[28px]"
+                                style={{ background: "rgba(0,122,255,0.35)", filter: "blur(20px)" }}
+                                animate={{ opacity: [0.5, 0.9, 0.5] }}
+                                transition={{ duration: 3, repeat: Infinity }}
+                            />
+                            <motion.div
+                                className="relative w-[88px] h-[88px] rounded-[28px] overflow-hidden ring-1 ring-white/10 shadow-2xl"
+                                animate={{ rotateY: [0, 6, -6, 0] }}
+                                transition={{ duration: 7, repeat: Infinity, ease: "easeInOut" }}
                             >
-                                <img src="/logo.png?v=2" alt="Oasis Logo" className="w-full h-full object-cover" />
+                                <img src="/logo.png?v=2" alt="Oasis" className="w-full h-full object-cover" />
                             </motion.div>
                         </div>
 
-                        <div className="text-center space-y-1">
-                            <h1 className="text-3xl font-bold text-white tracking-tight">
-                                Oasis
-                            </h1>
-                            <p className="text-xs font-medium text-white/50 tracking-widest uppercase">
-                                AI Expense Tracker
-                            </p>
+                        {/* App name */}
+                        <div className="text-center">
+                            <h1 className="text-[40px] font-black text-white tracking-tight leading-none">Oasis</h1>
+                            <p className="text-[11px] font-semibold text-white/35 tracking-[0.2em] uppercase mt-1">AI Expense Tracker</p>
                         </div>
 
-                        {/* Tagline */}
-                        <motion.p
-                            initial={{ opacity: 0 }}
-                            animate={{ opacity: 1 }}
-                            transition={{ delay: 0.4 }}
-                            className="text-sm text-white/60 text-center max-w-xs leading-relaxed"
-                        >
-                            Your AI-powered financial companion that <span className="text-white/90 font-medium">thinks</span>, <span className="text-white/90 font-medium">learns</span>, and <span className="text-white/90 font-medium">protects</span>.
-                        </motion.p>
+                        {/* Typewriter tagline */}
+                        <div className="h-7 flex items-center justify-center">
+                            <p className="text-[15px] font-medium text-white/60 text-center">
+                                {displayed}
+                                <motion.span
+                                    animate={{ opacity: [1, 0, 1] }}
+                                    transition={{ duration: 0.8, repeat: Infinity }}
+                                    className="inline-block w-[2px] h-[15px] bg-blue-400 ml-[2px] align-middle rounded-full"
+                                />
+                            </p>
+                        </div>
                     </motion.div>
 
-                    {/* Feature Cards — 2 Column Grid */}
+                    {/* ── Stats Row ───────────────────────────── */}
                     <motion.div
-                        initial={{ opacity: 0 }}
-                        animate={{ opacity: 1 }}
+                        initial={{ opacity: 0, y: 16 }}
+                        animate={{ opacity: 1, y: 0 }}
                         transition={{ delay: 0.3 }}
-                        className="grid grid-cols-2 gap-2.5"
+                        className="grid grid-cols-4 gap-2"
                     >
-                        {features.map(({ icon: Icon, title, desc, color, gradient }, i) => (
+                        {stats.map(({ value, label }, i) => (
                             <motion.div
-                                key={title}
-                                initial={{ opacity: 0, y: 20, scale: 0.95 }}
-                                animate={{ opacity: 1, y: 0, scale: 1 }}
-                                transition={{ delay: 0.4 + i * 0.08, type: "spring", stiffness: 200 }}
-                                className={`relative group p-3 rounded-2xl bg-gradient-to-br ${gradient} backdrop-blur-sm border border-white/[0.06] hover:border-white/[0.12] transition-all duration-300`}
+                                key={label}
+                                initial={{ opacity: 0, scale: 0.85 }}
+                                animate={{ opacity: 1, scale: 1 }}
+                                transition={{ delay: 0.35 + i * 0.07, type: "spring" }}
+                                className="flex flex-col items-center py-3 px-1 rounded-2xl bg-white/[0.035] border border-white/[0.06] backdrop-blur-sm"
                             >
-                                <div
-                                    className="w-8 h-8 rounded-lg flex items-center justify-center mb-2"
-                                    style={{ backgroundColor: `${color}25` }}
-                                >
-                                    <Icon size={16} style={{ color }} strokeWidth={2.2} />
-                                </div>
-                                <h3 className="text-[12px] font-bold text-white/90 mb-0.5 leading-tight">{title}</h3>
-                                <p className="text-[10px] text-white/40 leading-snug">{desc}</p>
+                                <span className="text-[18px] font-black text-white">{value}</span>
+                                <span className="text-[9px] text-white/35 font-medium text-center leading-tight mt-0.5">{label}</span>
                             </motion.div>
                         ))}
                     </motion.div>
 
-                    {/* Sign In Section */}
+                    {/* ── Scrolling Feature Ticker ─────────────── */}
                     <motion.div
-                        initial={{ opacity: 0, y: 15 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        transition={{ delay: 0.9 }}
-                        className="space-y-3"
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        transition={{ delay: 0.5 }}
+                        className="relative overflow-hidden"
                     >
-                        <button
-                            onClick={handleSignIn}
-                            disabled={isLoading}
-                            className="w-full relative flex items-center justify-center gap-3 py-3.5 rounded-2xl bg-white text-slate-900 text-[15px] font-bold shadow-lg shadow-white/10 active:scale-[0.97] transition-all duration-200 disabled:opacity-70 overflow-hidden group"
+                        {/* Left fade */}
+                        <div className="absolute left-0 top-0 bottom-0 w-8 z-10 bg-gradient-to-r from-[#050714] to-transparent pointer-events-none" />
+                        {/* Right fade */}
+                        <div className="absolute right-0 top-0 bottom-0 w-8 z-10 bg-gradient-to-l from-[#050714] to-transparent pointer-events-none" />
+
+                        <motion.div
+                            className="flex gap-3 w-max"
+                            animate={{ x: ["0%", "-50%"] }}
+                            transition={{ duration: 20, repeat: Infinity, ease: "linear" }}
                         >
-                            {/* Shimmer effect */}
-                            <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent translate-x-[-200%] group-hover:translate-x-[200%] transition-transform duration-1000" />
+                            {[...features, ...features].map(({ icon: Icon, label, color }, i) => (
+                                <div
+                                    key={`${label}-${i}`}
+                                    className="flex items-center gap-2 px-3.5 py-2 rounded-full border border-white/[0.07] bg-white/[0.03] backdrop-blur-sm flex-shrink-0"
+                                >
+                                    <div
+                                        className="w-5 h-5 rounded-full flex items-center justify-center flex-shrink-0"
+                                        style={{ backgroundColor: `${color}20` }}
+                                    >
+                                        <Icon size={11} style={{ color }} strokeWidth={2.5} />
+                                    </div>
+                                    <span className="text-[12px] font-medium text-white/55 whitespace-nowrap">{label}</span>
+                                </div>
+                            ))}
+                        </motion.div>
+                    </motion.div>
 
-                            {isLoading ? (
-                                <div className="w-5 h-5 border-2 border-slate-400 border-t-slate-800 rounded-full animate-spin" />
-                            ) : (
-                                <svg viewBox="0 0 24 24" width="20" height="20">
-                                    <path fill="#EA4335" d="M5.27 9.76A7.08 7.08 0 0 1 12 4.9c1.76 0 3.35.64 4.59 1.7l3.41-3.4A11.95 11.95 0 0 0 12 1C8.08 1 4.67 3.01 2.73 6.02l2.54 3.74z" />
-                                    <path fill="#34A853" d="M16.04 18.01A7.07 7.07 0 0 1 12 19.1c-2.9 0-5.4-1.74-6.59-4.28l-2.68 3.92A11.95 11.95 0 0 0 12 23c3.2 0 6.13-1.17 8.35-3.1l-4.31-1.89z" />
-                                    <path fill="#FBBC05" d="M5.41 14.82A7.12 7.12 0 0 1 4.9 12c0-.99.19-1.95.52-2.84L2.73 5.42A11.93 11.93 0 0 0 1 12c0 2.34.67 4.52 1.84 6.38l2.57-3.56z" />
-                                    <path fill="#4285F4" d="M23 12.24c0-.77-.07-1.52-.19-2.24H12v4.24h6.18a5.26 5.26 0 0 1-2.28 3.44l4.31 1.89C21.94 17.71 23 15.14 23 12.24z" />
-                                </svg>
-                            )}
-                            {isLoading ? "Connecting..." : "Continue with Google"}
-                        </button>
+                    {/* ── Sign-in Card ─────────────────────────── */}
+                    <motion.div
+                        initial={{ opacity: 0, y: 24 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ delay: 0.65, type: "spring", stiffness: 180 }}
+                        className="relative rounded-3xl overflow-hidden"
+                    >
+                        {/* Card border glow */}
+                        <div
+                            className="absolute inset-0 rounded-3xl"
+                            style={{
+                                background: "linear-gradient(135deg, rgba(0,122,255,0.25) 0%, rgba(88,86,214,0.12) 50%, rgba(0,0,0,0) 100%)",
+                                padding: "1px",
+                            }}
+                        >
+                            <div className="absolute inset-[1px] rounded-[23px] bg-[#0d1230]/90 backdrop-blur-xl" />
+                        </div>
 
-                        {/* Trust badge */}
-                        <p className="flex items-center justify-center gap-1.5 text-white/30 text-[11px]">
-                            <Shield size={11} /> End-to-end Secure
-                        </p>
+                        <div className="relative z-10 p-6 space-y-5">
+                            {/* Highlights list */}
+                            <div className="space-y-2.5">
+                                {highlights.map((text, i) => (
+                                    <motion.div
+                                        key={text}
+                                        initial={{ opacity: 0, x: -12 }}
+                                        animate={{ opacity: 1, x: 0 }}
+                                        transition={{ delay: 0.75 + i * 0.07 }}
+                                        className="flex items-center gap-3"
+                                    >
+                                        <div className="w-5 h-5 rounded-full bg-blue-500/20 flex items-center justify-center flex-shrink-0">
+                                            <Check size={11} className="text-blue-400" strokeWidth={3} />
+                                        </div>
+                                        <span className="text-[13px] text-white/60 font-medium">{text}</span>
+                                    </motion.div>
+                                ))}
+                            </div>
 
-                        {/* Legal links */}
-                        <p className="flex items-center justify-center gap-2 text-white/30 text-[11px] mt-1">
-                            <a href="/privacy" target="_blank" rel="noopener noreferrer" className="hover:text-white/60 underline transition-colors">Privacy Policy</a>
-                            <span>·</span>
-                            <a href="/terms" target="_blank" rel="noopener noreferrer" className="hover:text-white/60 underline transition-colors">Terms of Service</a>
-                        </p>
+                            {/* Divider */}
+                            <div className="h-px bg-white/[0.06]" />
+
+                            {/* Google Sign-in Button */}
+                            <motion.button
+                                onClick={handleSignIn}
+                                disabled={isLoading}
+                                whileTap={{ scale: 0.97 }}
+                                className="w-full relative flex items-center justify-center gap-3 py-4 rounded-2xl bg-white text-slate-900 text-[15px] font-bold shadow-xl shadow-blue-500/10 overflow-hidden group disabled:opacity-70"
+                            >
+                                {/* Shimmer sweep on hover */}
+                                <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/30 to-transparent translate-x-[-200%] group-hover:translate-x-[250%] transition-transform duration-700" />
+
+                                {isLoading ? (
+                                    <div className="w-5 h-5 border-2 border-slate-300 border-t-slate-700 rounded-full animate-spin" />
+                                ) : (
+                                    <svg viewBox="0 0 24 24" width="20" height="20" className="flex-shrink-0">
+                                        <path fill="#EA4335" d="M5.27 9.76A7.08 7.08 0 0 1 12 4.9c1.76 0 3.35.64 4.59 1.7l3.41-3.4A11.95 11.95 0 0 0 12 1C8.08 1 4.67 3.01 2.73 6.02l2.54 3.74z" />
+                                        <path fill="#34A853" d="M16.04 18.01A7.07 7.07 0 0 1 12 19.1c-2.9 0-5.4-1.74-6.59-4.28l-2.68 3.92A11.95 11.95 0 0 0 12 23c3.2 0 6.13-1.17 8.35-3.1l-4.31-1.89z" />
+                                        <path fill="#FBBC05" d="M5.41 14.82A7.12 7.12 0 0 1 4.9 12c0-.99.19-1.95.52-2.84L2.73 5.42A11.93 11.93 0 0 0 1 12c0 2.34.67 4.52 1.84 6.38l2.57-3.56z" />
+                                        <path fill="#4285F4" d="M23 12.24c0-.77-.07-1.52-.19-2.24H12v4.24h6.18a5.26 5.26 0 0 1-2.28 3.44l4.31 1.89C21.94 17.71 23 15.14 23 12.24z" />
+                                    </svg>
+                                )}
+                                <span>{isLoading ? "Connecting..." : "Continue with Google"}</span>
+                                {!isLoading && <ArrowRight size={16} className="text-slate-400 group-hover:translate-x-1 transition-transform" />}
+                            </motion.button>
+
+                            {/* Trust + Legal */}
+                            <div className="space-y-2 text-center">
+                                <p className="flex items-center justify-center gap-1.5 text-white/25 text-[11px]">
+                                    <Shield size={10} />
+                                    <span>End-to-end secure · No passwords</span>
+                                </p>
+                                <p className="flex items-center justify-center gap-2 text-white/25 text-[10px]">
+                                    <a href="/privacy" target="_blank" rel="noopener noreferrer" className="hover:text-white/50 underline underline-offset-2 transition-colors">Privacy Policy</a>
+                                    <span>·</span>
+                                    <a href="/terms" target="_blank" rel="noopener noreferrer" className="hover:text-white/50 underline underline-offset-2 transition-colors">Terms of Service</a>
+                                </p>
+                            </div>
+                        </div>
                     </motion.div>
                 </div>
             </div>
