@@ -4,9 +4,18 @@ import { useState, useRef } from "react";
 import { Drawer } from "vaul";
 import { motion, AnimatePresence } from "framer-motion";
 import { trpc } from "@/trpc/client";
-import { X, Loader2, Paperclip, Camera, AlertTriangle, Sparkles } from "lucide-react";
+import { X, Loader2, Paperclip, Camera, AlertTriangle, Sparkles, Briefcase, Laptop, TrendingUp, Building, Gift, RefreshCw } from "lucide-react";
 import { cn, compressImage } from "@/lib/utils";
 import { useEffect } from "react";
+
+const PRESET_SOURCES = [
+    { name: "Salary", icon: Briefcase, color: "#007AFF" },
+    { name: "Freelance", icon: Laptop, color: "#5856D6" },
+    { name: "Investment", icon: TrendingUp, color: "#34C759" },
+    { name: "Business", icon: Building, color: "#FF9F0A" },
+    { name: "Gifts", icon: Gift, color: "#FF2D55" },
+    { name: "Refund", icon: RefreshCw, color: "#5AC8FA" },
+];
 
 export interface IncomeEditData {
     id: string;
@@ -337,6 +346,35 @@ export function AddIncomeSheet({ open, onOpenChange, onSuccess, editData, editId
                                     onBlur={() => window.scrollTo(0, 0)}
                                     className="text-5xl font-semibold bg-transparent outline-none text-center w-52 placeholder-[#E5E5EA] dark:placeholder-[#3A3A3C] transition-colors text-[#FF9500]"
                                 />
+                            </div>
+                        </div>
+
+                        {/* Preset Sources */}
+                        <div>
+                            <div className="text-xs font-semibold ios-text-secondary mb-2 uppercase tracking-wider">Source</div>
+                            <div className="flex flex-wrap gap-2">
+                                {PRESET_SOURCES.map((preset) => {
+                                    const Icon = preset.icon;
+                                    const isSelected = source.toLowerCase() === preset.name.toLowerCase();
+                                    return (
+                                        <motion.button
+                                            key={preset.name}
+                                            type="button"
+                                            whileTap={{ scale: 0.95 }}
+                                            onClick={() => setSource(preset.name)}
+                                            className={cn(
+                                                "flex items-center gap-1.5 px-3 py-2 rounded-full border transition-all text-[14px] font-medium",
+                                                isSelected
+                                                    ? "border-transparent text-white"
+                                                    : "border-[#E5E5EA] dark:border-[#3A3A3C] bg-white dark:bg-[#2C2C2E] ios-text-primary hover:bg-black/5 dark:hover:bg-white/5"
+                                            )}
+                                            style={isSelected ? { backgroundColor: preset.color } : {}}
+                                        >
+                                            <Icon size={16} style={{ color: isSelected ? "#fff" : preset.color }} />
+                                            {preset.name}
+                                        </motion.button>
+                                    );
+                                })}
                             </div>
                         </div>
 
