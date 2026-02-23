@@ -1,9 +1,13 @@
 import { NextRequest, NextResponse } from "next/server";
-import { writeFile, mkdir } from "fs/promises";
-import path from "path";
-import { v4 as uuidv4 } from "uuid";
+import { v2 as cloudinary, UploadApiResponse } from "cloudinary";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/auth";
+
+cloudinary.config({
+    cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
+    api_key: process.env.CLOUDINARY_API_KEY,
+    api_secret: process.env.CLOUDINARY_API_SECRET,
+});
 
 export async function POST(req: NextRequest) {
     try {
@@ -31,24 +35,29 @@ export async function POST(req: NextRequest) {
 
         const buffer = Buffer.from(await file.arrayBuffer());
 
-        // Ensure valid filename format
-        const ext = file.name.split('.').pop() || 'tmp';
-        const fileName = `${uuidv4()}.${ext}`;
-        const filePath = path.join(process.cwd(), "public/uploads", fileName);
-
-        // Ensure directory exists
-        const dirPath = path.dirname(filePath);
-        await mkdir(dirPath, { recursive: true });
-
-        await writeFile(filePath, buffer);
+        // Upload directly to Cloudinary via stream
+        const uploadResult = await new Promise<UploadApiResponse>((resolve, reject) => {
+            const uploadStream = cloudinary.uploader.upload_stream(
+                {
+                    folder: "ai_expense_tracker_receipts",
+                    resource_type: "auto", // Handles both images and raw files like PDF
+                },
+                (error, result) => {
+                    if (error) return reject(error);
+                    if (result) return resolve(result);
+                    reject(new Error("Cloudinary upload failed without error details"));
+                }
+            );
+            uploadStream.end(buffer);
+        });
 
         return NextResponse.json({
             success: true,
-            url: `/uploads/${fileName}`
+            url: uploadResult.secure_url
         });
 
     } catch (error: any) {
-        console.error("Upload Error:", error);
-        return NextResponse.json({ error: error.message || "Failed to upload file" }, { status: 500 });
+        console.error("Cloudinary Upload Error:", error);
+        return NextResponse.json({ error: error.message || "Failed to upload file to cloud storage" }, { status: 500 });
     }
 }
