@@ -444,11 +444,12 @@ export function AddExpenseSheet({ open, onOpenChange, onSuccess, editData, editI
                                     type="file"
                                     className="hidden"
                                     accept=".jpg,.jpeg,.png,.webp,.pdf"
-                                    onChange={async (e) => {
+                                    onChange={(e) => {
                                         const selected = e.target.files?.[0];
                                         if (!selected) return;
                                         if (selected.type.startsWith('image/')) {
-                                            setFile(await compressImage(selected));
+                                            // Also trigger AI scan to autofill details from gallery images
+                                            handleScan(e);
                                         } else {
                                             setFile(selected);
                                         }
