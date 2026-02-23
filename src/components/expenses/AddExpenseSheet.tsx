@@ -185,7 +185,7 @@ export function AddExpenseSheet({ open, onOpenChange, onSuccess, editData, editI
             const imageBitmap = await window.createImageBitmap(selectedFile);
             const canvas = document.createElement('canvas');
             let { width, height } = imageBitmap;
-            const MAX_DIMENSION = 1200;
+            const MAX_DIMENSION = 1920;
 
             if (width > height && width > MAX_DIMENSION) {
                 height *= MAX_DIMENSION / width;
@@ -200,8 +200,8 @@ export function AddExpenseSheet({ open, onOpenChange, onSuccess, editData, editI
             const ctx = canvas.getContext('2d');
             ctx?.drawImage(imageBitmap, 0, 0, width, height);
 
-            // Convert to highly optimized JPEG
-            const compressedBase64 = canvas.toDataURL('image/jpeg', 0.7).split(",")[1];
+            // Convert to highly optimized JPEG, keeping quality high for OCR
+            const compressedBase64 = canvas.toDataURL('image/jpeg', 0.85).split(",")[1];
 
             const result = await scanReceipt.mutateAsync({
                 imageBase64: compressedBase64,
@@ -445,8 +445,12 @@ export function AddExpenseSheet({ open, onOpenChange, onSuccess, editData, editI
                                     className="hidden"
                                     accept=".jpg,.jpeg,.png,.webp,.pdf"
                                     onChange={(e) => {
-                                        if (e.target.files && e.target.files[0]) {
-                                            setFile(e.target.files[0]);
+                                        const selected = e.target.files?.[0];
+                                        if (!selected) return;
+                                        if (selected.type.startsWith('image/')) {
+                                            handleScan(e);
+                                        } else {
+                                            setFile(selected);
                                         }
                                     }}
                                 />

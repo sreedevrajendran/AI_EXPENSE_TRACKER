@@ -39,7 +39,7 @@ If you cannot determine a field, use null.`
                         ]
                     }
                 ],
-                model: "llama-3.2-11b-vision-preview",
+                model: "llama-3.2-90b-vision-preview",
                 temperature: 0,
             });
 
