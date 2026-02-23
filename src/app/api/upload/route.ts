@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { writeFile } from "fs/promises";
+import { writeFile, mkdir } from "fs/promises";
 import path from "path";
 import { v4 as uuidv4 } from "uuid";
 import { getServerSession } from "next-auth";
@@ -36,6 +36,10 @@ export async function POST(req: NextRequest) {
         const fileName = `${uuidv4()}.${ext}`;
         const filePath = path.join(process.cwd(), "public/uploads", fileName);
 
+        // Ensure directory exists
+        const dirPath = path.dirname(filePath);
+        await mkdir(dirPath, { recursive: true });
+
         await writeFile(filePath, buffer);
 
         return NextResponse.json({
@@ -43,8 +47,8 @@ export async function POST(req: NextRequest) {
             url: `/uploads/${fileName}`
         });
 
-    } catch (error) {
+    } catch (error: any) {
         console.error("Upload Error:", error);
-        return NextResponse.json({ error: "Failed to upload file" }, { status: 500 });
+        return NextResponse.json({ error: error.message || "Failed to upload file" }, { status: 500 });
     }
 }

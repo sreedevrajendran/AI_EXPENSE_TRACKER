@@ -199,6 +199,9 @@ export function AddExpenseSheet({ open, onOpenChange, onSuccess, editData, editI
                     if (result.amount) setAmount(String(result.amount));
                     if (result.merchant) setMerchant(result.merchant);
                     if (result.note) setNote(result.note);
+                    if (result.paymentMethod && ["CASH", "CARD", "UPI", "BANK_TRANSFER", "OTHER"].includes(result.paymentMethod)) {
+                        setPaymentMethod(result.paymentMethod as PaymentMethod);
+                    }
                     if (result.category && categories) {
                         const match = categories.find((c: { id: string; name: string }) =>
                             c.name.toLowerCase().includes(result.category.toLowerCase())

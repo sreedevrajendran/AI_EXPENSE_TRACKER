@@ -27,9 +27,11 @@ export const aiRouter = router({
   "merchant": "<string>",
   "date": "<YYYY-MM-DD>",
   "category": "<string>",
+  "paymentMethod": "<string>",
   "note": "<string>"
 }
 CRITICAL: The "category" field MUST be exactly one of the following, do NOT invent categories: "Food & Dining", "Transport", "Shopping", "Entertainment", "Health", "Bills & Utilities", "Travel", "Groceries", "Education", or "Other".
+CRITICAL: The "paymentMethod" field MUST be exactly one of the following: "CASH", "CARD", "UPI", "BANK_TRANSFER", or "OTHER".
 If a field is missing, use null.`
                                 },
                                 {
@@ -51,7 +53,7 @@ If a field is missing, use null.`
                 } catch {
                     const jsonMatch = text.match(/\{[\s\S]*\}/);
                     if (jsonMatch) return JSON.parse(jsonMatch[0]);
-                    return { amount: null, merchant: null, date: null, category: null, note: null };
+                    return { amount: null, merchant: null, date: null, category: null, paymentMethod: null, note: null };
                 }
             } catch (error: any) {
                 console.error("Groq API error:", error);
