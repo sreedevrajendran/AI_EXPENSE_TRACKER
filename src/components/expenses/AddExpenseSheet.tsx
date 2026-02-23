@@ -6,7 +6,7 @@ import { motion } from "framer-motion";
 import { trpc } from "@/trpc/client";
 import { PaymentMethod } from "@prisma/client";
 import { X, Camera, Loader2, ChevronDown, CreditCard, Banknote, Smartphone, Building2, MoreHorizontal, Paperclip } from "lucide-react";
-import { cn } from "@/lib/utils";
+import { cn, compressImage } from "@/lib/utils";
 import { getLucideIcon } from "@/lib/icons";
 import { useEffect } from "react";
 
@@ -178,50 +178,47 @@ export function AddExpenseSheet({ open, onOpenChange, onSuccess, editData, editI
     const handleScan = async (e: React.ChangeEvent<HTMLInputElement>) => {
         const selectedFile = e.target.files?.[0];
         if (!selectedFile) return;
-        setFile(selectedFile); // Set as attachment too
+
         setIsScanning(true);
         try {
-            // Compress image to prevent Vercel/Netlify 4.5MB payload limit errors
-            const imageBitmap = await window.createImageBitmap(selectedFile);
-            const canvas = document.createElement('canvas');
-            let { width, height } = imageBitmap;
-            const MAX_DIMENSION = 1600;
+            // Compress image to prevent Vercel/Netlify payload limit errors on upload
+            const compressedFile = await compressImage(selectedFile);
+            setFile(compressedFile);
 
-            if (width > height && width > MAX_DIMENSION) {
-                height *= MAX_DIMENSION / width;
-                width = MAX_DIMENSION;
-            } else if (height > MAX_DIMENSION) {
-                width *= MAX_DIMENSION / height;
-                height = MAX_DIMENSION;
-            }
+            // Read the compressed file as base64 for the AI API
+            const reader = new FileReader();
+            reader.readAsDataURL(compressedFile);
+            reader.onload = async () => {
+                try {
+                    const base64String = (reader.result as string).split(",")[1];
+                    const result = await scanReceipt.mutateAsync({
+                        imageBase64: base64String,
+                        mimeType: compressedFile.type,
+                    });
 
-            canvas.width = width;
-            canvas.height = height;
-            const ctx = canvas.getContext('2d');
-            ctx?.drawImage(imageBitmap, 0, 0, width, height);
-
-            // Convert to highly optimized JPEG
-            const compressedBase64 = canvas.toDataURL('image/jpeg', 0.8).split(",")[1];
-
-            const result = await scanReceipt.mutateAsync({
-                imageBase64: compressedBase64,
-                mimeType: "image/jpeg",
-            });
-
-            if (result.amount) setAmount(String(result.amount));
-            if (result.merchant) setMerchant(result.merchant);
-            if (result.note) setNote(result.note);
-            // try to match category
-            if (result.category && categories) {
-                const match = categories.find((c: { id: string; name: string }) =>
-                    c.name.toLowerCase().includes(result.category.toLowerCase())
-                );
-                if (match) setSelectedCategory(match.id);
-            }
-            setIsScanning(false);
+                    if (result.amount) setAmount(String(result.amount));
+                    if (result.merchant) setMerchant(result.merchant);
+                    if (result.note) setNote(result.note);
+                    if (result.category && categories) {
+                        const match = categories.find((c: { id: string; name: string }) =>
+                            c.name.toLowerCase().includes(result.category.toLowerCase())
+                        );
+                        if (match) setSelectedCategory(match.id);
+                    }
+                } catch (err: any) {
+                    console.error("Receipt scan failed:", err);
+                    setError(err.message || "Failed to scan receipt. Please try again.");
+                } finally {
+                    setIsScanning(false);
+                }
+            };
+            reader.onerror = () => {
+                setError("Failed to read image file.");
+                setIsScanning(false);
+            };
         } catch (error: any) {
-            console.error("Receipt scan failed:", error);
-            setError(error.message || "Failed to scan receipt. Please try again.");
+            console.error("Image processing failed:", error);
+            setError(error.message || "Failed to process image. Please try again.");
             setIsScanning(false);
         }
     };

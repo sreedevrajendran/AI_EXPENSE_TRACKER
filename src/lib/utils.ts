@@ -52,3 +52,40 @@ export function getBudgetColor(status: "safe" | "warning" | "danger"): string {
         default: return "#34C759";
     }
 }
+
+export async function compressImage(file: File, maxDimension = 1600): Promise<File> {
+    if (!file.type.startsWith('image/')) return file;
+
+    return new Promise(async (resolve) => {
+        try {
+            const imageBitmap = await window.createImageBitmap(file);
+            const canvas = document.createElement('canvas');
+            let { width, height } = imageBitmap;
+
+            if (width > height && width > maxDimension) {
+                height *= maxDimension / width;
+                width = maxDimension;
+            } else if (height > maxDimension) {
+                width *= maxDimension / height;
+                height = maxDimension;
+            }
+
+            canvas.width = width;
+            canvas.height = height;
+            const ctx = canvas.getContext('2d');
+            ctx?.drawImage(imageBitmap, 0, 0, width, height);
+
+            canvas.toBlob((blob) => {
+                if (blob) {
+                    const newFileName = file.name.replace(/\.[^/.]+$/, "") + ".jpeg";
+                    resolve(new File([blob], newFileName, { type: 'image/jpeg' }));
+                } else {
+                    resolve(file);
+                }
+            }, 'image/jpeg', 0.8);
+        } catch (err) {
+            console.error("Image compression failed:", err);
+            resolve(file); // Fallback to original
+        }
+    });
+}

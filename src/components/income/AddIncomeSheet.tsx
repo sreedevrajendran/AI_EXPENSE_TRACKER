@@ -5,7 +5,7 @@ import { Drawer } from "vaul";
 import { motion } from "framer-motion";
 import { trpc } from "@/trpc/client";
 import { X, Loader2, Paperclip, FileText, Image as ImageIcon } from "lucide-react";
-import { cn } from "@/lib/utils";
+import { cn, compressImage } from "@/lib/utils";
 
 import { useEffect } from "react";
 
@@ -281,9 +281,14 @@ export function AddIncomeSheet({ open, onOpenChange, onSuccess, editData, editId
                                     type="file"
                                     className="hidden"
                                     accept=".jpg,.jpeg,.png,.webp,.pdf"
-                                    onChange={(e) => {
+                                    onChange={async (e) => {
                                         if (e.target.files && e.target.files[0]) {
-                                            setFile(e.target.files[0]);
+                                            const selectedFile = e.target.files[0];
+                                            if (selectedFile.type.startsWith('image/')) {
+                                                setFile(await compressImage(selectedFile));
+                                            } else {
+                                                setFile(selectedFile);
+                                            }
                                         }
                                     }}
                                 />
