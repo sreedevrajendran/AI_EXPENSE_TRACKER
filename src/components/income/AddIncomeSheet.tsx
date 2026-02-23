@@ -1,12 +1,11 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { Drawer } from "vaul";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 import { trpc } from "@/trpc/client";
-import { X, Loader2, Paperclip, FileText, Image as ImageIcon } from "lucide-react";
+import { X, Loader2, Paperclip, Camera, AlertTriangle, Sparkles } from "lucide-react";
 import { cn, compressImage } from "@/lib/utils";
-
 import { useEffect } from "react";
 
 export interface IncomeEditData {
@@ -34,6 +33,10 @@ export function AddIncomeSheet({ open, onOpenChange, onSuccess, editData, editId
     const [uploading, setUploading] = useState(false);
     const [error, setError] = useState<string | null>(null);
     const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+    const [isScanning, setIsScanning] = useState(false);
+    const [scanWarning, setScanWarning] = useState<string | null>(null);
+    const [aiDetected, setAiDetected] = useState(false);
+    const cameraRef = useRef<HTMLInputElement>(null);
 
     const utils = trpc.useUtils();
 
@@ -107,6 +110,7 @@ export function AddIncomeSheet({ open, onOpenChange, onSuccess, editData, editId
     });
 
     const mapIcon = trpc.ai.mapIcon.useMutation();
+    const scanIncomeDoc = trpc.ai.scanIncomeDoc.useMutation();
 
     const resetForm = () => {
         setAmount("");
@@ -114,7 +118,65 @@ export function AddIncomeSheet({ open, onOpenChange, onSuccess, editData, editId
         setNote("");
         setFile(null);
         setError(null);
+        setScanWarning(null);
+        setAiDetected(false);
         setShowDeleteConfirm(false);
+    };
+
+    // ── AI Income Doc Scan ────────────────────────────────────────
+    const handleDocScan = async (selectedFile: File) => {
+        if (!selectedFile.type.startsWith("image/")) {
+            // PDFs — just attach, no scan
+            setFile(selectedFile);
+            return;
+        }
+
+        setIsScanning(true);
+        setScanWarning(null);
+        setError(null);
+
+        try {
+            const compressedFile = await compressImage(selectedFile);
+            setFile(compressedFile);
+
+            const reader = new FileReader();
+            reader.readAsDataURL(compressedFile);
+            reader.onload = async () => {
+                try {
+                    const base64String = (reader.result as string).split(",")[1];
+                    const result = await scanIncomeDoc.mutateAsync({
+                        imageBase64: base64String,
+                        mimeType: compressedFile.type,
+                    });
+
+                    if (result.isIncomeDoc === false) {
+                        // Reject - not an income document
+                        const reason = result.reason || "This doesn't look like an income document.";
+                        setScanWarning(`⚠️ Not an income document — ${reason}`);
+                        setFile(null); // Remove the invalid attachment
+                        setAiDetected(false);
+                    } else if (result.isIncomeDoc === true) {
+                        // Autofill the form
+                        if (result.amount) setAmount(String(result.amount));
+                        if (result.source) setSource(result.source);
+                        if (result.note) setNote(result.note);
+                        setAiDetected(true);
+                        setScanWarning(null);
+                    }
+                } catch (err: any) {
+                    setError(err.message || "Failed to analyse document. Please try again.");
+                } finally {
+                    setIsScanning(false);
+                }
+            };
+            reader.onerror = () => {
+                setError("Failed to read the file.");
+                setIsScanning(false);
+            };
+        } catch (err: any) {
+            setError(err.message || "Failed to process image.");
+            setIsScanning(false);
+        }
     };
 
     const handleSubmit = async () => {
@@ -201,7 +263,7 @@ export function AddIncomeSheet({ open, onOpenChange, onSuccess, editData, editId
                         <button
                             type="button"
                             onClick={handleSubmit}
-                            disabled={!amount || !source || createIncome.isPending || updateIncome.isPending || uploading}
+                            disabled={!amount || !source || createIncome.isPending || updateIncome.isPending || uploading || isScanning}
                             className={cn("text-[17px] font-semibold transition-opacity flex items-center gap-1",
                                 !amount || !source ? "text-[#FF9500]/40" : "text-[#FF9500]"
                             )}
@@ -211,18 +273,58 @@ export function AddIncomeSheet({ open, onOpenChange, onSuccess, editData, editId
                     </div>
 
                     <div className="overflow-y-auto flex-1 pb-8 px-6 space-y-4">
-                        {error && (
-                            <motion.div
-                                initial={{ opacity: 0, scale: 0.9 }}
-                                animate={{ opacity: 1, scale: 1 }}
-                                className="p-3 bg-ios-red/10 border border-ios-red/20 rounded-ios-sm text-ios-red text-sm font-medium text-center"
-                            >
-                                {error}
-                            </motion.div>
-                        )}
+                        {/* Error */}
+                        <AnimatePresence>
+                            {error && (
+                                <motion.div
+                                    key="error"
+                                    initial={{ opacity: 0, scale: 0.95 }}
+                                    animate={{ opacity: 1, scale: 1 }}
+                                    exit={{ opacity: 0, scale: 0.95 }}
+                                    className="p-3 bg-ios-red/10 border border-ios-red/20 rounded-ios-sm text-ios-red text-sm font-medium text-center"
+                                >
+                                    {error}
+                                </motion.div>
+                            )}
+
+                            {/* Non-income document warning */}
+                            {scanWarning && (
+                                <motion.div
+                                    key="warning"
+                                    initial={{ opacity: 0, y: -8 }}
+                                    animate={{ opacity: 1, y: 0 }}
+                                    exit={{ opacity: 0, y: -8 }}
+                                    className="flex items-start gap-3 p-3.5 bg-amber-500/10 border border-amber-500/20 rounded-2xl"
+                                >
+                                    <AlertTriangle size={18} className="text-amber-500 flex-shrink-0 mt-0.5" />
+                                    <p className="text-[13px] text-amber-600 dark:text-amber-400 font-medium leading-snug">{scanWarning}</p>
+                                </motion.div>
+                            )}
+
+                            {/* AI autofill success badge */}
+                            {aiDetected && (
+                                <motion.div
+                                    key="ai-badge"
+                                    initial={{ opacity: 0, y: -8 }}
+                                    animate={{ opacity: 1, y: 0 }}
+                                    exit={{ opacity: 0 }}
+                                    className="flex items-center gap-2 p-3 bg-[#34C759]/10 border border-[#34C759]/20 rounded-2xl"
+                                >
+                                    <Sparkles size={15} className="text-[#34C759] flex-shrink-0" />
+                                    <p className="text-[13px] text-[#34C759] font-medium">AI filled in the details from your document!</p>
+                                </motion.div>
+                            )}
+                        </AnimatePresence>
 
                         {/* Amount input */}
                         <div className="ios-card p-5 text-center relative overflow-hidden">
+                            {aiDetected && (
+                                <div className="absolute top-2 right-2">
+                                    <span className="text-[10px] bg-[#34C759]/15 text-[#34C759] font-semibold px-2 py-0.5 rounded-full flex items-center gap-1">
+                                        <Sparkles size={9} /> AI
+                                    </span>
+                                </div>
+                            )}
                             <div className="text-xs ios-text-secondary mb-1 uppercase tracking-wider">Amount</div>
                             <div className="flex items-center justify-center gap-1 relative z-10">
                                 <span className="text-4xl font-light ios-text-secondary">₹</span>
@@ -233,9 +335,7 @@ export function AddIncomeSheet({ open, onOpenChange, onSuccess, editData, editId
                                     value={amount}
                                     onChange={(e) => setAmount(e.target.value)}
                                     onBlur={() => window.scrollTo(0, 0)}
-                                    className={cn(
-                                        "text-5xl font-semibold bg-transparent outline-none text-center w-52 placeholder-[#E5E5EA] dark:placeholder-[#3A3A3C] transition-colors text-[#FF9500]"
-                                    )}
+                                    className="text-5xl font-semibold bg-transparent outline-none text-center w-52 placeholder-[#E5E5EA] dark:placeholder-[#3A3A3C] transition-colors text-[#FF9500]"
                                 />
                             </div>
                         </div>
@@ -261,16 +361,41 @@ export function AddIncomeSheet({ open, onOpenChange, onSuccess, editData, editId
                             />
                         </div>
 
-                        {/* Attachment Section */}
+                        {/* ── AI Document Scanner Button ─── */}
+                        <button
+                            type="button"
+                            onClick={() => cameraRef.current?.click()}
+                            disabled={isScanning}
+                            className="w-full flex items-center justify-center gap-2 py-3 rounded-ios-sm border-2 border-dashed border-[#FF9500]/30 text-[#FF9500] text-[15px] font-medium"
+                        >
+                            {isScanning ? <Loader2 size={18} className="animate-spin" /> : <Camera size={18} />}
+                            {isScanning ? "Analysing document..." : "Scan Income Doc with AI"}
+                        </button>
+                        <input
+                            ref={cameraRef}
+                            type="file"
+                            accept="image/*"
+                            capture="environment"
+                            className="hidden"
+                            onChange={(e) => {
+                                const f = e.target.files?.[0];
+                                if (f) handleDocScan(f);
+                            }}
+                        />
+
+                        {/* ── Gallery Attachment ─── */}
                         <div className="ios-card overflow-hidden">
                             <label className="flex items-center gap-3 px-4 py-3.5 w-full cursor-pointer active:bg-black/5 dark:active:bg-white/5 transition-colors">
                                 <div className="w-8 h-8 rounded-lg bg-[#FF9500]/10 flex items-center justify-center flex-shrink-0">
                                     <Paperclip size={18} className="text-[#FF9500]" />
                                 </div>
                                 <div className="flex-1 flex items-center justify-between">
-                                    <span className="text-[17px] ios-text-primary">
-                                        {file ? "Change Attachment" : "Add Attachment"}
-                                    </span>
+                                    <div>
+                                        <span className="text-[17px] ios-text-primary block">
+                                            {file ? "Change Attachment" : "Add Attachment"}
+                                        </span>
+                                        <span className="text-[11px] ios-text-secondary">Salary slip, payslip, invoice…</span>
+                                    </div>
                                     {file && (
                                         <span className="text-[15px] ios-text-secondary truncate max-w-[120px]">
                                             {file.name}
@@ -281,15 +406,9 @@ export function AddIncomeSheet({ open, onOpenChange, onSuccess, editData, editId
                                     type="file"
                                     className="hidden"
                                     accept=".jpg,.jpeg,.png,.webp,.pdf"
-                                    onChange={async (e) => {
-                                        if (e.target.files && e.target.files[0]) {
-                                            const selectedFile = e.target.files[0];
-                                            if (selectedFile.type.startsWith('image/')) {
-                                                setFile(await compressImage(selectedFile));
-                                            } else {
-                                                setFile(selectedFile);
-                                            }
-                                        }
+                                    onChange={(e) => {
+                                        const f = e.target.files?.[0];
+                                        if (f) handleDocScan(f);
                                     }}
                                 />
                             </label>
@@ -297,7 +416,14 @@ export function AddIncomeSheet({ open, onOpenChange, onSuccess, editData, editId
                                 <div className="px-4 pb-3.5 flex justify-end">
                                     <button
                                         type="button"
-                                        onClick={() => setFile(null)}
+                                        onClick={() => {
+                                            setFile(null);
+                                            setAmount("");
+                                            setSource("");
+                                            setNote("");
+                                            setAiDetected(false);
+                                            setScanWarning(null);
+                                        }}
                                         className="text-[13px] text-ios-red font-medium"
                                     >
                                         Remove

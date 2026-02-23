@@ -61,6 +61,70 @@ If a field is missing, use null.`
             }
         }),
 
+    scanIncomeDoc: protectedProcedure
+        .input(
+            z.object({
+                imageBase64: z.string(),
+                mimeType: z.string().default("image/jpeg"),
+            })
+        )
+        .mutation(async ({ input }) => {
+            try {
+                const chatCompletion = await groq.chat.completions.create({
+                    messages: [
+                        {
+                            role: "user",
+                            content: [
+                                {
+                                    type: "text",
+                                    text: `Analyse this document image. First determine if it is an income-related document (e.g. salary slip, payslip, bank credit statement, freelance invoice, dividend notice, pension statement, or any document showing money received).
+
+Return ONLY a raw JSON object. Do not include markdown formatting, backticks, or any conversational text.
+
+If it IS an income document:
+{
+  "isIncomeDoc": true,
+  "amount": <number, net/take-home amount if visible, else gross>,
+  "source": "<employer name or income source, e.g. 'Infosys', 'Freelance - Upwork', 'Bank Interest'>",
+  "date": "<YYYY-MM-DD, the payslip or credit date>",
+  "note": "<short descriptive note e.g. 'March 2025 Salary' or 'Q1 dividend payout'>"
+}
+
+If it is NOT an income document (e.g. it is an expense receipt, a random photo, a food bill, a utility bill, etc.):
+{
+  "isIncomeDoc": false,
+  "reason": "<brief human-readable reason why this is not an income document, max 12 words>"
+}
+
+If a field is missing in an income doc, use null.`
+                                },
+                                {
+                                    type: "image_url",
+                                    image_url: {
+                                        url: `data:${input.mimeType};base64,${input.imageBase64}`,
+                                    }
+                                }
+                            ]
+                        }
+                    ],
+                    model: "meta-llama/llama-4-scout-17b-16e-instruct",
+                    temperature: 0,
+                });
+
+                const text = chatCompletion.choices[0]?.message?.content || "{}";
+                try {
+                    return JSON.parse(text);
+                } catch {
+                    const jsonMatch = text.match(/\{[\s\S]*\}/);
+                    if (jsonMatch) return JSON.parse(jsonMatch[0]);
+                    return { isIncomeDoc: false, reason: "Could not parse the document." };
+                }
+            } catch (error: any) {
+                console.error("Income doc scan error:", error);
+                throw new Error(`AI processing failed: ${error.message || "Unknown error"}`);
+            }
+        }),
+
     mapIcon: protectedProcedure
         .input(z.object({ query: z.string() }))
         .mutation(async ({ input }) => {
