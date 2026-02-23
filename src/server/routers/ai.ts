@@ -13,43 +13,48 @@ export const aiRouter = router({
             })
         )
         .mutation(async ({ input }) => {
-            const chatCompletion = await groq.chat.completions.create({
-                messages: [
-                    {
-                        role: "user",
-                        content: [
-                            {
-                                type: "text",
-                                text: `You are an AI receipt scanner. Extract the following from this receipt image and return ONLY valid JSON (no markdown, no code blocks):
-{
-  "amount": <number, total amount>,
-  "merchant": "<string, store/merchant name>",
-  "date": "<string, ISO date YYYY-MM-DD>",
-  "category": "<string, one of: Food & Dining, Transport, Shopping, Entertainment, Health, Bills & Utilities, Travel, Groceries, Education, Other>",
-  "note": "<string, brief description>"
-}
-If you cannot determine a field, use null.`
-                            },
-                            {
-                                type: "image_url",
-                                image_url: {
-                                    url: `data:${input.mimeType};base64,${input.imageBase64}`,
-                                }
-                            }
-                        ]
-                    }
-                ],
-                model: "llama-3.2-90b-vision-preview",
-                temperature: 0,
-            });
-
-            const text = chatCompletion.choices[0]?.message?.content || "{}";
             try {
-                return JSON.parse(text);
-            } catch {
-                const jsonMatch = text.match(/\{[\s\S]*\}/);
-                if (jsonMatch) return JSON.parse(jsonMatch[0]);
-                return { amount: null, merchant: null, date: null, category: null, note: null };
+                const chatCompletion = await groq.chat.completions.create({
+                    messages: [
+                        {
+                            role: "user",
+                            content: [
+                                {
+                                    type: "text",
+                                    text: `Extract receipt data from this image. Return ONLY a raw JSON object. Do not include markdown formatting, backticks, or any conversational text.
+{
+  "amount": <number only>,
+  "merchant": "<string>",
+  "date": "<YYYY-MM-DD>",
+  "category": "<string: Food & Dining, Transport, Shopping, Entertainment, Health, Bills & Utilities, Travel, Groceries, Education, Other>",
+  "note": "<string>"
+}
+If a field is missing, use null.`
+                                },
+                                {
+                                    type: "image_url",
+                                    image_url: {
+                                        url: `data:${input.mimeType};base64,${input.imageBase64}`,
+                                    }
+                                }
+                            ]
+                        }
+                    ],
+                    model: "llama-3.2-90b-vision-preview",
+                    temperature: 0,
+                });
+
+                const text = chatCompletion.choices[0]?.message?.content || "{}";
+                try {
+                    return JSON.parse(text);
+                } catch {
+                    const jsonMatch = text.match(/\{[\s\S]*\}/);
+                    if (jsonMatch) return JSON.parse(jsonMatch[0]);
+                    return { amount: null, merchant: null, date: null, category: null, note: null };
+                }
+            } catch (error: any) {
+                console.error("Groq API error:", error);
+                throw new Error(`AI processing failed: ${error.message || "Unknown error"}`);
             }
         }),
 
