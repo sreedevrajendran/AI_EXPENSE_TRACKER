@@ -86,6 +86,7 @@ If it IS an income document:
   "isIncomeDoc": true,
   "amount": <number, net/take-home amount if visible, else gross>,
   "source": "<employer name or income source, e.g. 'Infosys', 'Freelance - Upwork', 'Bank Interest'>",
+  "sourceType": "<classify the income type. MUST be exactly one of: 'Salary', 'Freelance', 'Investment', 'Business', 'Gifts', 'Refund'. Use 'Salary' for payslips/salary slips. Use 'Freelance' for invoices/gig work. Use 'Investment' for dividends/interest. Use 'Business' for business revenue. Use 'Gifts' for gift/bonus payments. Use 'Refund' for refunds/cashbacks.>",
   "date": "<YYYY-MM-DD, the payslip or credit date>",
   "note": "<short descriptive note e.g. 'March 2025 Salary' or 'Q1 dividend payout'>"
 }

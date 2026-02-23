@@ -45,6 +45,7 @@ export function AddIncomeSheet({ open, onOpenChange, onSuccess, editData, editId
     const [isScanning, setIsScanning] = useState(false);
     const [scanWarning, setScanWarning] = useState<string | null>(null);
     const [aiDetected, setAiDetected] = useState(false);
+    const [selectedPreset, setSelectedPreset] = useState<string | null>(null);
     const cameraRef = useRef<HTMLInputElement>(null);
 
     const utils = trpc.useUtils();
@@ -129,6 +130,7 @@ export function AddIncomeSheet({ open, onOpenChange, onSuccess, editData, editId
         setError(null);
         setScanWarning(null);
         setAiDetected(false);
+        setSelectedPreset(null);
         setShowDeleteConfirm(false);
     };
 
@@ -169,6 +171,11 @@ export function AddIncomeSheet({ open, onOpenChange, onSuccess, editData, editId
                         if (result.amount) setAmount(String(result.amount));
                         if (result.source) setSource(result.source);
                         if (result.note) setNote(result.note);
+                        // Auto-select the matching preset chip from sourceType
+                        const VALID_PRESETS = ["Salary", "Freelance", "Investment", "Business", "Gifts", "Refund"];
+                        if (result.sourceType && VALID_PRESETS.includes(result.sourceType)) {
+                            setSelectedPreset(result.sourceType);
+                        }
                         setAiDetected(true);
                         setScanWarning(null);
                     }
@@ -355,13 +362,20 @@ export function AddIncomeSheet({ open, onOpenChange, onSuccess, editData, editId
                             <div className="flex flex-wrap gap-2">
                                 {PRESET_SOURCES.map((preset) => {
                                     const Icon = preset.icon;
-                                    const isSelected = source.toLowerCase() === preset.name.toLowerCase();
+                                    const isSelected = selectedPreset === preset.name;
                                     return (
                                         <motion.button
                                             key={preset.name}
                                             type="button"
                                             whileTap={{ scale: 0.95 }}
-                                            onClick={() => setSource(preset.name)}
+                                            onClick={() => {
+                                                setSelectedPreset(preset.name);
+                                                // Only overwrite the text field if it's empty or was another preset
+                                                const presetNames = PRESET_SOURCES.map(p => p.name);
+                                                if (!source || presetNames.includes(source)) {
+                                                    setSource(preset.name);
+                                                }
+                                            }}
                                             className={cn(
                                                 "flex items-center gap-1.5 px-3 py-2 rounded-full border transition-all text-[14px] font-medium",
                                                 isSelected
@@ -460,6 +474,7 @@ export function AddIncomeSheet({ open, onOpenChange, onSuccess, editData, editId
                                             setSource("");
                                             setNote("");
                                             setAiDetected(false);
+                                            setSelectedPreset(null);
                                             setScanWarning(null);
                                         }}
                                         className="text-[13px] text-ios-red font-medium"
