@@ -26,9 +26,10 @@ export const aiRouter = router({
   "amount": <number only>,
   "merchant": "<string>",
   "date": "<YYYY-MM-DD>",
-  "category": "<string: Food & Dining, Transport, Shopping, Entertainment, Health, Bills & Utilities, Travel, Groceries, Education, Other>",
+  "category": "<string>",
   "note": "<string>"
 }
+CRITICAL: The "category" field MUST be exactly one of the following, do NOT invent categories: "Food & Dining", "Transport", "Shopping", "Entertainment", "Health", "Bills & Utilities", "Travel", "Groceries", "Education", or "Other".
 If a field is missing, use null.`
                                 },
                                 {
@@ -40,7 +41,7 @@ If a field is missing, use null.`
                             ]
                         }
                     ],
-                    model: "llama-3.2-90b-vision-preview",
+                    model: "meta-llama/llama-4-scout-17b-16e-instruct",
                     temperature: 0,
                 });
 
@@ -65,15 +66,22 @@ If a field is missing, use null.`
                 messages: [
                     {
                         role: "user",
-                        content: `Given the merchant or category name "${input.query}", return ONLY a single Lucide icon name (kebab-case) that best represents it.
-Examples: "Starbucks" → "coffee", "Amazon" → "shopping-cart", "Netflix" → "film", "Uber" → "car", "McDonald's" → "utensils", "Gym" → "dumbbell"
-Return ONLY the icon name, nothing else.`
+                        content: `Given the merchant or category name "${input.query}", return a JSON object with a single key "icon" containing the Lucide icon name (kebab-case) that best represents it.
+Examples: "Starbucks" -> {"icon": "coffee"}, "Amazon" -> {"icon": "shopping-cart"}, "Netflix" -> {"icon": "film"}
+Do not return any extra text.`
                     }
                 ],
                 model: "llama-3.1-8b-instant",
                 temperature: 0,
+                response_format: { type: "json_object" },
             });
-            return { icon: (chatCompletion.choices[0]?.message?.content || "").trim().toLowerCase().replace(/['"]/g, "") };
+            const text = chatCompletion.choices[0]?.message?.content || "{}";
+            try {
+                const parsed = JSON.parse(text);
+                return { icon: parsed.icon || "circle" };
+            } catch {
+                return { icon: "circle" };
+            }
         }),
 
     getInsights: protectedProcedure.query(async ({ ctx }) => {

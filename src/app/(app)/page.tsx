@@ -40,36 +40,7 @@ export default function HomePage() {
     const [modalTransactions, setModalTransactions] = useState<ModalTransaction[]>([]);
 
     const utils = trpc.useUtils();
-    const [isSyncing, setIsSyncing] = useState(false);
-    const syncMail = trpc.gmail.syncCurrentMonth.useMutation();
 
-    const handleMailSync = async () => {
-        setIsSyncing(true);
-        const toastId = toast.loading("Syncing AI receipts...");
-        try {
-            const res = await syncMail.mutateAsync();
-            toast.success(res.message, { id: toastId });
-            // Invalidate everything to refresh dashboard
-            utils.expense.getRecentExpenses.invalidate();
-            utils.income.getRecentIncomes.invalidate();
-            utils.expense.getMonthTotal.invalidate();
-            utils.income.getMonthTotal.invalidate();
-            utils.budget.list.invalidate();
-        } catch (error: any) {
-            if (error.message.includes("Gmail not connected")) {
-                toast.error(
-                    <span>
-                        Gmail not connected. <a href="/settings" className="underline font-bold">Configure in Settings</a>
-                    </span>,
-                    { id: toastId, duration: 5000 }
-                );
-            } else {
-                toast.error(error.message, { id: toastId });
-            }
-        } finally {
-            setIsSyncing(false);
-        }
-    };
 
     const { data: monthTotal } = trpc.expense.getMonthTotal.useQuery();
     const { data: monthIncomeTotal } = trpc.income.getMonthTotal.useQuery();
@@ -245,13 +216,6 @@ export default function HomePage() {
                                 <div className="flex items-center justify-between mb-3">
                                     <h2 className="text-[20px] font-bold ios-text-primary">Recent</h2>
                                     <div className="flex items-center gap-3">
-                                        <button
-                                            onClick={handleMailSync}
-                                            disabled={isSyncing}
-                                            className="text-ios-blue dark:text-ios-blue-dark text-sm font-medium flex items-center gap-1 bg-ios-blue/10 dark:bg-ios-blue-dark/10 px-2.5 py-1 rounded-md active:scale-95 transition-transform disabled:opacity-50"
-                                        >
-                                            {isSyncing ? "Syncing..." : <><Mail size={14} /> AI Sync</>}
-                                        </button>
                                         <a href="/expenses" className="text-ios-blue dark:text-ios-blue-dark text-sm font-medium flex items-center gap-1">
                                             See all <ArrowUpRight size={14} />
                                         </a>

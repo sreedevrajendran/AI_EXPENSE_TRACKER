@@ -2,7 +2,7 @@
 
 import { usePathname } from "next/navigation";
 import Link from "next/link";
-import { Home, List, PiggyBank, Settings, Sparkles } from "lucide-react";
+import { Home, List, PiggyBank, Settings, Sparkles, Wallet } from "lucide-react";
 import { motion } from "framer-motion";
 import { cn } from "@/lib/utils";
 import { useState } from "react";
@@ -10,6 +10,7 @@ import { AgentOasisChatSheet } from "@/components/ai/AgentOasisChatSheet";
 
 const tabs = [
     { href: "/", label: "Home", icon: Home },
+    { href: "/incomes", label: "Incomes", icon: Wallet },
     { href: "/expenses", label: "Expenses", icon: List },
     { href: "/budgets", label: "Budgets", icon: PiggyBank },
     { href: "/settings", label: "Settings", icon: Settings },

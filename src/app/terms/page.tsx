@@ -59,20 +59,11 @@ export default function TermsPage() {
                     </p>
                 </section>
 
-                {/* 3. Gmail Integration */}
-                <section className="bg-white dark:bg-[#1C1C1E] rounded-2xl p-6 space-y-3">
-                    <h2 className="text-xl font-semibold text-[#1C1C1E] dark:text-white">3. Gmail Integration</h2>
-                    <p className="text-sm text-[#3A3A3C] dark:text-[#EBEBF5] leading-relaxed">
-                        If you choose to connect your Gmail account, you grant {appName} read-only access to your Gmail
-                        messages solely for the purpose of identifying purchase receipts and creating expense entries.
-                        You can revoke this access at any time from Settings or from your Google Account settings.
-                        We do not send emails on your behalf.
-                    </p>
-                </section>
 
-                {/* 4. AI Features */}
+
+                {/* 3. AI Features */}
                 <section className="bg-white dark:bg-[#1C1C1E] rounded-2xl p-6 space-y-3">
-                    <h2 className="text-xl font-semibold text-[#1C1C1E] dark:text-white">4. AI Features</h2>
+                    <h2 className="text-xl font-semibold text-[#1C1C1E] dark:text-white">3. AI Features</h2>
                     <p className="text-sm text-[#3A3A3C] dark:text-[#EBEBF5] leading-relaxed">
                         The AI-powered features (receipt scanning, chatbot, spending insights) use third-party AI models
                         (Groq / LLaMA). AI-generated results may not always be accurate. You should review and verify
@@ -81,9 +72,9 @@ export default function TermsPage() {
                     </p>
                 </section>
 
-                {/* 5. Intellectual Property */}
+                {/* 4. Intellectual Property */}
                 <section className="bg-white dark:bg-[#1C1C1E] rounded-2xl p-6 space-y-3">
-                    <h2 className="text-xl font-semibold text-[#1C1C1E] dark:text-white">5. Intellectual Property</h2>
+                    <h2 className="text-xl font-semibold text-[#1C1C1E] dark:text-white">4. Intellectual Property</h2>
                     <p className="text-sm text-[#3A3A3C] dark:text-[#EBEBF5] leading-relaxed">
                         The {appName} application, including its design, code, and features, is the intellectual property
                         of its developer. You retain ownership of all financial data you input. You grant us a limited
@@ -91,9 +82,9 @@ export default function TermsPage() {
                     </p>
                 </section>
 
-                {/* 6. Disclaimers */}
+                {/* 5. Disclaimers */}
                 <section className="bg-white dark:bg-[#1C1C1E] rounded-2xl p-6 space-y-3">
-                    <h2 className="text-xl font-semibold text-[#1C1C1E] dark:text-white">6. Disclaimers</h2>
+                    <h2 className="text-xl font-semibold text-[#1C1C1E] dark:text-white">5. Disclaimers</h2>
                     <p className="text-sm text-[#3A3A3C] dark:text-[#EBEBF5] leading-relaxed">
                         {appName} is provided &quot;as is&quot; without warranties of any kind. We do not guarantee uninterrupted
                         access, accuracy of AI outputs, or that the service will be error-free. This app is not a
@@ -101,9 +92,9 @@ export default function TermsPage() {
                     </p>
                 </section>
 
-                {/* 7. Limitation of Liability */}
+                {/* 6. Limitation of Liability */}
                 <section className="bg-white dark:bg-[#1C1C1E] rounded-2xl p-6 space-y-3">
-                    <h2 className="text-xl font-semibold text-[#1C1C1E] dark:text-white">7. Limitation of Liability</h2>
+                    <h2 className="text-xl font-semibold text-[#1C1C1E] dark:text-white">6. Limitation of Liability</h2>
                     <p className="text-sm text-[#3A3A3C] dark:text-[#EBEBF5] leading-relaxed">
                         To the fullest extent permitted by law, {appName} and its developer shall not be liable for any
                         indirect, incidental, special, or consequential damages arising from your use or inability
@@ -111,9 +102,9 @@ export default function TermsPage() {
                     </p>
                 </section>
 
-                {/* 8. Termination */}
+                {/* 7. Termination */}
                 <section className="bg-white dark:bg-[#1C1C1E] rounded-2xl p-6 space-y-3">
-                    <h2 className="text-xl font-semibold text-[#1C1C1E] dark:text-white">8. Termination</h2>
+                    <h2 className="text-xl font-semibold text-[#1C1C1E] dark:text-white">7. Termination</h2>
                     <p className="text-sm text-[#3A3A3C] dark:text-[#EBEBF5] leading-relaxed">
                         We reserve the right to suspend or terminate your access to the service at any time, for any
                         reason, including violation of these terms. You may stop using the service at any time and
@@ -122,9 +113,9 @@ export default function TermsPage() {
                     </p>
                 </section>
 
-                {/* 9. Changes */}
+                {/* 8. Changes */}
                 <section className="bg-white dark:bg-[#1C1C1E] rounded-2xl p-6 space-y-3">
-                    <h2 className="text-xl font-semibold text-[#1C1C1E] dark:text-white">9. Changes to Terms</h2>
+                    <h2 className="text-xl font-semibold text-[#1C1C1E] dark:text-white">8. Changes to Terms</h2>
                     <p className="text-sm text-[#3A3A3C] dark:text-[#EBEBF5] leading-relaxed">
                         We may update these Terms from time to time. Continued use of the service after changes
                         constitutes acceptance of the updated Terms. The &quot;Last updated&quot; date at the top reflects
@@ -132,9 +123,9 @@ export default function TermsPage() {
                     </p>
                 </section>
 
-                {/* 10. Contact */}
+                {/* 9. Contact */}
                 <section className="bg-white dark:bg-[#1C1C1E] rounded-2xl p-6 space-y-3">
-                    <h2 className="text-xl font-semibold text-[#1C1C1E] dark:text-white">10. Contact</h2>
+                    <h2 className="text-xl font-semibold text-[#1C1C1E] dark:text-white">9. Contact</h2>
                     <p className="text-sm text-[#3A3A3C] dark:text-[#EBEBF5] leading-relaxed">
                         Questions about these Terms? Contact us at:{" "}
                         <a href={`mailto:${contactEmail}`} className="text-[#007AFF] underline font-medium">{contactEmail}</a>

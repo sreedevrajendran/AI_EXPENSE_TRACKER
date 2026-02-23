@@ -212,48 +212,52 @@ function BudgetSheet({ open, onOpenChange, existingBudget }: { open: boolean; on
 
                             {/* Delete Button (Editing only) */}
                             {existingBudget && (
-                                !showDeleteConfirm ? (
-                                    <motion.button
-                                        type="button"
-                                        whileTap={{ scale: 0.98 }}
-                                        onClick={() => setShowDeleteConfirm(true)}
-                                        disabled={deleteBudget.isPending}
-                                        className="w-full py-3.5 mt-4 rounded-ios-sm bg-ios-red/10 text-ios-red font-semibold flex items-center justify-center gap-2"
-                                    >
-                                        {deleteBudget.isPending ? <Loader2 size={18} className="animate-spin" /> : "Delete Budget"}
-                                    </motion.button>
-                                ) : (
-                                    <motion.div
-                                        initial={{ opacity: 0, y: -10 }}
-                                        animate={{ opacity: 1, y: 0 }}
-                                        className="mt-4 p-4 rounded-ios-sm bg-ios-red/10 border border-ios-red/20 space-y-3"
-                                    >
-                                        <p className="text-[15px] font-medium text-ios-red text-center">Are you sure you want to delete this budget?</p>
-                                        <div className="flex items-center gap-3">
-                                            <button
-                                                type="button"
-                                                onClick={() => setShowDeleteConfirm(false)}
-                                                className="flex-1 py-2.5 rounded-lg bg-white dark:bg-[#2C2C2E] text-ios-text-primary text-[15px] font-medium shadow-sm border border-[#E5E5EA] dark:border-[#3A3A3C] active:opacity-70 transition-opacity"
-                                            >
-                                                Cancel
-                                            </button>
-                                            <button
-                                                type="button"
-                                                onClick={() => deleteBudget.mutate({ id: existingBudget.id })}
-                                                disabled={deleteBudget.isPending}
-                                                className="flex-1 py-2.5 rounded-lg bg-ios-red text-white text-[15px] font-medium shadow-sm flex justify-center items-center gap-2 active:opacity-80 transition-opacity"
-                                            >
-                                                {deleteBudget.isPending ? <Loader2 size={18} className="animate-spin" /> : "Delete"}
-                                            </button>
-                                        </div>
-                                    </motion.div>
-                                )
+                                <motion.button
+                                    type="button"
+                                    whileTap={{ scale: 0.98 }}
+                                    onClick={() => setShowDeleteConfirm(true)}
+                                    disabled={deleteBudget.isPending}
+                                    className="w-full py-3.5 mt-4 rounded-ios-sm bg-ios-red/10 text-ios-red font-semibold flex items-center justify-center gap-2"
+                                >
+                                    {deleteBudget.isPending ? <Loader2 size={18} className="animate-spin" /> : "Delete Budget"}
+                                </motion.button>
                             )}
                         </div>
                     </div>
+
+                    {/* Centered Popup for Deletion Confirmation */}
+                    {showDeleteConfirm && (
+                        <div className="absolute inset-0 z-[60] flex items-center justify-center bg-black/40 backdrop-blur-sm p-4">
+                            <motion.div
+                                initial={{ opacity: 0, scale: 0.95 }}
+                                animate={{ opacity: 1, scale: 1 }}
+                                className="bg-white dark:bg-[#1C1C1E] rounded-xl p-5 shadow-xl w-full max-w-sm space-y-4"
+                            >
+                                <h3 className="text-[17px] font-semibold text-center mt-1 ios-text-primary">Delete Budget?</h3>
+                                <p className="text-[15px] text-ios-secondary text-center">Are you sure you want to delete this budget? This action cannot be undone.</p>
+                                <div className="flex items-center gap-3 pt-2">
+                                    <button
+                                        type="button"
+                                        onClick={() => setShowDeleteConfirm(false)}
+                                        className="flex-1 py-3 rounded-lg bg-[#E5E5EA] dark:bg-[#2C2C2E] text-ios-text-primary text-[15px] font-semibold active:opacity-70 transition-opacity"
+                                    >
+                                        Cancel
+                                    </button>
+                                    <button
+                                        type="button"
+                                        onClick={() => deleteBudget.mutate({ id: existingBudget!.id })}
+                                        disabled={deleteBudget.isPending}
+                                        className="flex-1 py-3 rounded-lg bg-ios-red text-white text-[15px] font-semibold flex justify-center items-center gap-2 active:opacity-80 transition-opacity"
+                                    >
+                                        {deleteBudget.isPending ? <Loader2 size={18} className="animate-spin" /> : "Delete"}
+                                    </button>
+                                </div>
+                            </motion.div>
+                        </div>
+                    )}
                 </Drawer.Content>
             </Drawer.Portal>
-        </Drawer.Root>
+        </Drawer.Root >
     );
 }
 

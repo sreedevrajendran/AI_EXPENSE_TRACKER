@@ -55,15 +55,7 @@ export default function PrivacyPage() {
                                 and is never sold or shared with third parties.
                             </p>
                         </div>
-                        <div>
-                            <h3 className="font-semibold text-[#1C1C1E] dark:text-white mb-1">Gmail Data (Optional)</h3>
-                            <p className="leading-relaxed text-sm">
-                                If you choose to connect your Gmail account, we request read-only access (<code className="text-xs bg-[#F2F2F7] dark:bg-[#2C2C2E] px-1.5 py-0.5 rounded">gmail.readonly</code>)
-                                to scan purchase confirmation emails and automatically create expense entries. We access only email subjects
-                                and bodies that match purchase receipt patterns. We do not store, read, or retain your full Gmail inbox.
-                                Gmail data is processed in real time and only the extracted expense information (merchant, amount, date) is saved.
-                            </p>
-                        </div>
+
                         <div>
                             <h3 className="font-semibold text-[#1C1C1E] dark:text-white mb-1">Receipt Images</h3>
                             <p className="leading-relaxed text-sm">
@@ -86,41 +78,14 @@ export default function PrivacyPage() {
                     <ul className="list-disc list-inside space-y-2 text-sm text-[#3A3A3C] dark:text-[#EBEBF5] leading-relaxed">
                         <li>To authenticate you and maintain your account session</li>
                         <li>To display your financial data, charts, and insights within the app</li>
-                        <li>To process Gmail emails to automatically extract and log expenses (only when you explicitly enable Gmail Sync)</li>
+
                         <li>To scan receipt images with AI to pre-fill expense forms</li>
                         <li>To provide AI-powered spending insights and chatbot answers about your own data</li>
                         <li>To improve the app&apos;s features and performance</li>
                     </ul>
                 </section>
 
-                {/* Section: Google API */}
-                <section className="bg-white dark:bg-[#1C1C1E] rounded-2xl p-6 space-y-3">
-                    <h2 className="text-xl font-semibold text-[#1C1C1E] dark:text-white">3. Google API Services</h2>
-                    <p className="text-sm text-[#3A3A3C] dark:text-[#EBEBF5] leading-relaxed">
-                        {appName}&apos;s use of information received from Google APIs adheres to the{" "}
-                        <a
-                            href="https://developers.google.com/terms/api-services-user-data-policy"
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="text-[#007AFF] underline"
-                        >
-                            Google API Services User Data Policy
-                        </a>
-                        , including the Limited Use requirements.
-                    </p>
-                    <p className="text-sm text-[#3A3A3C] dark:text-[#EBEBF5] leading-relaxed">
-                        Specifically: We only request Gmail read access when you explicitly connect Gmail in Settings.
-                        We use this access solely to identify purchase-related emails and extract expense data for your account.
-                        We do not transfer Gmail data to third parties except as necessary to provide the service,
-                        and we do not use Gmail data for advertising.
-                    </p>
-                    <p className="text-sm text-[#3A3A3C] dark:text-[#EBEBF5] leading-relaxed">
-                        You can revoke Gmail access at any time from the Settings page, or directly from your{" "}
-                        <a href="https://myaccount.google.com/permissions" target="_blank" rel="noopener noreferrer" className="text-[#007AFF] underline">
-                            Google Account permissions
-                        </a>.
-                    </p>
-                </section>
+
 
                 {/* Section: Data sharing */}
                 <section className="bg-white dark:bg-[#1C1C1E] rounded-2xl p-6 space-y-3">
@@ -156,8 +121,7 @@ export default function PrivacyPage() {
                     <h2 className="text-xl font-semibold text-[#1C1C1E] dark:text-white">6. Security</h2>
                     <p className="text-sm text-[#3A3A3C] dark:text-[#EBEBF5] leading-relaxed">
                         We implement industry-standard security measures including encrypted connections (HTTPS),
-                        secure session tokens, and protected database access. Gmail refresh tokens are stored encrypted
-                        and are only used to fetch purchase-related emails when you trigger a sync.
+                        secure session tokens, and protected database access.
                     </p>
                 </section>
 

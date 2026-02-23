@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useSession, signOut } from "next-auth/react";
 import { useTheme } from "next-themes";
 import { usePrivacy } from "@/context/PrivacyContext";
@@ -7,7 +8,7 @@ import { motion } from "framer-motion";
 import Image from "next/image";
 import { Suspense, useEffect, useState } from "react";
 import { trpc } from "@/trpc/client";
-import { Eye, EyeOff, Moon, Sun, LogOut, Check, Shield, Mail } from "lucide-react";
+import { Eye, EyeOff, Moon, Sun, LogOut, Check, Shield, Mail, FileText } from "lucide-react";
 import toast from "react-hot-toast";
 import { useSearchParams } from "next/navigation";
 
@@ -15,57 +16,11 @@ function SettingsContent() {
     const { data: session } = useSession();
     const { theme, setTheme } = useTheme();
     const { isPrivate, togglePrivacy } = usePrivacy();
-    const searchParams = useSearchParams();
     const [mounted, setMounted] = useState(false);
-    const [showDisconnectConfirm, setShowDisconnectConfirm] = useState(false);
-
-    // Fetch Gmail connection status
-    const { data: gmailStatus, refetch: refetchGmailStatus } = trpc.gmail.getStatus.useQuery(undefined, {
-        enabled: mounted && !!session?.user
-    });
-
-    const disconnectGmail = trpc.gmail.disconnect.useMutation({
-        onSuccess: () => {
-            toast.success("Gmail disconnected successfully.");
-            refetchGmailStatus();
-        },
-        onError: () => {
-            toast.error("Failed to disconnect Gmail.");
-        }
-    });
 
     useEffect(() => {
         setMounted(true);
     }, []);
-
-    useEffect(() => {
-        const errorParam = searchParams?.get("error");
-        if (searchParams?.get("gmail_connected") === "true") {
-            toast.success("Gmail connected successfully for AI Sync!");
-            refetchGmailStatus();
-        } else if (errorParam === "access_denied") {
-            toast.error(
-                (t) => (
-                    <span>
-                        <strong>Gmail access blocked.</strong> Your Google account isn\'t added as a test user yet.{" "}
-                        <a
-                            href="https://console.cloud.google.com/apis/credentials/consent"
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="underline font-bold"
-                            onClick={() => toast.dismiss(t.id)}
-                        >
-                            Add yourself here
-                        </a>
-                        {" "}under Test Users, then try again.
-                    </span>
-                ),
-                { duration: 10000 }
-            );
-        } else if (errorParam) {
-            toast.error("Failed to connect Gmail. Please try again.");
-        }
-    }, [searchParams, refetchGmailStatus]);
 
     const user = session?.user;
 
@@ -142,73 +97,7 @@ function SettingsContent() {
                 </div>
             </div>
 
-            {/* Integrations */}
-            <div>
-                <p className="text-xs font-semibold ios-text-secondary uppercase tracking-wider mb-2 px-1">Integrations</p>
-                <div className="ios-card overflow-hidden divide-y ios-separator">
-                    <div className="flex items-center justify-between px-4 py-3.5">
-                        <div className="flex items-center gap-3">
-                            <div className="w-8 h-8 rounded-full bg-[#EA4335]/10 flex items-center justify-center">
-                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                    <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4" />
-                                    <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853" />
-                                    <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05" />
-                                    <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335" />
-                                </svg>
-                            </div>
-                            <div>
-                                <p className="text-[15px] ios-text-primary font-medium">Google Workspace</p>
-                                <p className="text-xs ios-text-secondary">Sync receipts via Gmail</p>
-                            </div>
-                        </div>
-                        {gmailStatus?.isConnected ? (
-                            <div className="flex items-center gap-3">
-                                {!showDisconnectConfirm ? (
-                                    <>
-                                        <span className="flex items-center gap-1 text-[#34C759] dark:text-[#32D74B] text-[13px] font-medium">
-                                            <Check size={14} strokeWidth={3} />
-                                            Connected
-                                        </span>
-                                        <button
-                                            onClick={() => setShowDisconnectConfirm(true)}
-                                            className="px-3 py-1.5 bg-[#E5E5EA] dark:bg-[#3A3A3C] text-ios-text-primary text-[13px] font-medium rounded-full active:opacity-70 transition-opacity"
-                                        >
-                                            Disconnect
-                                        </button>
-                                    </>
-                                ) : (
-                                    <div className="flex items-center gap-2">
-                                        <span className="text-[12px] ios-text-secondary">Are you sure?</span>
-                                        <button
-                                            onClick={() => setShowDisconnectConfirm(false)}
-                                            className="px-3 py-1.5 bg-[#E5E5EA] dark:bg-[#3A3A3C] text-ios-text-primary text-[13px] font-medium rounded-full active:opacity-70 transition-opacity"
-                                        >
-                                            Cancel
-                                        </button>
-                                        <button
-                                            onClick={() => {
-                                                setShowDisconnectConfirm(false);
-                                                disconnectGmail.mutate();
-                                            }}
-                                            disabled={disconnectGmail.isPending}
-                                            className="px-3 py-1.5 bg-ios-red/10 text-ios-red text-[13px] font-medium rounded-full active:opacity-70 transition-opacity"
-                                        >
-                                            {disconnectGmail.isPending ? "..." : "Yes, Disconnect"}
-                                        </button>
-                                    </div>
-                                )}
-                            </div>
-                        ) : (
-                            <a
-                                href="/api/gmail/auth"
-                                className="px-3 py-1.5 bg-ios-blue/10 dark:bg-ios-blue-dark/20 text-ios-blue dark:text-ios-blue-dark text-[13px] font-medium rounded-full active:opacity-70 transition-opacity"
-                            >
-                                Connect
-                            </a>
-                        )}
-                    </div>
-                </div>
-            </div>
+
 
             {/* Account */}
             <div>
@@ -247,24 +136,30 @@ function SettingsContent() {
                     </div>
 
                     <div className="divide-y ios-separator">
-                        {/* Privacy Policy */}
-                        <div className="p-5 space-y-3">
-                            <div className="flex items-center gap-2 text-ios-blue dark:text-ios-blue-dark font-medium">
-                                <Shield size={18} strokeWidth={2.5} />
-                                <h4 className="text-[15px]">Privacy Policy</h4>
+                        {/* Legal Links */}
+                        <Link
+                            href="/privacy"
+                            className="flex items-center justify-between px-5 py-4 active:bg-[#F2F2F7] dark:active:bg-[#2C2C2E] transition-colors group"
+                        >
+                            <div className="flex items-center gap-3">
+                                <div className="w-8 h-8 rounded-full bg-ios-blue/10 dark:bg-ios-blue-dark/20 flex items-center justify-center text-ios-blue dark:text-ios-blue-dark">
+                                    <Shield size={16} strokeWidth={2.5} />
+                                </div>
+                                <p className="text-[15px] ios-text-primary font-medium">Privacy Policy</p>
                             </div>
-                            <div className="space-y-2 text-[13px] leading-relaxed ios-text-secondary">
-                                <p>
-                                    Your data is securely stored and private by default. Oasis does not share or sell your financial data to third parties.
-                                </p>
-                                <p>
-                                    <strong>Gmail Sync:</strong> When you connect your Gmail account, Oasis only requests read-only access to parse digital receipts. We do not read personal communications, insert emails, or store copies of your emails. The AI parsing is done securely using our trusted LLM providers (Groq Llama 3) strictly for extracting expense amounts, merchants, and dates.
-                                </p>
-                                <p>
-                                    <strong>AI Chatbot:</strong> Conversations with Agent Oasis are restricted to your own financial context. Contextual data sent to the AI is transient and not used to train global models.
-                                </p>
+                        </Link>
+
+                        <Link
+                            href="/terms"
+                            className="flex items-center justify-between px-5 py-4 active:bg-[#F2F2F7] dark:active:bg-[#2C2C2E] transition-colors group"
+                        >
+                            <div className="flex items-center gap-3">
+                                <div className="w-8 h-8 rounded-full bg-ios-blue/10 dark:bg-ios-blue-dark/20 flex items-center justify-center text-ios-blue dark:text-ios-blue-dark">
+                                    <FileText size={16} strokeWidth={2.5} />
+                                </div>
+                                <p className="text-[15px] ios-text-primary font-medium">Terms of Service</p>
                             </div>
-                        </div>
+                        </Link>
 
                         {/* Contact Support */}
                         <a

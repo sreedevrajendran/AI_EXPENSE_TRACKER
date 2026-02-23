@@ -4,7 +4,6 @@ import { categoryRouter } from "./category";
 import { budgetRouter } from "./budget";
 import { aiRouter } from "./ai";
 import { incomeRouter } from "./income";
-import { gmailRouter } from "./gmail";
 
 export const appRouter = router({
     expense: expenseRouter,
@@ -12,7 +11,6 @@ export const appRouter = router({
     category: categoryRouter,
     budget: budgetRouter,
     ai: aiRouter,
-    gmail: gmailRouter,
 });
 
 export type AppRouter = typeof appRouter;
