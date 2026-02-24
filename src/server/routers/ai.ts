@@ -2,7 +2,13 @@ import { z } from "zod";
 import { protectedProcedure, router } from "../trpc";
 import Groq from "groq-sdk";
 
-const groq = new Groq({ apiKey: process.env.GROQ_API_KEY });
+// Initialize Groq dynamically on request to ensure process.env.GROQ_API_KEY is available in serverless environments (like Netlify)
+const getGroqClient = () => {
+    if (!process.env.GROQ_API_KEY) {
+        throw new Error("Missing GROQ_API_KEY environment variable");
+    }
+    return new Groq({ apiKey: process.env.GROQ_API_KEY });
+};
 
 export const aiRouter = router({
     scanReceipt: protectedProcedure
@@ -14,7 +20,7 @@ export const aiRouter = router({
         )
         .mutation(async ({ input }) => {
             try {
-                const chatCompletion = await groq.chat.completions.create({
+                const chatCompletion = await getGroqClient().chat.completions.create({
                     messages: [
                         {
                             role: "user",
@@ -173,7 +179,7 @@ IMPORTANT: Prefer 'bill' type over 'expense' whenever you can see individual lin
                     const pdfRawText = Buffer.from(input.imageBase64, "base64").toString("utf-8");
                     const printable = pdfRawText.replace(/[^\x20-\x7E\n\t]/g, " ").replace(/\s{3,}/g, "  ").trim();
                     const truncated = printable.slice(0, 12000);
-                    const pdfCompletion = await groq.chat.completions.create({
+                    const pdfCompletion = await getGroqClient().chat.completions.create({
                         messages: [
                             {
                                 role: "user",
@@ -187,7 +193,7 @@ IMPORTANT: Prefer 'bill' type over 'expense' whenever you can see individual lin
                     rawText = pdfCompletion.choices[0]?.message?.content || "{}";
                 } else {
                     // Images: vision model — response_format is NOT supported with image_url content
-                    const imgCompletion = await groq.chat.completions.create({
+                    const imgCompletion = await getGroqClient().chat.completions.create({
                         messages: [
                             {
                                 role: "user",
@@ -236,7 +242,7 @@ IMPORTANT: Prefer 'bill' type over 'expense' whenever you can see individual lin
         )
         .mutation(async ({ input }) => {
             try {
-                const chatCompletion = await groq.chat.completions.create({
+                const chatCompletion = await getGroqClient().chat.completions.create({
                     messages: [
                         {
                             role: "user",
@@ -295,7 +301,7 @@ If a field is missing in an income doc, use null.`
     mapIcon: protectedProcedure
         .input(z.object({ query: z.string() }))
         .mutation(async ({ input }) => {
-            const chatCompletion = await groq.chat.completions.create({
+            const chatCompletion = await getGroqClient().chat.completions.create({
                 messages: [
                     {
                         role: "user",
@@ -382,7 +388,7 @@ Return ONLY valid JSON (no markdown):
 }`;
 
         try {
-            const chatCompletion = await groq.chat.completions.create({
+            const chatCompletion = await getGroqClient().chat.completions.create({
                 messages: [{ role: "user", content: prompt }],
                 model: "llama-3.1-8b-instant",
                 temperature: 0,
@@ -480,7 +486,7 @@ Context Information:
 ${contextData}`
             };
 
-            const chatCompletion = await groq.chat.completions.create({
+            const chatCompletion = await getGroqClient().chat.completions.create({
                 messages: [systemMessage, ...input.messages],
                 model: "llama-3.1-8b-instant",
                 temperature: 0.7,
