@@ -1,13 +1,13 @@
 import Link from "next/link";
 
 export const metadata = {
-    title: "Terms of Service | AI Expense Tracker",
-    description: "Terms of Service for AI Expense Tracker.",
+    title: "Terms of Service | Floww",
+    description: "Terms of Service for Floww — AI Expense Tracker.",
 };
 
 export default function TermsPage() {
-    const lastUpdated = "February 22, 2025";
-    const appName = "AI Expense Tracker";
+    const lastUpdated = "February 24, 2025";
+    const appName = "Floww";
     const contactEmail = "sreerajar40@gmail.com";
     const appUrl = "https://ai-expense-tracker.netlify.app";
 
@@ -59,22 +59,38 @@ export default function TermsPage() {
                     </p>
                 </section>
 
-
-
                 {/* 3. AI Features */}
                 <section className="bg-white dark:bg-[#1C1C1E] rounded-2xl p-6 space-y-3">
                     <h2 className="text-xl font-semibold text-[#1C1C1E] dark:text-white">3. AI Features</h2>
                     <p className="text-sm text-[#3A3A3C] dark:text-[#EBEBF5] leading-relaxed">
-                        The AI-powered features (receipt scanning, chatbot, spending insights) use third-party AI models
-                        (Groq / LLaMA). AI-generated results may not always be accurate. You should review and verify
-                        all AI-extracted expense data before relying on it. {appName} is not liable for financial decisions
-                        made based on AI-generated content.
+                        {appName} provides several AI-powered features including:
+                    </p>
+                    <ul className="list-disc list-inside space-y-1.5 text-sm text-[#3A3A3C] dark:text-[#EBEBF5]">
+                        <li><strong>Receipt &amp; Document Scanning</strong> — AI extracts expense details from images or PDFs</li>
+                        <li><strong>Bank Statement Import</strong> — AI categorises bulk transactions from your bank statement</li>
+                        <li><strong>AI Coach</strong> — personalised monthly spending insights and health score</li>
+                        <li><strong>Agent Floww</strong> — an AI chatbot that answers questions about your finances</li>
+                    </ul>
+                    <p className="text-sm text-[#3A3A3C] dark:text-[#EBEBF5] leading-relaxed">
+                        These features use third-party AI models (Groq / Llama 4). AI-generated results may not always be accurate.
+                        You should review and verify all AI-extracted data before relying on it. {appName} is not liable for financial
+                        decisions made based on AI-generated content.
                     </p>
                 </section>
 
-                {/* 4. Intellectual Property */}
+                {/* 4. Your Data */}
                 <section className="bg-white dark:bg-[#1C1C1E] rounded-2xl p-6 space-y-3">
-                    <h2 className="text-xl font-semibold text-[#1C1C1E] dark:text-white">4. Intellectual Property</h2>
+                    <h2 className="text-xl font-semibold text-[#1C1C1E] dark:text-white">4. Your Data</h2>
+                    <p className="text-sm text-[#3A3A3C] dark:text-[#EBEBF5] leading-relaxed">
+                        You retain full ownership of all financial data you input into {appName}. We store your data
+                        to provide the service and will never sell it. You can request deletion of your data at any time.
+                        Refer to our <Link href="/privacy" className="text-[#007AFF] underline">Privacy Policy</Link> for full details.
+                    </p>
+                </section>
+
+                {/* 5. Intellectual Property */}
+                <section className="bg-white dark:bg-[#1C1C1E] rounded-2xl p-6 space-y-3">
+                    <h2 className="text-xl font-semibold text-[#1C1C1E] dark:text-white">5. Intellectual Property</h2>
                     <p className="text-sm text-[#3A3A3C] dark:text-[#EBEBF5] leading-relaxed">
                         The {appName} application, including its design, code, and features, is the intellectual property
                         of its developer. You retain ownership of all financial data you input. You grant us a limited
@@ -82,19 +98,19 @@ export default function TermsPage() {
                     </p>
                 </section>
 
-                {/* 5. Disclaimers */}
+                {/* 6. Disclaimers */}
                 <section className="bg-white dark:bg-[#1C1C1E] rounded-2xl p-6 space-y-3">
-                    <h2 className="text-xl font-semibold text-[#1C1C1E] dark:text-white">5. Disclaimers</h2>
+                    <h2 className="text-xl font-semibold text-[#1C1C1E] dark:text-white">6. Disclaimers</h2>
                     <p className="text-sm text-[#3A3A3C] dark:text-[#EBEBF5] leading-relaxed">
                         {appName} is provided &quot;as is&quot; without warranties of any kind. We do not guarantee uninterrupted
                         access, accuracy of AI outputs, or that the service will be error-free. This app is not a
-                        registered financial advisor and does not provide financial advice.
+                        registered financial advisor and does not provide certified financial advice.
                     </p>
                 </section>
 
-                {/* 6. Limitation of Liability */}
+                {/* 7. Limitation of Liability */}
                 <section className="bg-white dark:bg-[#1C1C1E] rounded-2xl p-6 space-y-3">
-                    <h2 className="text-xl font-semibold text-[#1C1C1E] dark:text-white">6. Limitation of Liability</h2>
+                    <h2 className="text-xl font-semibold text-[#1C1C1E] dark:text-white">7. Limitation of Liability</h2>
                     <p className="text-sm text-[#3A3A3C] dark:text-[#EBEBF5] leading-relaxed">
                         To the fullest extent permitted by law, {appName} and its developer shall not be liable for any
                         indirect, incidental, special, or consequential damages arising from your use or inability
@@ -102,9 +118,9 @@ export default function TermsPage() {
                     </p>
                 </section>
 
-                {/* 7. Termination */}
+                {/* 8. Termination */}
                 <section className="bg-white dark:bg-[#1C1C1E] rounded-2xl p-6 space-y-3">
-                    <h2 className="text-xl font-semibold text-[#1C1C1E] dark:text-white">7. Termination</h2>
+                    <h2 className="text-xl font-semibold text-[#1C1C1E] dark:text-white">8. Termination</h2>
                     <p className="text-sm text-[#3A3A3C] dark:text-[#EBEBF5] leading-relaxed">
                         We reserve the right to suspend or terminate your access to the service at any time, for any
                         reason, including violation of these terms. You may stop using the service at any time and
@@ -113,9 +129,9 @@ export default function TermsPage() {
                     </p>
                 </section>
 
-                {/* 8. Changes */}
+                {/* 9. Changes */}
                 <section className="bg-white dark:bg-[#1C1C1E] rounded-2xl p-6 space-y-3">
-                    <h2 className="text-xl font-semibold text-[#1C1C1E] dark:text-white">8. Changes to Terms</h2>
+                    <h2 className="text-xl font-semibold text-[#1C1C1E] dark:text-white">9. Changes to Terms</h2>
                     <p className="text-sm text-[#3A3A3C] dark:text-[#EBEBF5] leading-relaxed">
                         We may update these Terms from time to time. Continued use of the service after changes
                         constitutes acceptance of the updated Terms. The &quot;Last updated&quot; date at the top reflects
@@ -123,9 +139,9 @@ export default function TermsPage() {
                     </p>
                 </section>
 
-                {/* 9. Contact */}
+                {/* 10. Contact */}
                 <section className="bg-white dark:bg-[#1C1C1E] rounded-2xl p-6 space-y-3">
-                    <h2 className="text-xl font-semibold text-[#1C1C1E] dark:text-white">9. Contact</h2>
+                    <h2 className="text-xl font-semibold text-[#1C1C1E] dark:text-white">10. Contact</h2>
                     <p className="text-sm text-[#3A3A3C] dark:text-[#EBEBF5] leading-relaxed">
                         Questions about these Terms? Contact us at:{" "}
                         <a href={`mailto:${contactEmail}`} className="text-[#007AFF] underline font-medium">{contactEmail}</a>

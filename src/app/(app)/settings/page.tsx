@@ -113,25 +113,25 @@ function SettingsContent() {
                 </div>
             </div>
 
-            {/* About Oasis */}
+            {/* About Floww */}
             <div className="pt-4">
-                <p className="text-xs font-semibold ios-text-secondary uppercase tracking-wider mb-2 px-1">About Oasis</p>
+                <p className="text-xs font-semibold ios-text-secondary uppercase tracking-wider mb-2 px-1">About Floww</p>
                 <div className="ios-card overflow-hidden">
                     <div className="p-5 flex flex-col items-center text-center space-y-3 border-b ios-separator">
                         <Image
-                            src="/logo.png?v=2"
-                            alt="Oasis Logo"
+                            src="/logo.png?v=3"
+                            alt="Floww Logo"
                             width={80}
                             height={80}
                             className="rounded-[20px] shadow-sm"
                             unoptimized
                         />
                         <div>
-                            <h3 className="text-[19px] font-bold ios-text-primary tracking-tight">Oasis Expense Tracker</h3>
+                            <h3 className="text-[19px] font-bold ios-text-primary tracking-tight">Floww — AI Expense Tracker</h3>
                             <p className="text-[13px] ios-text-secondary mt-0.5">Version 1.0.0</p>
                         </div>
                         <p className="text-[14px] leading-relaxed ios-text-primary px-2 pt-2">
-                            Oasis is an intelligent personal finance manager built to give you total clarity over your spending habits. By combining manual tracking with smart AI insights and automated email receipt parsing, Oasis helps you stay on top of your budgets effortlessly.
+                            Floww is an intelligent personal finance manager built to give you total clarity over your spending habits. Track expenses &amp; income, scan receipts and bank statements with AI, set budgets, and get personalised insights through Agent Floww — your always-on AI financial assistant.
                         </p>
                     </div>
 

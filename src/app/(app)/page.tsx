@@ -90,64 +90,75 @@ export default function HomePage() {
                     <div className="md:grid md:grid-cols-12 md:gap-6 md:space-y-0 space-y-4">
                         {/* Left Column (Stats & Chart) */}
                         <div className="md:col-span-7 space-y-4">
-                            {/* Summary Card */}
+                            {/* Combined Stats Card */}
                             <motion.div
                                 initial={{ opacity: 0, y: 20 }}
                                 animate={{ opacity: 1, y: 0 }}
-                                className="rounded-[28px] overflow-hidden cursor-pointer active:scale-[0.98] transition-transform"
+                                className="rounded-[28px] overflow-hidden mb-4"
                                 style={{ background: "linear-gradient(135deg, #007AFF 0%, #5856D6 100%)" }}
-                                onClick={() => {
-                                    setModalTitle("All Transactions");
-                                    setModalTransactions(allTransactions);
-                                    setModalOpen(true);
-                                }}
                             >
-                                <div className="p-6 text-white space-y-4">
-                                    <div>
-                                        <p className="text-sm text-white/70 font-medium">Balance This Month</p>
+                                <div className="p-6 text-white space-y-6">
+                                    <div
+                                        className="cursor-pointer active:scale-[0.98] transition-transform"
+                                        onClick={() => {
+                                            setModalTitle("All Transactions");
+                                            setModalTransactions(allTransactions);
+                                            setModalOpen(true);
+                                        }}
+                                    >
+                                        <p className="text-[14px] text-white/70 font-medium uppercase tracking-wider mb-1">Balance This Month</p>
                                         <PrivacyWrapper>
-                                            <p className="text-5xl font-bold mt-1 tracking-tight">
+                                            <p className="text-5xl font-bold tracking-tight">
                                                 {formatCurrency((monthIncomeTotal ?? 0) - (monthTotal ?? 0))}
                                             </p>
                                         </PrivacyWrapper>
                                     </div>
-                                    {/* Budget progress bar removed per user request */}
+
+                                    <div className="h-[1px] w-full bg-white/20 rounded-full" />
+
+                                    <div className="pt-2 flex items-center gap-4">
+                                        <div
+                                            className="flex-1 flex flex-col justify-center cursor-pointer active:scale-[0.98] transition-transform"
+                                            onClick={() => {
+                                                setModalTitle("Total Income");
+                                                setModalTransactions(allTransactions.filter(t => t.type === 'income'));
+                                                setModalOpen(true);
+                                            }}
+                                        >
+                                            <p className="text-[12px] text-white/70 font-medium uppercase tracking-wider mb-0.5">Total Income</p>
+                                            <PrivacyWrapper>
+                                                <p className="text-xl font-bold tracking-tight text-white flex items-center gap-1.5 mt-0.5">
+                                                    <span className="w-5 h-5 rounded-full bg-white/10 flex items-center justify-center inline-flex">
+                                                        <ArrowUpRight size={12} className="text-white" />
+                                                    </span>
+                                                    {formatCurrency(monthIncomeTotal ?? 0)}
+                                                </p>
+                                            </PrivacyWrapper>
+                                        </div>
+
+                                        <div className="w-[1px] h-10 bg-white/20 rounded-full" />
+
+                                        <div
+                                            className="flex-1 flex flex-col justify-center cursor-pointer active:scale-[0.98] transition-transform"
+                                            onClick={() => {
+                                                setModalTitle("Total Spent");
+                                                setModalTransactions(allTransactions.filter(t => t.type === 'expense'));
+                                                setModalOpen(true);
+                                            }}
+                                        >
+                                            <p className="text-[12px] text-white/70 font-medium uppercase tracking-wider mb-0.5 pl-2">Total Spent</p>
+                                            <PrivacyWrapper>
+                                                <p className="text-xl font-bold tracking-tight text-white flex items-center gap-1.5 mt-0.5 pl-2">
+                                                    <span className="w-5 h-5 rounded-full bg-white/10 flex items-center justify-center inline-flex">
+                                                        <TrendingDown size={12} className="text-white" />
+                                                    </span>
+                                                    {formatCurrency(monthTotal ?? 0)}
+                                                </p>
+                                            </PrivacyWrapper>
+                                        </div>
+                                    </div>
                                 </div>
                             </motion.div>
-
-                            {/* Quick Stats: Income / Expense */}
-                            <div className="grid grid-cols-2 gap-3 mb-4">
-                                <button
-                                    className="ios-card p-4 text-left cursor-pointer active:scale-[0.98] transition-transform"
-                                    onClick={() => {
-                                        setModalTitle("Total Income");
-                                        setModalTransactions(allTransactions.filter(t => t.type === 'income'));
-                                        setModalOpen(true);
-                                    }}
-                                >
-                                    <p className="text-xs ios-text-secondary mb-1">Total Income</p>
-                                    <PrivacyWrapper>
-                                        <p className="text-xl font-bold text-[#34C759] dark:text-[#32D74B]">
-                                            +{formatCurrency(monthIncomeTotal ?? 0)}
-                                        </p>
-                                    </PrivacyWrapper>
-                                </button>
-                                <button
-                                    className="ios-card p-4 text-left cursor-pointer active:scale-[0.98] transition-transform"
-                                    onClick={() => {
-                                        setModalTitle("Total Spent");
-                                        setModalTransactions(allTransactions.filter(t => t.type === 'expense'));
-                                        setModalOpen(true);
-                                    }}
-                                >
-                                    <p className="text-xs ios-text-secondary mb-1">Total Spent</p>
-                                    <PrivacyWrapper>
-                                        <p className="text-xl font-bold text-[#FF3B30] dark:text-[#FF453A]">
-                                            -{formatCurrency(monthTotal ?? 0)}
-                                        </p>
-                                    </PrivacyWrapper>
-                                </button>
-                            </div>
 
                             {/* Quick Stats: Budget */}
                             {budgets && budgets.length > 0 && (
@@ -163,7 +174,7 @@ export default function HomePage() {
                                         return (
                                             <button
                                                 key={budget.id}
-                                                className="w-full block ios-card p-4 active:scale-[0.98] transition-transform text-left"
+                                                className="w-full block bg-white/60 dark:bg-[#1C1C1E]/60 backdrop-blur-2xl border border-white/50 dark:border-white/5 shadow-[0_4px_24px_-4px_rgba(0,0,0,0.05)] rounded-[24px] p-5 active:scale-[0.98] transition-all text-left"
                                                 onClick={() => {
                                                     setModalTitle(title);
                                                     // Filter transactions by expense and the correct category id 
@@ -223,13 +234,13 @@ export default function HomePage() {
                                 </div>
 
                                 {recentTransactions.length === 0 ? (
-                                    <div className="ios-card p-8 text-center">
+                                    <div className="bg-white/60 dark:bg-[#1C1C1E]/60 backdrop-blur-2xl border border-white/50 dark:border-white/5 shadow-sm rounded-[24px] p-8 text-center">
                                         <TrendingDown size={32} className="mx-auto mb-3 ios-text-secondary opacity-50" />
                                         <p className="ios-text-secondary text-sm">No recent transactions.</p>
                                         <p className="text-xs ios-text-secondary mt-1 opacity-60">Tap + to add your first one!</p>
                                     </div>
                                 ) : (
-                                    <div className="ios-card overflow-hidden divide-y ios-separator">
+                                    <div className="bg-white/60 dark:bg-[#1C1C1E]/60 backdrop-blur-2xl border border-white/50 dark:border-white/5 shadow-sm rounded-[24px] overflow-hidden divide-y divide-[#E5E5EA] dark:divide-[#3A3A3C]">
                                         {recentTransactions.map((t, i) => {
                                             const isIncome = t.type === 'income';
                                             const title = isIncome ? (t as any).source : (t as any).merchant;
@@ -290,92 +301,6 @@ export default function HomePage() {
                     </div> {/* End Grid */}
                 </div> {/* End Main Content Area */}
             </PullToRefresh>
-
-            {/* Desktop Action Buttons (Hidden on mobile) */}
-            <div className="hidden md:flex fixed bottom-8 right-8 gap-4 z-40">
-                <motion.button
-                    whileHover={{ scale: 1.05 }}
-                    whileTap={{ scale: 0.95 }}
-                    onClick={() => setAddIncomeOpen(true)}
-                    className="px-6 py-3 rounded-full font-semibold shadow-ios-lg bg-white dark:bg-[#1C1C1E] text-[#FF9500] border border-[#FF9500]/20 flex items-center gap-2"
-                >
-                    <Plus size={20} /> Add Income
-                </motion.button>
-                <motion.button
-                    whileHover={{ scale: 1.05 }}
-                    whileTap={{ scale: 0.95 }}
-                    onClick={() => setAddExpenseOpen(true)}
-                    className="px-6 py-3 rounded-full text-white font-semibold shadow-ios-lg flex items-center gap-2"
-                    style={{ background: "linear-gradient(135deg, #FF2D55, #FF375F)" }}
-                >
-                    <Plus size={20} /> Add Expense
-                </motion.button>
-            </div>
-
-            {/* Mobile FAB with Expandable Menu */}
-            <div className="fixed bottom-[calc(83px+env(safe-area-inset-bottom,0px)+16px)] right-5 z-40 md:hidden flex flex-col items-end">
-                <AnimatePresence>
-                    {actionMenuOpen && (
-                        <motion.div
-                            initial={{ opacity: 0, scale: 0.8, y: 20 }}
-                            animate={{ opacity: 1, scale: 1, y: 0 }}
-                            exit={{ opacity: 0, scale: 0.8, y: 20 }}
-                            transition={{ type: "spring", stiffness: 400, damping: 25 }}
-                            className="flex flex-col gap-3 mb-4 items-end"
-                        >
-                            <motion.button
-                                whileTap={{ scale: 0.9 }}
-                                onClick={() => {
-                                    setAddIncomeOpen(true);
-                                    setActionMenuOpen(false);
-                                }}
-                                className="flex items-center gap-3 bg-white dark:bg-[#2C2C2E] px-4 py-2.5 rounded-full shadow-lg border border-[#E5E5EA] dark:border-[#3A3A3C]"
-                            >
-                                <span className="text-[15px] font-semibold text-[#FF9500]">Income</span>
-                                <div className="w-8 h-8 rounded-full bg-[#FF9500]/10 flex items-center justify-center">
-                                    <ArrowUpRight size={18} className="text-[#FF9500]" />
-                                </div>
-                            </motion.button>
-
-                            <motion.button
-                                whileTap={{ scale: 0.9 }}
-                                onClick={() => {
-                                    setAddExpenseOpen(true);
-                                    setActionMenuOpen(false);
-                                }}
-                                className="flex items-center gap-3 bg-white dark:bg-[#2C2C2E] px-4 py-2.5 rounded-full shadow-lg border border-[#E5E5EA] dark:border-[#3A3A3C]"
-                            >
-                                <span className="text-[15px] font-semibold text-[#FF2D55]">Expense</span>
-                                <div className="w-8 h-8 rounded-full bg-[#FF2D55]/10 flex items-center justify-center">
-                                    <TrendingDown size={18} className="text-[#FF2D55]" />
-                                </div>
-                            </motion.button>
-                        </motion.div>
-                    )}
-                </AnimatePresence>
-
-                <motion.button
-                    whileTap={{ scale: 0.92 }}
-                    onClick={() => setActionMenuOpen(!actionMenuOpen)}
-                    animate={{ rotate: actionMenuOpen ? 45 : 0 }}
-                    className="w-14 h-14 rounded-full shadow-ios-lg flex items-center justify-center relative bg-ios-blue dark:bg-ios-blue-dark"
-                >
-                    <Plus size={28} className="text-white relative z-10" strokeWidth={2.5} />
-                </motion.button>
-            </div>
-
-            {/* Backdrop for mobile FAB menu */}
-            <AnimatePresence>
-                {actionMenuOpen && (
-                    <motion.div
-                        initial={{ opacity: 0 }}
-                        animate={{ opacity: 1 }}
-                        exit={{ opacity: 0 }}
-                        onClick={() => setActionMenuOpen(false)}
-                        className="fixed inset-0 z-30 bg-black/20 backdrop-blur-sm md:hidden"
-                    />
-                )}
-            </AnimatePresence>
 
             <AddExpenseSheet open={addExpenseOpen} onOpenChange={(open) => { setAddExpenseOpen(open); if (!open) setTimeout(() => setEditExpenseId(null), 300); }} editId={editExpenseId} />
             <AddIncomeSheet open={addIncomeOpen} onOpenChange={(open) => { setAddIncomeOpen(open); if (!open) setTimeout(() => setEditIncomeId(null), 300); }} editId={editIncomeId} />

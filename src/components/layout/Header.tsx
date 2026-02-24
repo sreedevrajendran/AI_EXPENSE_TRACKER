@@ -2,9 +2,10 @@
 
 import { useState } from "react";
 import { motion } from "framer-motion";
-import { Eye, EyeOff, Sparkles } from "lucide-react";
+import { Eye, EyeOff, Settings, Sparkles } from "lucide-react";
 import { usePrivacy } from "@/context/PrivacyContext";
 import { AgentOasisChatSheet } from "@/components/ai/AgentOasisChatSheet";
+import Link from "next/link";
 
 interface HeaderProps {
     title?: string;
@@ -20,7 +21,7 @@ export function Header({ title = "Expense Tracker" }: HeaderProps) {
                 <div className="flex items-center justify-between px-4 h-14 pt-[env(safe-area-inset-top,0px)] md:px-8">
 
                     {/* Assistant Trigger — Mobile only */}
-                    <div className="flex-1 md:hidden">
+                    <div className="flex flex-1 items-center justify-start md:hidden">
                         <motion.button
                             whileTap={{ scale: 0.9 }}
                             onClick={() => setChatOpen(true)}
@@ -32,19 +33,19 @@ export function Header({ title = "Expense Tracker" }: HeaderProps) {
                         </motion.button>
                     </div>
 
-                    {/* Desktop left spacer (if keeping structure) */}
-                    <div className="hidden md:block flex-1" />
+                    {/* Desktop left spacer */}
+                    <div className="hidden md:flex flex-1" />
 
-                    {/* Title & Logo — Mobile only */}
-                    <div className="flex-[2] md:hidden flex justify-center items-center gap-2">
-                        <img src="/logo.png?v=2" alt="Oasis Logo" className="w-7 h-7 rounded-lg" />
+                    {/* Title & Logo */}
+                    <div className="flex-[2] flex justify-center items-center gap-2">
+                        <img src="/logo.png?v=3" alt="Floww Logo" className="w-7 h-7 rounded-lg" />
                         <h1 className="text-[17px] font-semibold ios-text-primary tracking-tight truncate">
-                            {title === "Expense Tracker" ? "Oasis" : title}
+                            {title === "Expense Tracker" ? "Floww" : title}
                         </h1>
                     </div>
 
-                    {/* Actions (Privacy & Info Bot) */}
-                    <div className="flex flex-1 items-center justify-end gap-3 md:flex-none">
+                    {/* Actions (Privacy & Settings) */}
+                    <div className="flex flex-1 items-center justify-end gap-2 md:gap-3">
                         <motion.button
                             whileTap={{ scale: 0.9 }}
                             onClick={togglePrivacy}
@@ -53,6 +54,9 @@ export function Header({ title = "Expense Tracker" }: HeaderProps) {
                         >
                             {isPrivate ? <EyeOff size={17} /> : <Eye size={17} />}
                         </motion.button>
+                        <Link href="/settings" className="w-9 h-9 flex items-center justify-center rounded-full bg-[#F2F2F7] dark:bg-[#2C2C2E] ios-text-secondary active:scale-95 transition-transform md:hidden">
+                            <Settings size={17} />
+                        </Link>
                     </div>
                 </div>
             </header>

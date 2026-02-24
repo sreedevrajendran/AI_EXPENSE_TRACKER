@@ -24,7 +24,7 @@ export function AgentOasisChatSheet({ open, onOpenChange }: AgentOasisChatSheetP
         {
             id: "initial",
             role: "assistant",
-            content: "Hi! I'm Agent Oasis. I've got your latest budget and spending context loaded up. What can I help you with today?"
+            content: "Hi! I'm Agent Floww. I've got your latest budget and spending context loaded up. What can I help you with today?"
         }
     ]);
     const [input, setInput] = useState("");
@@ -97,7 +97,7 @@ export function AgentOasisChatSheet({ open, onOpenChange }: AgentOasisChatSheetP
             <Drawer.Portal>
                 <Drawer.Overlay className="fixed inset-0 bg-black/50 z-50 backdrop-blur-sm" />
                 <Drawer.Content className="fixed bottom-0 left-0 right-0 z-50 h-[90dvh] outline-none flex flex-col">
-                    <Drawer.Title className="sr-only">Chat with Agent Oasis</Drawer.Title>
+                    <Drawer.Title className="sr-only">Chat with Agent Floww</Drawer.Title>
                     <div className="bg-white dark:bg-[#1C1C1E] rounded-t-[28px] flex flex-col flex-1 h-full overflow-hidden">
                         {/* Drag Handle */}
                         <div className="flex justify-center pt-3 pb-0 flex-none">
@@ -111,7 +111,7 @@ export function AgentOasisChatSheet({ open, onOpenChange }: AgentOasisChatSheetP
                                     <Sparkles size={16} className="text-ios-blue dark:text-ios-blue-dark" />
                                 </div>
                                 <div>
-                                    <h2 className="text-[17px] font-semibold ios-text-primary leading-tight">Agent Oasis</h2>
+                                    <h2 className="text-[17px] font-semibold ios-text-primary leading-tight">Agent Floww</h2>
                                     <p className="text-[11px] ios-text-secondary font-medium uppercase tracking-wider">AI Assistant</p>
                                 </div>
                             </div>

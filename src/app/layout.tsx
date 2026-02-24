@@ -3,17 +3,13 @@ import "./globals.css";
 import { Providers } from "@/components/providers";
 
 export const metadata: Metadata = {
-    title: "Oasis — AI Expense Tracker",
+    title: "Floww — AI Expense Tracker",
     description: "Track your expenses intelligently with AI-powered insights",
     manifest: "/manifest.json",
     appleWebApp: {
         capable: true,
         statusBarStyle: "default",
-        title: "Oasis",
-    },
-    icons: {
-        apple: "/logo.webp",
-        icon: "/logo.webp",
+        title: "Floww",
     },
 };
 

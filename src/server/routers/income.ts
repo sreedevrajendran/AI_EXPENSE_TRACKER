@@ -80,6 +80,31 @@ export const incomeRouter = router({
             });
         }),
 
+    bulkCreate: protectedProcedure
+        .input(
+            z.array(
+                z.object({
+                    amount: z.number().positive(),
+                    source: z.string().min(1),
+                    note: z.string().optional(),
+                    date: z.date().default(() => new Date()),
+                    categoryId: z.string().optional(),
+                    receiptUrl: z.string().optional(),
+                    icon: z.string().optional(),
+                })
+            )
+        )
+        .mutation(async ({ ctx, input }) => {
+            const userId = ctx.session.user.id!;
+            const data = input.map(item => ({
+                ...item,
+                userId,
+            }));
+            return ctx.db.income.createMany({
+                data,
+            });
+        }),
+
     update: protectedProcedure
         .input(
             z.object({

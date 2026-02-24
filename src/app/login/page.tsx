@@ -9,9 +9,9 @@ const features = [
     { icon: Camera, label: "AI Receipt Scanner", color: "#007AFF" },
     { icon: Brain, label: "AI Finance Coach", color: "#FF9F0A" },
     { icon: PieChart, label: "Smart Budgets", color: "#34C759" },
-    { icon: Shield, label: "Privacy Mode", color: "#FF2D55" },
-    { icon: TrendingUp, label: "Spending Insights", color: "#5AC8FA" },
-    { icon: Sparkles, label: "Auto Categorization", color: "#5856D6" },
+    { icon: TrendingUp, label: "Income Tracking", color: "#30D158" },
+    { icon: Sparkles, label: "Agent Floww AI Chat", color: "#5856D6" },
+    { icon: Shield, label: "Bank Statement Import", color: "#5AC8FA" },
 ];
 
 const stats = [
@@ -24,15 +24,15 @@ const stats = [
 const taglines = [
     "Think smarter about money.",
     "Track every rupee effortlessly.",
-    "Snap receipts. Done.",
-    "Your AI finance coach.",
+    "Scan receipts. Import statements.",
+    "Your AI finance assistant — Floww.",
 ];
 
 const highlights = [
-    "No manual entry needed",
-    "AI extracts receipt data instantly",
-    "Smart budget alerts",
-    "Beautiful spending charts",
+    "Track expenses and income in one place",
+    "AI scans receipts & bank statements",
+    "Smart budget alerts by category",
+    "Agent Floww: your AI finance chatbot",
     "Privacy mode for public use",
 ];
 
@@ -136,13 +136,13 @@ export default function LoginPage() {
                                 animate={{ rotateY: [0, 6, -6, 0] }}
                                 transition={{ duration: 7, repeat: Infinity, ease: "easeInOut" }}
                             >
-                                <img src="/logo.png?v=2" alt="Oasis" className="w-full h-full object-cover" />
+                                <img src="/logo.png?v=3" alt="Floww" className="w-full h-full object-contain p-1" />
                             </motion.div>
                         </div>
 
                         {/* App name */}
                         <div className="text-center">
-                            <h1 className="text-[40px] font-black text-white tracking-tight leading-none">Oasis</h1>
+                            <h1 className="text-[40px] font-black text-white tracking-tight leading-none">Floww</h1>
                             <p className="text-[11px] font-semibold text-white/35 tracking-[0.2em] uppercase mt-1">AI Expense Tracker</p>
                         </div>
 

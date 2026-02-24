@@ -2,11 +2,11 @@
 
 import { useState, useRef } from "react";
 import { Drawer } from "vaul";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 import { trpc } from "@/trpc/client";
 import { PaymentMethod } from "@prisma/client";
 import { X, Camera, Loader2, ChevronDown, CreditCard, Banknote, Smartphone, Building2, MoreHorizontal, Paperclip } from "lucide-react";
-import { cn, compressImage } from "@/lib/utils";
+import { cn } from "@/lib/utils";
 import { getLucideIcon } from "@/lib/icons";
 import { useEffect } from "react";
 
@@ -26,8 +26,9 @@ interface AddExpenseSheetProps {
     onSuccess?: () => void;
     editData?: ExpenseEditData;
     editId?: string | null;
+    prefillData?: any;
+    initialFile?: File | null;
 }
-
 const PAYMENT_METHODS: { value: PaymentMethod; label: string; icon: React.ElementType }[] = [
     { value: "CASH", label: "Cash", icon: Banknote },
     { value: "CARD", label: "Card", icon: CreditCard },
@@ -36,14 +37,12 @@ const PAYMENT_METHODS: { value: PaymentMethod; label: string; icon: React.Elemen
     { value: "OTHER", label: "Other", icon: MoreHorizontal },
 ];
 
-
-export function AddExpenseSheet({ open, onOpenChange, onSuccess, editData, editId }: AddExpenseSheetProps) {
+export function AddExpenseSheet({ open, onOpenChange, onSuccess, editData, editId, prefillData, initialFile }: AddExpenseSheetProps) {
     const [amount, setAmount] = useState("");
     const [merchant, setMerchant] = useState("");
     const [note, setNote] = useState("");
     const [selectedCategory, setSelectedCategory] = useState<string | undefined>();
     const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>("UPI");
-    const [isScanning, setIsScanning] = useState(false);
     const [isCustom, setIsCustom] = useState(false);
     const [customCategoryName, setCustomCategoryName] = useState("");
     const [error, setError] = useState<string | null>(null);
@@ -52,8 +51,6 @@ export function AddExpenseSheet({ open, onOpenChange, onSuccess, editData, editI
     const [uploading, setUploading] = useState(false);
     const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
 
-    const fileRef = useRef<HTMLInputElement>(null);
-    const attachmentRef = useRef<HTMLInputElement>(null);
     const hasSeededRef = useRef(false);
 
     const { data: allExpenses } = trpc.expense.list.useQuery(
@@ -130,11 +127,7 @@ export function AddExpenseSheet({ open, onOpenChange, onSuccess, editData, editI
             onOpenChange(false);
             onSuccess?.();
         },
-        onError: (err) => {
-            setError(err.message || "Failed to delete expense.");
-        }
     });
-    const scanReceipt = trpc.ai.scanReceipt.useMutation();
     const mapIcon = trpc.ai.mapIcon.useMutation();
     const seedCategories = trpc.category.seedDefaults.useMutation({
         onSuccess: () => utils.category.listAll.invalidate(),
@@ -148,6 +141,27 @@ export function AddExpenseSheet({ open, onOpenChange, onSuccess, editData, editI
             seedCategories.mutate();
         }
     }, [open, categories, seedCategories]);
+
+    // Apply prefill data passed globally
+    useEffect(() => {
+        if (open && prefillData) {
+            if (prefillData.amount) setAmount(String(prefillData.amount));
+            if (prefillData.merchant) setMerchant(prefillData.merchant);
+            if (prefillData.note) setNote(prefillData.note);
+            if (prefillData.paymentMethod && ["CASH", "CARD", "UPI", "BANK_TRANSFER", "OTHER"].includes(prefillData.paymentMethod)) {
+                setPaymentMethod(prefillData.paymentMethod as PaymentMethod);
+            }
+            if (prefillData.category && categories) {
+                const match = categories.find((c: { id: string; name: string }) =>
+                    c.name.toLowerCase().includes(prefillData.category.toLowerCase())
+                );
+                if (match) setSelectedCategory(match.id);
+            }
+        }
+        if (open && initialFile) {
+            setFile(initialFile);
+        }
+    }, [open, prefillData, initialFile, categories]);
 
     const resetForm = () => {
         setAmount(""); setMerchant(""); setNote("");
@@ -174,57 +188,6 @@ export function AddExpenseSheet({ open, onOpenChange, onSuccess, editData, editI
     const isOverBudget = isOverallExceeded || isCategoryExceeded;
     const activeBudgetRemaining = categoryBudget ? categoryRemaining : overallBudget ? overallRemaining : null;
     const budgetWarningType = isCategoryExceeded ? "Category" : "Monthly";
-
-    const handleScan = async (e: React.ChangeEvent<HTMLInputElement>) => {
-        const selectedFile = e.target.files?.[0];
-        if (!selectedFile) return;
-
-        setIsScanning(true);
-        try {
-            // Compress image to prevent Vercel/Netlify payload limit errors on upload
-            const compressedFile = await compressImage(selectedFile);
-            setFile(compressedFile);
-
-            // Read the compressed file as base64 for the AI API
-            const reader = new FileReader();
-            reader.readAsDataURL(compressedFile);
-            reader.onload = async () => {
-                try {
-                    const base64String = (reader.result as string).split(",")[1];
-                    const result = await scanReceipt.mutateAsync({
-                        imageBase64: base64String,
-                        mimeType: compressedFile.type,
-                    });
-
-                    if (result.amount) setAmount(String(result.amount));
-                    if (result.merchant) setMerchant(result.merchant);
-                    if (result.note) setNote(result.note);
-                    if (result.paymentMethod && ["CASH", "CARD", "UPI", "BANK_TRANSFER", "OTHER"].includes(result.paymentMethod)) {
-                        setPaymentMethod(result.paymentMethod as PaymentMethod);
-                    }
-                    if (result.category && categories) {
-                        const match = categories.find((c: { id: string; name: string }) =>
-                            c.name.toLowerCase().includes(result.category.toLowerCase())
-                        );
-                        if (match) setSelectedCategory(match.id);
-                    }
-                } catch (err: any) {
-                    console.error("Receipt scan failed:", err);
-                    setError(err.message || "Failed to scan receipt. Please try again.");
-                } finally {
-                    setIsScanning(false);
-                }
-            };
-            reader.onerror = () => {
-                setError("Failed to read image file.");
-                setIsScanning(false);
-            };
-        } catch (error: any) {
-            console.error("Image processing failed:", error);
-            setError(error.message || "Failed to process image. Please try again.");
-            setIsScanning(false);
-        }
-    };
 
     const handleSubmit = async () => {
         const parsedAmt = parseFloat(amount);
@@ -318,53 +281,47 @@ export function AddExpenseSheet({ open, onOpenChange, onSuccess, editData, editI
         <Drawer.Root open={open} onOpenChange={onOpenChange}>
             <Drawer.Portal>
                 <Drawer.Overlay className="fixed inset-0 bg-black/50 z-50 backdrop-blur-sm" />
-                <Drawer.Content className="fixed bottom-0 left-0 right-0 z-50 max-h-[95dvh] outline-none bg-white dark:bg-[#1C1C1E] rounded-t-[28px] flex flex-col overflow-hidden">
+                <Drawer.Content className="fixed bottom-0 left-0 right-0 z-50 max-h-[96dvh] outline-none bg-white dark:bg-black rounded-t-[32px] flex flex-col overflow-hidden shadow-[0_-10px_40px_rgba(0,0,0,0.2)]">
                     <Drawer.Title className="sr-only">Add Expense</Drawer.Title>
 
-                    {/* Handle */}
-                    <div className="flex justify-center pt-3 pb-0 flex-shrink-0">
-                        <div className="w-10 h-1 rounded-full bg-[#E5E5EA] dark:bg-[#3A3A3C]" />
-                    </div>
+                    {/* Top Section with Dynamic Gradient */}
+                    <div className="relative overflow-hidden bg-gradient-to-b from-rose-500/15 to-transparent dark:from-rose-500/10">
+                        {/* Glow effects */}
+                        <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[120%] h-64 bg-rose-500/20 rounded-[100%] blur-[60px] pointer-events-none" />
 
-                    {/* Header */}
-                    <div className="flex items-center justify-between px-6 py-4 flex-shrink-0">
-                        <button
-                            type="button"
-                            onClick={() => onOpenChange(false)}
-                            className="ios-text-secondary text-[17px]"
-                        >
-                            Cancel
-                        </button>
-                        <h2 className="text-[17px] font-semibold ios-text-primary">
-                            {editData ? "Edit Expense" : "Add Expense"}
-                        </h2>
-                        <button
-                            type="button"
-                            onClick={handleSubmit}
-                            disabled={!amount || !merchant || createExpense.isPending || updateExpense.isPending || uploading}
-                            className={cn("text-[17px] font-semibold transition-opacity flex items-center gap-1",
-                                !amount || !merchant ? "text-ios-blue/40" : "text-ios-blue dark:text-ios-blue-dark"
-                            )}
-                        >
-                            {createExpense.isPending || updateExpense.isPending || uploading ? <Loader2 size={18} className="animate-spin" /> : editData ? "Update" : "Add"}
-                        </button>
-                    </div>
+                        {/* Handle */}
+                        <div className="relative z-10 flex justify-center pt-3 pb-0 flex-shrink-0">
+                            <div className="w-12 h-1.5 rounded-full bg-black/10 dark:bg-white/15" />
+                        </div>
 
-                    <div className="overflow-y-auto flex-1 pb-8 px-6 space-y-4">
-                        {error && (
-                            <motion.div
-                                initial={{ opacity: 0, scale: 0.9 }}
-                                animate={{ opacity: 1, scale: 1 }}
-                                className="p-3 bg-ios-red/10 border border-ios-red/20 rounded-ios-sm text-ios-red text-sm font-medium text-center"
+                        {/* Header */}
+                        <div className="relative z-10 flex items-center justify-between px-6 py-4 flex-shrink-0">
+                            <button
+                                type="button"
+                                onClick={() => onOpenChange(false)}
+                                className="text-[17px] font-medium ios-text-secondary active:opacity-70 transition-opacity"
                             >
-                                {error}
-                            </motion.div>
-                        )}
+                                Cancel
+                            </button>
+                            <h2 className="text-[14px] font-bold ios-text-primary tracking-widest uppercase opacity-80">
+                                {editData ? "Edit Expense" : "New Expense"}
+                            </h2>
+                            <button
+                                type="button"
+                                onClick={handleSubmit}
+                                disabled={!amount || !merchant || createExpense.isPending || updateExpense.isPending || uploading}
+                                className={cn("text-[17px] font-bold transition-opacity flex items-center gap-1",
+                                    !amount || !merchant ? "text-ios-text-primary/30" : "text-rose-500 dark:text-rose-400 active:opacity-70"
+                                )}
+                            >
+                                {createExpense.isPending || updateExpense.isPending || uploading ? <Loader2 size={18} className="animate-spin" /> : editData ? "Save" : "Add"}
+                            </button>
+                        </div>
+
                         {/* Amount input */}
-                        <div className="ios-card p-5 text-center relative overflow-hidden">
-                            <div className="text-xs ios-text-secondary mb-1 uppercase tracking-wider">Amount</div>
-                            <div className="flex items-center justify-center gap-1 relative z-10">
-                                <span className="text-4xl font-light ios-text-secondary">₹</span>
+                        <div className="relative z-10 px-6 pt-6 pb-10 text-center">
+                            <div className="flex items-center justify-center gap-2">
+                                <span className={cn("text-5xl font-medium transition-colors duration-300", amount ? "text-rose-500 dark:text-rose-400" : "ios-text-secondary opacity-40")}>₹</span>
                                 <input
                                     type="number"
                                     inputMode="decimal"
@@ -373,195 +330,169 @@ export function AddExpenseSheet({ open, onOpenChange, onSuccess, editData, editI
                                     onChange={(e) => setAmount(e.target.value)}
                                     onBlur={() => window.scrollTo(0, 0)}
                                     className={cn(
-                                        "text-5xl font-semibold bg-transparent outline-none text-center w-52 placeholder-[#E5E5EA] dark:placeholder-[#3A3A3C] transition-colors ios-text-primary"
+                                        "text-[80px] leading-none font-bold bg-transparent outline-none text-center w-64 transition-colors duration-300 tracking-tighter placeholder:font-medium",
+                                        amount ? "text-rose-500 dark:text-rose-400" : "placeholder-[#C7C7CC] dark:placeholder-[#636366]"
                                     )}
                                 />
                             </div>
                             {activeBudgetRemaining !== null && (
                                 <motion.div
-                                    initial={{ opacity: 0 }}
-                                    animate={{ opacity: 1 }}
+                                    initial={{ opacity: 0, y: 5 }}
+                                    animate={{ opacity: 1, y: 0 }}
                                     className={cn(
-                                        "text-xs font-medium mt-3 px-3 py-1.5 rounded-full inline-block",
-                                        isOverBudget ? "bg-[#FF3B30]/10 text-[#FF3B30] dark:bg-[#FF453A]/15 dark:text-[#FF453A]" : "bg-[#34C759]/10 text-[#34C759] dark:bg-[#32D74B]/15 dark:text-[#32D74B]"
+                                        "text-[12px] font-bold mt-6 px-4 py-2 rounded-full inline-block tracking-wider uppercase backdrop-blur-md border shadow-sm",
+                                        isOverBudget ? "bg-[#FF3B30]/10 text-[#FF3B30] border-[#FF3B30]/20" : "bg-[#34C759]/10 text-[#34C759] border-[#34C759]/20"
                                     )}
                                 >
-                                    {isOverBudget ? `Exceeds ${budgetWarningType.toLowerCase()} limit` : `₹${activeBudgetRemaining.toFixed(0)} remaining (${budgetWarningType.toLowerCase()})`}
+                                    {isOverBudget ? `EXCEEDS ${budgetWarningType.toUpperCase()} LIMIT` : `₹${activeBudgetRemaining.toFixed(0)} REMAINING (${budgetWarningType.toUpperCase()})`}
                                 </motion.div>
                             )}
                         </div>
+                    </div>
 
-                        {/* Receipt scan */}
-                        <button
-                            type="button"
-                            onClick={() => fileRef.current?.click()}
-                            disabled={isScanning}
-                            className="w-full flex items-center justify-center gap-2 py-3 rounded-ios-sm border-2 border-dashed border-ios-blue/30 dark:border-ios-blue-dark/30 text-ios-blue dark:text-ios-blue-dark text-[15px] font-medium"
-                        >
-                            {isScanning ? <Loader2 size={18} className="animate-spin" /> : <Camera size={18} />}
-                            {isScanning ? "Scanning receipt..." : "Scan Receipt with AI"}
-                        </button>
-                        <input ref={fileRef} type="file" accept="image/*" capture="environment" className="hidden" onChange={handleScan} />
+                    <div className="overflow-y-auto flex-1 pb-safe px-6 pt-4 space-y-8 no-scrollbar">
+                        {error && (
+                            <motion.div
+                                initial={{ opacity: 0, scale: 0.95 }}
+                                animate={{ opacity: 1, scale: 1 }}
+                                className="p-4 bg-ios-red/10 border border-ios-red/20 rounded-2xl text-ios-red text-[15px] font-semibold text-center"
+                            >
+                                {error}
+                            </motion.div>
+                        )}
 
-                        {/* Merchant */}
-                        <div className="ios-card overflow-hidden">
-                            <input
-                                type="text"
-                                placeholder="Merchant / Store name"
-                                value={merchant}
-                                onChange={(e) => setMerchant(e.target.value)}
-                                onBlur={() => window.scrollTo(0, 0)}
-                                className="w-full px-4 py-3.5 text-[17px] ios-text-primary bg-transparent outline-none placeholder-[#C7C7CC] dark:placeholder-[#636366]"
-                            />
-                            <div className="h-px bg-[#E5E5EA] dark:bg-[#3A3A3C] mx-4" />
-                            <input
-                                type="text"
-                                placeholder="Note (optional)"
-                                value={note}
-                                onChange={(e) => setNote(e.target.value)}
-                                onBlur={() => window.scrollTo(0, 0)}
-                                className="w-full px-4 py-3.5 text-[17px] ios-text-primary bg-transparent outline-none placeholder-[#C7C7CC] dark:placeholder-[#636366]"
-                            />
-                        </div>
-
-                        {/* Attachment Section */}
-                        <div className="ios-card overflow-hidden">
-                            <label className="flex items-center gap-3 px-4 py-3.5 w-full cursor-pointer active:bg-black/5 dark:active:bg-white/5 transition-colors">
-                                <div className="w-8 h-8 rounded-lg bg-ios-blue/10 flex items-center justify-center flex-shrink-0">
-                                    <Paperclip size={18} className="text-ios-blue" />
-                                </div>
-                                <div className="flex-1 flex items-center justify-between">
-                                    <span className="text-[17px] ios-text-primary">
-                                        {file ? "Change Attachment" : "Add Attachment"}
-                                    </span>
-                                    {file && (
-                                        <span className="text-[15px] ios-text-secondary truncate max-w-[120px]">
-                                            {file.name}
-                                        </span>
-                                    )}
-                                </div>
+                        {/* Immersive Inputs (Merchant & Note) */}
+                        <div className="space-y-3">
+                            <div className="bg-[#F2F2F7] dark:bg-[#1C1C1E] border border-black/5 dark:border-white/5 rounded-[24px] overflow-hidden focus-within:ring-2 focus-within:ring-rose-500/20 transition-all shadow-sm">
                                 <input
-                                    type="file"
-                                    className="hidden"
-                                    accept=".jpg,.jpeg,.png,.webp,.pdf"
-                                    onChange={(e) => {
-                                        const selected = e.target.files?.[0];
-                                        if (!selected) return;
-                                        if (selected.type.startsWith('image/')) {
-                                            // Also trigger AI scan to autofill details from gallery images
-                                            handleScan(e);
-                                        } else {
-                                            setFile(selected);
-                                        }
-                                    }}
+                                    type="text"
+                                    placeholder="Merchant / Store name"
+                                    value={merchant}
+                                    onChange={(e) => setMerchant(e.target.value)}
+                                    onBlur={() => window.scrollTo(0, 0)}
+                                    className="w-full px-5 py-4 text-[17px] font-semibold ios-text-primary bg-transparent outline-none placeholder-[#8E8E93] dark:placeholder-[#636366]"
                                 />
-                            </label>
-                            {file && (
-                                <div className="px-4 pb-3.5 flex justify-end">
-                                    <button
-                                        type="button"
-                                        onClick={() => {
-                                            setFile(null);
-                                            setAmount("");
-                                            setMerchant("");
-                                            setNote("");
-                                            setSelectedCategory(undefined);
-                                            setPaymentMethod("UPI");
-                                        }}
-                                        className="text-[13px] text-ios-red font-medium"
-                                    >
-                                        Remove
-                                    </button>
-                                </div>
-                            )}
+                            </div>
+                            <div className="bg-[#F2F2F7] dark:bg-[#1C1C1E] border border-black/5 dark:border-white/5 rounded-[24px] overflow-hidden focus-within:ring-2 focus-within:ring-rose-500/20 transition-all shadow-sm">
+                                <input
+                                    type="text"
+                                    placeholder="Note (optional)"
+                                    value={note}
+                                    onChange={(e) => setNote(e.target.value)}
+                                    onBlur={() => window.scrollTo(0, 0)}
+                                    className="w-full px-5 py-4 text-[17px] font-semibold ios-text-primary bg-transparent outline-none placeholder-[#8E8E93] dark:placeholder-[#636366]"
+                                />
+                            </div>
                         </div>
 
-                        {/* Category */}
+                        {/* Animated Categories */}
                         <div>
-                            <div className="text-sm font-semibold ios-text-secondary mb-2 uppercase tracking-wider">Category</div>
-                            <div className="flex flex-wrap gap-2">
+                            <div className="text-[14px] font-bold ios-text-secondary mb-3 uppercase tracking-wider pl-1">Category</div>
+                            <div className="flex overflow-x-auto pb-6 -mx-6 px-6 gap-3 no-scrollbar items-center">
                                 {categories?.map((cat: { id: string; name: string; icon: string; color: string }) => {
                                     const Icon = getLucideIcon(cat.icon);
                                     const isSelected = selectedCategory === cat.id && !isCustom;
                                     return (
                                         <motion.button
                                             key={cat.id}
+                                            layout
+                                            initial={false}
                                             type="button"
-                                            whileTap={{ scale: 0.93 }}
+                                            whileTap={{ scale: 0.95 }}
                                             onClick={() => {
                                                 setSelectedCategory(isSelected ? undefined : cat.id);
                                                 setIsCustom(false);
                                             }}
+                                            animate={{
+                                                backgroundColor: isSelected ? cat.color : "transparent",
+                                                color: isSelected ? "#ffffff" : "var(--ios-text-primary)",
+                                                borderColor: isSelected ? cat.color : "var(--ios-border)"
+                                            }}
                                             className={cn(
-                                                "flex items-center gap-1.5 px-3 py-2 rounded-full text-sm font-medium transition-all border",
-                                                isSelected
-                                                    ? "text-white border-transparent"
-                                                    : "ios-text-primary border-[#E5E5EA] dark:border-[#3A3A3C] bg-transparent"
+                                                "flex-shrink-0 flex items-center justify-center gap-2.5 px-5 py-3.5 rounded-2xl border transition-shadow",
+                                                isSelected ? "shadow-xl" : "border-[#E5E5EA] dark:border-[#3A3A3C] bg-white dark:bg-[#1C1C1E]"
                                             )}
-                                            style={isSelected ? { backgroundColor: cat.color, borderColor: cat.color } : {}}
+                                            style={isSelected ? { boxShadow: `0 10px 20px -5px ${cat.color}70` } : {}}
                                         >
-                                            <Icon size={14} style={{ color: isSelected ? "white" : cat.color }} />
-                                            {cat.name}
+                                            <Icon size={20} style={{ color: isSelected ? "#fff" : cat.color }} className="transition-colors" />
+                                            <span className="font-semibold text-[16px]">{cat.name}</span>
                                         </motion.button>
                                     );
                                 })}
                                 <motion.button
+                                    layout
+                                    initial={false}
                                     type="button"
-                                    whileTap={{ scale: 0.93 }}
+                                    whileTap={{ scale: 0.95 }}
                                     onClick={() => {
                                         setIsCustom(!isCustom);
                                         setSelectedCategory(undefined);
                                     }}
+                                    animate={{
+                                        backgroundColor: isCustom ? "#007AFF" : "transparent",
+                                        color: isCustom ? "#ffffff" : "var(--ios-text-primary)",
+                                        borderColor: isCustom ? "#007AFF" : "var(--ios-border)"
+                                    }}
                                     className={cn(
-                                        "flex items-center gap-1.5 px-3 py-2 rounded-full text-sm font-medium transition-all border",
-                                        isCustom
-                                            ? "bg-ios-blue text-white border-transparent"
-                                            : "ios-text-primary border-[#E5E5EA] dark:border-[#3A3A3C] bg-transparent"
+                                        "flex-shrink-0 flex items-center justify-center gap-2.5 px-5 py-3.5 rounded-2xl border transition-shadow",
+                                        isCustom ? "shadow-xl shadow-blue-500/40" : "border-[#E5E5EA] dark:border-[#3A3A3C] bg-white dark:bg-[#1C1C1E]"
                                     )}
                                 >
-                                    <MoreHorizontal size={14} />
-                                    Custom
+                                    <MoreHorizontal size={20} />
+                                    <span className="font-semibold text-[16px]">Custom</span>
                                 </motion.button>
                             </div>
-                            {isCustom && (
-                                <motion.div
-                                    initial={{ opacity: 0, height: 0 }}
-                                    animate={{ opacity: 1, height: "auto" }}
-                                    className="mt-3"
-                                >
-                                    <input
-                                        type="text"
-                                        placeholder="Enter custom category name"
-                                        value={customCategoryName}
-                                        onChange={(e) => setCustomCategoryName(e.target.value)}
-                                        onBlur={() => window.scrollTo(0, 0)}
-                                        className="w-full px-4 py-3 rounded-ios-sm bg-ios-surface-light dark:bg-ios-surface-dark border border-[#E5E5EA] dark:border-[#3A3A3C] outline-none ios-text-primary placeholder-[#C7C7CC] dark:placeholder-[#636366]"
-                                    />
-                                </motion.div>
-                            )}
+
+                            <AnimatePresence>
+                                {isCustom && (
+                                    <motion.div
+                                        initial={{ opacity: 0, height: 0, scale: 0.95 }}
+                                        animate={{ opacity: 1, height: "auto", scale: 1 }}
+                                        exit={{ opacity: 0, height: 0, scale: 0.95 }}
+                                        className="mb-8"
+                                    >
+                                        <div className="bg-[#F2F2F7] dark:bg-[#1C1C1E] border border-black/5 dark:border-white/5 rounded-[24px] overflow-hidden focus-within:ring-2 focus-within:ring-blue-500/20 transition-all shadow-sm">
+                                            <input
+                                                type="text"
+                                                placeholder="Enter custom category name"
+                                                value={customCategoryName}
+                                                onChange={(e) => setCustomCategoryName(e.target.value)}
+                                                onBlur={() => window.scrollTo(0, 0)}
+                                                className="w-full px-5 py-4 text-[17px] font-semibold ios-text-primary bg-transparent outline-none placeholder-[#8E8E93] dark:placeholder-[#636366]"
+                                            />
+                                        </div>
+                                    </motion.div>
+                                )}
+                            </AnimatePresence>
                         </div>
 
-                        {/* Payment method */}
+                        {/* Bouncy Payment method */}
                         <div>
-                            <div className="text-sm font-semibold ios-text-secondary mb-2 uppercase tracking-wider">Payment Method</div>
-                            <div className="flex gap-2">
-                                {PAYMENT_METHODS.map(({ value, label, icon: Icon }) => (
-                                    <motion.button
-                                        key={value}
-                                        type="button"
-                                        whileTap={{ scale: 0.93 }}
-                                        onClick={() => setPaymentMethod(value)}
-                                        className={cn(
-                                            "flex-1 flex flex-col items-center gap-1 py-3 rounded-ios-sm border transition-all text-xs font-medium",
-                                            paymentMethod === value
-                                                ? "bg-ios-blue dark:bg-ios-blue-dark text-white border-transparent"
-                                                : "border-[#E5E5EA] dark:border-[#3A3A3C] ios-text-secondary"
-                                        )}
-                                    >
-                                        <Icon size={18} />
-                                        {label}
-                                    </motion.button>
-                                ))}
+                            <div className="text-[14px] font-bold ios-text-secondary mb-3 uppercase tracking-wider pl-1">Payment Method</div>
+                            <div className="grid grid-cols-5 gap-3 pb-4">
+                                {PAYMENT_METHODS.map(({ value, label, icon: Icon }) => {
+                                    const isSelected = paymentMethod === value;
+                                    return (
+                                        <motion.button
+                                            key={value}
+                                            type="button"
+                                            whileTap={{ scale: 0.85 }}
+                                            onClick={() => setPaymentMethod(value)}
+                                            animate={{
+                                                backgroundColor: isSelected ? "#007AFF" : "transparent",
+                                                color: isSelected ? "#ffffff" : "var(--ios-text-secondary)",
+                                                borderColor: isSelected ? "#007AFF" : "var(--ios-border)"
+                                            }}
+                                            className={cn(
+                                                "w-full flex flex-col items-center justify-center gap-2.5 py-4 rounded-[20px] border transition-all",
+                                                isSelected ? "shadow-xl shadow-blue-500/40" : "border-[#E5E5EA] dark:border-[#3A3A3C] bg-white dark:bg-[#1C1C1E]"
+                                            )}
+                                        >
+                                            <Icon size={24} className={cn("transition-colors", isSelected ? "text-white" : "text-ios-secondary")} />
+                                            <span className="text-[11px] font-bold uppercase tracking-wider">{label}</span>
+                                        </motion.button>
+                                    );
+                                })}
                             </div>
                         </div>
 
@@ -572,11 +503,12 @@ export function AddExpenseSheet({ open, onOpenChange, onSuccess, editData, editI
                                 whileTap={{ scale: 0.98 }}
                                 onClick={() => setShowDeleteConfirm(true)}
                                 disabled={deleteExpense.isPending}
-                                className="w-full py-3.5 mt-4 rounded-ios-sm bg-ios-red/10 text-ios-red font-semibold flex items-center justify-center gap-2"
+                                className="w-full py-4 mb-4 rounded-2xl bg-[#FF3B30]/10 text-[#FF3B30] font-bold text-[17px] flex items-center justify-center gap-2"
                             >
-                                {deleteExpense.isPending ? <Loader2 size={18} className="animate-spin" /> : "Delete Expense"}
+                                {deleteExpense.isPending ? <Loader2 size={20} className="animate-spin" /> : "Delete Expense"}
                             </motion.button>
                         )}
+                        <div className="h-6" /> {/* Extra padding at bottom for safe area */}
                     </div>
 
                     {/* Centered Popup for Deletion Confirmation */}

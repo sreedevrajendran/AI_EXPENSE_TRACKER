@@ -61,6 +61,172 @@ If a field is missing, use null.`
             }
         }),
 
+    scanDocument: protectedProcedure
+        .input(
+            z.object({
+                imageBase64: z.string(),
+                mimeType: z.string().default("image/jpeg"),
+            })
+        )
+        .mutation(async ({ input }) => {
+            const prompt = `Analyze this document carefully. Determine which of these types it is:
+1. ITEMIZED BILL - a grocery receipt, restaurant bill, or shopping receipt with individual line items listed
+2. EXPENSE - a single-amount receipt/bill without line items (utility bill, taxi receipt, etc.)
+3. INCOME - a salary slip, invoice, or income document
+4. BANK STATEMENT - a document listing multiple debit/credit transactions
+
+Return ONLY a raw JSON object. No markdown, no backticks, no extra text.
+
+If it is an ITEMIZED BILL (grocery, shopping, restaurant with line items):
+{
+  "type": "bill",
+  "merchant": "<store/restaurant name>",
+  "date": "<YYYY-MM-DD>",
+  "paymentMethod": "<exactly one of: CASH, CARD, UPI, BANK_TRANSFER, OTHER>",
+  "category": "<exactly one of: Food & Dining, Groceries, Shopping, Entertainment, Health, Other>",
+  "items": [
+    {
+      "name": "<item name>",
+      "quantity": <number, default 1>,
+      "price": <total price for this item as number>
+    }
+  ],
+  "total": <grand total as number>
+}
+
+If it is a single EXPENSE document (no line items):
+{
+  "type": "expense",
+  "data": {
+    "amount": <number only>,
+    "merchant": "<string>",
+    "date": "<YYYY-MM-DD>",
+    "category": "<exactly one of: Food & Dining, Transport, Shopping, Entertainment, Health, Bills & Utilities, Travel, Groceries, Education, Other>",
+    "paymentMethod": "<exactly one of: CASH, CARD, UPI, BANK_TRANSFER, OTHER>",
+    "note": "<string>"
+  }
+}
+
+If it is an INCOME document:
+{
+  "type": "income",
+  "data": {
+    "amount": <number only>,
+    "source": "<employer name or income source>",
+    "sourceType": "<exactly one of: Salary, Freelance, Investment, Business, Gifts, Refund>",
+    "date": "<YYYY-MM-DD>",
+    "note": "<string>"
+  }
+}
+
+If it is a BANK STATEMENT with multiple transactions:
+{
+  "type": "statement",
+  "data": [
+    {
+      "type": "<exactly 'expense' or 'income'>",
+      "amount": <number only, always positive>,
+      "title": "<merchant name for expense, or income source for income — be specific, e.g. 'Swiggy', 'Amazon', 'HDFC Bank Salary'>",
+      "date": "<YYYY-MM-DD, the exact transaction date — CRITICAL, extract from each row>",
+      "category": "<for expenses: MUST be exactly one of: 'Food & Dining', 'Transport', 'Shopping', 'Entertainment', 'Health', 'Bills & Utilities', 'Travel', 'Groceries', 'Education', 'Other'. For income: one of: 'Salary', 'Freelance', 'Investment', 'Business', 'Gifts', 'Refund'>",
+      "paymentMethod": "<for expense only: exactly one of CASH, CARD, UPI, BANK_TRANSFER, OTHER. If unsure, use BANK_TRANSFER>"
+    }
+  ]
+}
+
+CATEGORIZATION RULES FOR BANK STATEMENTS:
+- Swiggy, Zomato, Dunzo, restaurant names, café → "Food & Dining"
+- Ola, Uber, Rapido, metro, petrol, fuel stations, BMTC, KSRTC → "Transport"
+- Amazon, Flipkart, Myntra, Nykaa, Ajio, Meesho, retail stores → "Shopping"
+- Netflix, Spotify, Amazon Prime, Disney+, cinema, gaming → "Entertainment"
+- Apollo, Practo, pharmacy, hospital, medical, insurance premium → "Health"
+- Electricity, water, gas, broadband, internet, phone bill, BESCOM, BSNL, Airtel, Jio, mobile recharge → "Bills & Utilities"
+- Flights, hotel bookings, MakeMyTrip, Yatra, Airbnb, OYO → "Travel"
+- Big Bazaar, DMart, More, grocery stores, vegetables → "Groceries"
+- Fees, tuition, school, college, Udemy, Coursera, books → "Education"
+- Bank charges, ATM withdrawals, processing fees, unknown → "Other"
+- Salary credit, payroll, employer name → income type "Salary"
+- Interest credit, dividend, stock gains → income type "Investment"
+- Refund, cashback, reversal → income type "Refund"
+
+CRITICAL RULES:
+- Every transaction MUST have a date in YYYY-MM-DD format — this is mandatory.
+- Debit entries (money going out) = expense. Credit entries (money coming in) = income.
+- Do NOT merge multiple rows; extract each transaction separately.
+- If paymentMethod is unclear from a bank statement, default to "BANK_TRANSFER".
+
+If unreadable or none of the above:
+{
+  "type": "unknown",
+  "reason": "<brief reason>"
+}
+
+IMPORTANT: Prefer 'bill' type over 'expense' whenever you can see individual line items in the document. If a field is missing, use null.`;
+
+            const isPdf = input.mimeType === "application/pdf";
+
+            try {
+                let rawText: string;
+
+                if (isPdf) {
+                    // PDFs: decode to text, use text model with json_object for reliable output
+                    const pdfRawText = Buffer.from(input.imageBase64, "base64").toString("utf-8");
+                    const printable = pdfRawText.replace(/[^\x20-\x7E\n\t]/g, " ").replace(/\s{3,}/g, "  ").trim();
+                    const truncated = printable.slice(0, 12000);
+                    const pdfCompletion = await groq.chat.completions.create({
+                        messages: [
+                            {
+                                role: "user",
+                                content: `${prompt}\n\nDocument text:\n\n${truncated}`,
+                            }
+                        ],
+                        model: "llama-3.3-70b-versatile",
+                        temperature: 0,
+                        response_format: { type: "json_object" }, // text-only models support this
+                    });
+                    rawText = pdfCompletion.choices[0]?.message?.content || "{}";
+                } else {
+                    // Images: vision model — response_format is NOT supported with image_url content
+                    const imgCompletion = await groq.chat.completions.create({
+                        messages: [
+                            {
+                                role: "user",
+                                content: [
+                                    { type: "text", text: prompt },
+                                    {
+                                        type: "image_url",
+                                        image_url: {
+                                            url: `data:${input.mimeType};base64,${input.imageBase64}`,
+                                        }
+                                    }
+                                ]
+                            }
+                        ],
+                        model: "meta-llama/llama-4-scout-17b-16e-instruct",
+                        temperature: 0,
+                        // DO NOT add response_format here — vision model doesn't support it
+                    });
+                    rawText = imgCompletion.choices[0]?.message?.content || "{}";
+                }
+
+                console.log("--- GROQ SCAN RESPONSE ---");
+                console.log(rawText.slice(0, 600));
+                console.log("--------------------------");
+
+                try {
+                    return JSON.parse(rawText);
+                } catch {
+                    // Strip markdown code fences if model wraps in ```json ... ```
+                    const jsonMatch = rawText.match(/\{[\s\S]*\}/);
+                    if (jsonMatch) return JSON.parse(jsonMatch[0]);
+                    return { type: "unknown", reason: "Could not parse the document into valid JSON." };
+                }
+            } catch (error: any) {
+                console.error("Unified Document Scan API error:", error);
+                throw new Error(`AI processing failed: ${error.message || "Unknown error"}`);
+            }
+        }),
+
     scanIncomeDoc: protectedProcedure
         .input(
             z.object({
@@ -304,7 +470,7 @@ ${budgets.map(b => `- ${b.category?.name || 'Overall'}: ₹${b.amount}`).join('\
 
             const systemMessage = {
                 role: "system" as const,
-                content: `You are Agent Oasis, a helpful, intelligent, and concise AI financial assistant built into the Agent Oasis app. 
+                content: `You are Agent Floww, a helpful, intelligent, and concise AI financial assistant built into the Floww app. 
 You help the user manage their cash, track their spending, and answer questions about their habits.
 Use the provided financial context to give precise, personalized answers.
 Be conversational but direct. Do not use markdown headers unless necessary, keep formatting simple.

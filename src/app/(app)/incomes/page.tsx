@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { motion } from "framer-motion";
-import { Plus, Receipt, Paperclip, Wallet } from "lucide-react";
+import { Plus, Receipt, Paperclip, Wallet, TrendingUp, Hash } from "lucide-react";
 import { trpc } from "@/trpc/client";
 import { formatCurrency, formatDate } from "@/lib/utils";
 import { PrivacyWrapper } from "@/components/ui/PrivacyWrapper";
@@ -50,16 +50,46 @@ export default function IncomesPage() {
     return (
         <>
             <PullToRefresh onRefresh={handleRefresh}>
-                <div className="px-4 pt-3 pb-6 space-y-4">
+                <div className="px-4 pt-3 pb-32 space-y-4">
 
-                    {monthTotal !== undefined && monthTotal > 0 && (
-                        <div className="ios-card p-4 flex items-center justify-between">
-                            <div>
-                                <p className="text-xs ios-text-secondary">Total Income</p>
-                                <PrivacyWrapper><p className="text-2xl font-bold text-[#34C759] dark:text-[#32D74B]">+{formatCurrency(monthTotal)}</p></PrivacyWrapper>
-                            </div>
-                            <div className="w-10 h-10 rounded-full bg-[#34C759]/10 flex items-center justify-center">
-                                <Wallet size={20} className="text-[#34C759]" />
+                    {monthTotal !== undefined && (
+                        <div className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-[#34C759]/90 to-[#30D158]/90 backdrop-blur-2xl mb-2 border border-white/20 dark:border-white/10 shadow-xl shadow-[#34C759]/20">
+                            <div className="absolute top-0 right-0 -mr-8 -mt-8 w-32 h-32 rounded-full bg-white/20 blur-2xl pointer-events-none" />
+                            <div className="absolute bottom-0 left-0 -ml-8 -mb-8 w-24 h-24 rounded-full bg-black/20 blur-xl pointer-events-none" />
+                            <div className="p-6 text-white space-y-5 relative z-10">
+                                <div className="flex items-center justify-between">
+                                    <div>
+                                        <p className="text-[14px] font-medium text-white/90 tracking-wide uppercase mb-1">Total Income</p>
+                                        <PrivacyWrapper><p className="text-4xl font-bold tracking-tight">{formatCurrency(monthTotal)}</p></PrivacyWrapper>
+                                    </div>
+                                    <div className="w-14 h-14 rounded-full bg-white/20 backdrop-blur-md flex items-center justify-center border border-white/30 shadow-sm flex-shrink-0">
+                                        <Wallet size={28} className="text-white drop-shadow-sm" />
+                                    </div>
+                                </div>
+                                <div className="h-[1px] w-full bg-white/20 rounded-full" />
+                                <div className="flex items-center gap-4">
+                                    <div className="flex-1">
+                                        <p className="text-[12px] text-white/70 font-medium uppercase tracking-wider mb-0.5">Transactions</p>
+                                        <p className="text-lg font-bold tracking-tight text-white flex items-center gap-1.5 mt-0.5">
+                                            <span className="w-5 h-5 rounded-full bg-white/10 flex items-center justify-center inline-flex">
+                                                <Hash size={12} className="text-white" />
+                                            </span>
+                                            {incomes?.length ?? 0}
+                                        </p>
+                                    </div>
+                                    <div className="w-[1px] h-8 bg-white/20 rounded-full" />
+                                    <div className="flex-1 pl-2">
+                                        <p className="text-[12px] text-white/70 font-medium uppercase tracking-wider mb-0.5">Largest</p>
+                                        <PrivacyWrapper>
+                                            <p className="text-lg font-bold tracking-tight text-white flex items-center gap-1.5 mt-0.5">
+                                                <span className="w-5 h-5 rounded-full bg-white/10 flex items-center justify-center inline-flex">
+                                                    <TrendingUp size={12} className="text-white" />
+                                                </span>
+                                                {formatCurrency(incomes?.length ? Math.max(...incomes.map(i => i.amount)) : 0)}
+                                            </p>
+                                        </PrivacyWrapper>
+                                    </div>
+                                </div>
                             </div>
                         </div>
                     )}
@@ -71,8 +101,8 @@ export default function IncomesPage() {
                     ) : grouped && Object.keys(grouped).length > 0 ? (
                         Object.entries(grouped).map(([date, items]) => (
                             <div key={date}>
-                                <p className="text-xs font-semibold ios-text-secondary uppercase tracking-wider mb-2 px-1">{date}</p>
-                                <div className="ios-card overflow-hidden divide-y ios-separator">
+                                <p className="text-[13px] font-semibold ios-text-secondary uppercase tracking-wider mb-3 px-1 mt-2">{date}</p>
+                                <div className="space-y-3">
                                     {(grouped[date] ?? []).map((income: IncomeItem, i: number) => {
                                         const Icon = getLucideIcon(income.category?.icon ?? income.icon ?? "circle");
                                         return (
@@ -80,45 +110,50 @@ export default function IncomesPage() {
                                                 type="button"
                                                 onClick={() => setEditIncome(income)}
                                                 key={income.id}
-                                                initial={{ opacity: 0 }}
-                                                animate={{ opacity: 1 }}
+                                                initial={{ opacity: 0, y: 10 }}
+                                                animate={{ opacity: 1, y: 0 }}
                                                 transition={{ delay: i * 0.03 }}
-                                                className="w-full text-left flex items-center gap-3 px-4 py-3.5 focus:outline-none active:bg-[#F2F2F7] dark:active:bg-[#2C2C2E] transition-colors"
+                                                className="group relative w-full text-left bg-white/60 dark:bg-[#1C1C1E]/60 backdrop-blur-2xl rounded-3xl p-4 shadow-[0_4px_24px_-4px_rgba(0,0,0,0.05)] border border-white/50 dark:border-white/5 flex items-center gap-4 active:scale-[0.98] transition-all overflow-hidden"
                                             >
                                                 <div
-                                                    className="w-10 h-10 rounded-[10px] flex items-center justify-center flex-shrink-0"
-                                                    style={{ backgroundColor: `${income.category?.color ?? "#34C759"}20` }}
-                                                >
-                                                    <Icon size={18} style={{ color: income.category?.color ?? "#34C759" }} />
+                                                    className="absolute top-0 right-0 w-32 h-32 blur-3xl rounded-full opacity-10 transition-opacity group-hover:opacity-20 pointer-events-none"
+                                                    style={{ backgroundColor: income.category?.color ?? "#34C759" }}
+                                                />
+                                                <div className="relative w-14 h-14 rounded-[20px] flex items-center justify-center flex-shrink-0 shadow-inner overflow-hidden">
+                                                    <div className="absolute inset-0 opacity-20" style={{ backgroundColor: income.category?.color ?? "#34C759" }} />
+                                                    <Icon size={26} style={{ color: income.category?.color ?? "#34C759" }} className="relative z-10" />
                                                 </div>
-                                                <div className="flex-1 min-w-0">
-                                                    <div className="flex items-center gap-2">
-                                                        <p className="text-[15px] font-medium ios-text-primary truncate">{income.source}</p>
+                                                <div className="flex-1 min-w-0 relative z-10">
+                                                    <div className="flex items-center gap-2 mb-1">
+                                                        <p className="text-[17px] font-bold ios-text-primary truncate tracking-tight">{income.source}</p>
                                                         {income.receiptUrl && (
-                                                            <div className="text-ios-blue flex-shrink-0" title="Has Attachment">
-                                                                <Paperclip size={14} />
+                                                            <div className="text-ios-blue flex-shrink-0 bg-ios-blue/10 p-1 rounded-full" title="Has Attachment">
+                                                                <Paperclip size={12} strokeWidth={3} />
                                                             </div>
                                                         )}
                                                     </div>
-                                                    <div className="flex items-center gap-1.5">
-                                                        <span className="text-xs ios-text-secondary">{income.category?.name ?? "Direct Income"}</span>
-                                                        <span className="text-xs ios-text-secondary">·</span>
+                                                    <div className="flex flex-wrap items-center gap-2">
+                                                        <span className="text-[12px] font-medium ios-text-secondary bg-[#F2F2F7] dark:bg-[#2C2C2E] px-2 py-0.5 rounded-md">
+                                                            {income.category?.name ?? "Direct Income"}
+                                                        </span>
                                                         <span
-                                                            className="text-[10px] font-semibold px-1.5 py-0.5 rounded-full"
+                                                            className="text-[10px] uppercase font-bold tracking-wider px-2 py-0.5 rounded-md"
                                                             style={{
                                                                 color: "#34C759",
-                                                                backgroundColor: "#34C75920",
+                                                                backgroundColor: "#34C75915",
                                                             }}
                                                         >
-                                                            Income
+                                                            INCOME
                                                         </span>
                                                     </div>
                                                 </div>
-                                                <PrivacyWrapper>
-                                                    <p className="text-[15px] font-semibold text-[#34C759] dark:text-[#32D74B] whitespace-nowrap">
-                                                        +{formatCurrency(income.amount)}
-                                                    </p>
-                                                </PrivacyWrapper>
+                                                <div className="relative z-10 text-right pr-1">
+                                                    <PrivacyWrapper>
+                                                        <p className="text-[19px] font-black text-[#34C759] dark:text-[#32D74B] tracking-tight whitespace-nowrap">
+                                                            +{formatCurrency(income.amount)}
+                                                        </p>
+                                                    </PrivacyWrapper>
+                                                </div>
                                             </motion.button>
                                         );
                                     })}
@@ -135,17 +170,7 @@ export default function IncomesPage() {
                 </div>
             </PullToRefresh>
 
-            <motion.button
-                whileTap={{ scale: 0.92 }}
-                onClick={() => {
-                    setEditIncome(null);
-                    setAddOpen(true);
-                }}
-                className="fixed bottom-[calc(83px+env(safe-area-inset-bottom,0px)+16px)] right-5 w-14 h-14 rounded-full shadow-ios-lg flex items-center justify-center z-40"
-                style={{ background: "linear-gradient(135deg, #34C759, #30D158)" }}
-            >
-                <Plus size={28} className="text-white" strokeWidth={2.5} />
-            </motion.button>
+
 
             <AddIncomeSheet
                 open={addOpen || !!editIncome}

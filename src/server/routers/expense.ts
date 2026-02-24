@@ -150,6 +150,128 @@ export const expenseRouter = router({
             });
         }),
 
+    bulkCreate: protectedProcedure
+        .input(
+            z.array(
+                z.object({
+                    amount: z.number().positive(),
+                    merchant: z.string().min(1),
+                    note: z.string().optional(),
+                    date: z.date().default(() => new Date()),
+                    paymentMethod: z.nativeEnum(PaymentMethod).default("CASH"),
+                    categoryId: z.string().optional(),
+                    receiptUrl: z.string().optional(),
+                    icon: z.string().optional(),
+                })
+            )
+        )
+        .mutation(async ({ ctx, input }) => {
+            const userId = ctx.session.user.id!;
+            const data = input.map(item => ({
+                ...item,
+                userId,
+            }));
+            return ctx.db.expense.createMany({
+                data,
+            });
+        }),
+
+    // Smart bulk create: accepts categoryName strings and resolves them to IDs
+    bulkCreateWithCategories: protectedProcedure
+        .input(
+            z.array(
+                z.object({
+                    amount: z.number().positive(),
+                    merchant: z.string().min(1),
+                    note: z.string().optional(),
+                    date: z.date().default(() => new Date()),
+                    paymentMethod: z.nativeEnum(PaymentMethod).default("BANK_TRANSFER"),
+                    categoryName: z.string().optional(),
+                    receiptUrl: z.string().optional(),
+                })
+            )
+        )
+        .mutation(async ({ ctx, input }) => {
+            const userId = ctx.session.user.id!;
+
+            // Fetch all user categories once for efficient lookup
+            const userCategories = await ctx.db.category.findMany({
+                where: { userId },
+                select: { id: true, name: true },
+            });
+
+            // Build a lowercase name → id map for fast fuzzy matching
+            const categoryMap = new Map(
+                userCategories.map(c => [c.name.toLowerCase().trim(), c.id])
+            );
+
+            const data = input.map(item => {
+                const { categoryName, ...rest } = item;
+                let categoryId: string | undefined;
+
+                if (categoryName) {
+                    // Exact match first (case-insensitive)
+                    const exactMatch = categoryMap.get(categoryName.toLowerCase().trim());
+                    if (exactMatch) {
+                        categoryId = exactMatch;
+                    } else {
+                        // Fuzzy: find a category whose name is contained in the AI name or vice versa
+                        const aiNameLower = categoryName.toLowerCase().trim();
+                        for (const [catName, catId] of categoryMap.entries()) {
+                            if (aiNameLower.includes(catName) || catName.includes(aiNameLower)) {
+                                categoryId = catId;
+                                break;
+                            }
+                        }
+                    }
+                }
+
+                return { ...rest, userId, categoryId };
+            });
+
+            return ctx.db.expense.createMany({ data });
+        }),
+
+    createWithItems: protectedProcedure
+        .input(
+            z.object({
+                merchant: z.string().min(1),
+                date: z.date().default(() => new Date()),
+                paymentMethod: z.nativeEnum(PaymentMethod).default("CASH"),
+                categoryId: z.string().optional(),
+                note: z.string().optional(),
+                icon: z.string().optional(),
+                items: z.array(
+                    z.object({
+                        name: z.string().min(1),
+                        quantity: z.number().positive().default(1),
+                        price: z.number().positive(),
+                    })
+                ).min(1),
+            })
+        )
+        .mutation(async ({ ctx, input }) => {
+            const userId = ctx.session.user.id!;
+            const { items, ...expenseData } = input;
+            const totalAmount = items.reduce((sum, i) => sum + i.price, 0);
+
+            return ctx.db.expense.create({
+                data: {
+                    ...expenseData,
+                    amount: totalAmount,
+                    userId,
+                    items: {
+                        create: items.map(item => ({
+                            name: item.name,
+                            quantity: item.quantity,
+                            price: item.price,
+                        })),
+                    },
+                },
+                include: { category: true, items: true },
+            });
+        }),
+
     update: protectedProcedure
         .input(
             z.object({

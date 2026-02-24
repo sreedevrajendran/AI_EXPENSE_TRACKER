@@ -7,6 +7,8 @@ import { motion } from "framer-motion";
 import { cn } from "@/lib/utils";
 import { useState } from "react";
 import { AgentOasisChatSheet } from "@/components/ai/AgentOasisChatSheet";
+import { GlobalActionSheet } from "@/components/layout/GlobalActionSheet";
+import { Plus } from "lucide-react";
 
 const tabs = [
     { href: "/", label: "Home", icon: Home },
@@ -18,6 +20,7 @@ const tabs = [
 
 export function DesktopSidebar() {
     const pathname = usePathname();
+    const [actionSheetOpen, setActionSheetOpen] = useState(false);
     const [chatOpen, setChatOpen] = useState(false);
 
     return (
@@ -25,8 +28,8 @@ export function DesktopSidebar() {
             <aside className="hidden md:flex flex-col w-64 h-dvh sticky top-0 border-r ios-separator ios-glass pb-6">
                 {/* Branding / App Info */}
                 <div className="p-6 pb-2 flex flex-col items-center">
-                    <img src="/logo.png?v=2" alt="Oasis Logo" className="w-20 h-20 rounded-[20px] shadow-sm mb-3" />
-                    <h1 className="text-xl font-bold ios-text-primary tracking-tight">Oasis</h1>
+                    <img src="/logo.png?v=3" alt="Floww Logo" className="w-20 h-20 rounded-[20px] shadow-sm mb-3" />
+                    <h1 className="text-xl font-bold ios-text-primary tracking-tight">Floww</h1>
                     <p className="text-xs ios-text-secondary font-medium tracking-wide">AI EXPENSE TRACKER</p>
                 </div>
 
@@ -54,27 +57,31 @@ export function DesktopSidebar() {
 
                 {/* Actions Area */}
                 <div className="px-4 mt-auto space-y-3">
+                    {/* Add Transaction Button */}
+                    <motion.button
+                        whileHover={{ scale: 1.02 }}
+                        whileTap={{ scale: 0.98 }}
+                        onClick={() => setActionSheetOpen(true)}
+                        className="w-full flex items-center justify-center gap-2 py-3 rounded-ios-sm bg-gradient-to-r from-ios-blue to-[#005bb5] text-white font-semibold shadow-md shadow-ios-blue/30 mt-2"
+                    >
+                        <Plus size={20} strokeWidth={3} />
+                        Add Transaction
+                    </motion.button>
+
                     {/* Chatbot Button */}
                     <motion.button
                         whileHover={{ scale: 1.02 }}
                         whileTap={{ scale: 0.98 }}
                         onClick={() => setChatOpen(true)}
-                        className="w-full relative flex items-center justify-center gap-2 py-3 rounded-ios-sm border-2 border-ios-blue bg-ios-blue/10 dark:bg-ios-blue-dark/20 text-ios-blue dark:text-ios-blue-dark font-semibold overflow-hidden group"
+                        className="w-full flex items-center justify-center gap-2 py-3 rounded-ios-sm border-2 border-ios-blue bg-ios-blue/10 dark:bg-ios-blue-dark/20 text-ios-blue dark:text-ios-blue-dark font-semibold group"
                     >
-                        <motion.div
-                            animate={{ rotate: 360 }}
-                            transition={{ duration: 4, repeat: Infinity, ease: "linear" }}
-                        >
-                            <Sparkles size={18} strokeWidth={2.5} />
-                        </motion.div>
-                        Ask Agent Oasis
-
-                        {/* Shimmer effect */}
-                        <div className="absolute inset-0 -translate-x-full group-hover:animate-[shimmer_1.5s_infinite] bg-gradient-to-r from-transparent via-ios-blue/10 to-transparent skew-x-12" />
+                        <Sparkles size={18} strokeWidth={2.5} className="group-hover:animate-spin-slow" />
+                        Ask Agent Floww
                     </motion.button>
                 </div>
             </aside>
 
+            <GlobalActionSheet open={actionSheetOpen} onOpenChange={setActionSheetOpen} />
             <AgentOasisChatSheet open={chatOpen} onOpenChange={setChatOpen} />
         </>
     );
