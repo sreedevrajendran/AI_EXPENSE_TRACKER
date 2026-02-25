@@ -72,7 +72,7 @@ export default function TermsPage() {
                         <li><strong>Agent Floww</strong> — an AI chatbot that answers questions about your finances</li>
                     </ul>
                     <p className="text-sm text-[#3A3A3C] dark:text-[#EBEBF5] leading-relaxed">
-                        These features use third-party AI models (Google Gemini). AI-generated results may not always be accurate.
+                        These features use third-party AI models (Google Gemini API). AI-generated results may not always be accurate.
                         You should review and verify all AI-extracted data before relying on it. {appName} is not liable for financial
                         decisions made based on AI-generated content.
                     </p>

@@ -60,15 +60,14 @@ export default function PrivacyPage() {
                             <h3 className="font-semibold text-[#1C1C1E] dark:text-white mb-1">Uploaded Documents</h3>
                             <p className="leading-relaxed text-sm">
                                 If you upload a receipt, invoice, or bank statement image/PDF, it is temporarily processed by our AI
-                                (Groq API with Llama 4) to extract transaction details. Images are stored in Cloudinary for your reference.
+                                (Google Gemini API) to extract transaction details. Images are stored in Cloudinary for your reference.
                                 You can delete them at any time. Bank statement PDFs are processed entirely in memory and not stored.
                             </p>
                         </div>
                         <div>
                             <h3 className="font-semibold text-[#1C1C1E] dark:text-white mb-1">AI Chat Data</h3>
                             <p className="leading-relaxed text-sm">
-                                When you use Agent Floww (our AI chatbot), your messages and relevant financial context are sent to Groq&apos;s
-                                API to generate responses. We do not store your chat history on our servers beyond the active session.
+                                When you use Agent Floww (our AI chatbot), your messages and relevant financial context are sent to the Google Gemini API to generate responses. We do not store your chat history on our servers beyond the active session.
                             </p>
                         </div>
                         <div>
@@ -104,7 +103,7 @@ export default function PrivacyPage() {
                     <ul className="list-disc list-inside space-y-1.5 text-sm text-[#3A3A3C] dark:text-[#EBEBF5]">
                         <li><strong>Google OAuth</strong> — authentication</li>
                         <li><strong>Supabase (PostgreSQL)</strong> — secure database hosting</li>
-                        <li><strong>Google Gemini (Gemini 2.5 Flash API)</strong> — receipt/document scanning, AI Coach insights, and Agent Floww chatbot</li>
+                        <li><strong>Google Gemini API</strong> — receipt/document scanning, AI Coach insights, and Agent Floww chatbot</li>
                         <li><strong>Cloudinary</strong> — receipt image storage</li>
                         <li><strong>Netlify</strong> — app hosting and deployment</li>
                     </ul>
