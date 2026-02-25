@@ -90,6 +90,7 @@ export function BillReviewSheet({ open, onOpenChange, billData }: BillReviewShee
                 merchant: billData.merchant || "Unknown Store",
                 date: billData.date ? new Date(billData.date) : new Date(),
                 paymentMethod,
+                categoryName: billData.category || undefined,
                 items: selectedItems.map(item => ({
                     name: item.name,
                     quantity: item.quantity ?? 1,

@@ -269,6 +269,7 @@ export function AddExpenseSheet({ open, onOpenChange, onSuccess, editData, editI
                 note: note || undefined,
                 paymentMethod,
                 categoryId,
+                categoryName: !categoryId && !isCustom && prefillData?.category ? prefillData.category : undefined,
                 date: new Date(),
                 receiptUrl,
                 icon: categoryId ? undefined : mappedIcon,

@@ -135,16 +135,48 @@ export const expenseRouter = router({
                 date: z.date().default(() => new Date()),
                 paymentMethod: z.nativeEnum(PaymentMethod).default("CASH"),
                 categoryId: z.string().optional(),
+                categoryName: z.string().optional(),
                 receiptUrl: z.string().optional(),
                 icon: z.string().optional(),
             })
         )
         .mutation(async ({ ctx, input }) => {
-            console.log("Creating expense for user:", ctx.session.user.id, input);
+            const userId = ctx.session.user.id!;
+            const { categoryName, ...expenseData } = input;
+
+            let finalCategoryId = expenseData.categoryId;
+
+            // Resolve category name if ID is not provided
+            if (!finalCategoryId && categoryName) {
+                const userCategories = await ctx.db.category.findMany({
+                    where: { userId },
+                    select: { id: true, name: true },
+                });
+
+                const categoryMap = new Map(
+                    userCategories.map(c => [c.name.toLowerCase().trim(), c.id])
+                );
+
+                const exactMatch = categoryMap.get(categoryName.toLowerCase().trim());
+                if (exactMatch) {
+                    finalCategoryId = exactMatch;
+                } else {
+                    const aiNameLower = categoryName.toLowerCase().trim();
+                    for (const [catName, catId] of categoryMap.entries()) {
+                        if (aiNameLower.includes(catName) || catName.includes(aiNameLower)) {
+                            finalCategoryId = catId;
+                            break;
+                        }
+                    }
+                }
+            }
+
+            console.log("Creating expense for user:", userId, expenseData);
             return ctx.db.expense.create({
                 data: {
-                    ...input,
-                    userId: ctx.session.user.id!,
+                    ...expenseData,
+                    categoryId: finalCategoryId,
+                    userId,
                 },
                 include: { category: true },
             });
@@ -239,6 +271,7 @@ export const expenseRouter = router({
                 date: z.date().default(() => new Date()),
                 paymentMethod: z.nativeEnum(PaymentMethod).default("CASH"),
                 categoryId: z.string().optional(),
+                categoryName: z.string().optional(),
                 note: z.string().optional(),
                 icon: z.string().optional(),
                 items: z.array(
@@ -252,12 +285,40 @@ export const expenseRouter = router({
         )
         .mutation(async ({ ctx, input }) => {
             const userId = ctx.session.user.id!;
-            const { items, ...expenseData } = input;
+            const { items, categoryName, ...expenseData } = input;
             const totalAmount = items.reduce((sum, i) => sum + i.price, 0);
+
+            let finalCategoryId = expenseData.categoryId;
+
+            // Resolve category name if ID is not provided
+            if (!finalCategoryId && categoryName) {
+                const userCategories = await ctx.db.category.findMany({
+                    where: { userId },
+                    select: { id: true, name: true },
+                });
+
+                const categoryMap = new Map(
+                    userCategories.map(c => [c.name.toLowerCase().trim(), c.id])
+                );
+
+                const exactMatch = categoryMap.get(categoryName.toLowerCase().trim());
+                if (exactMatch) {
+                    finalCategoryId = exactMatch;
+                } else {
+                    const aiNameLower = categoryName.toLowerCase().trim();
+                    for (const [catName, catId] of categoryMap.entries()) {
+                        if (aiNameLower.includes(catName) || catName.includes(aiNameLower)) {
+                            finalCategoryId = catId;
+                            break;
+                        }
+                    }
+                }
+            }
 
             return ctx.db.expense.create({
                 data: {
                     ...expenseData,
+                    categoryId: finalCategoryId,
                     amount: totalAmount,
                     userId,
                     items: {
