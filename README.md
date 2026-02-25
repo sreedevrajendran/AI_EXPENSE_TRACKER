@@ -1,16 +1,16 @@
-# 💸 AI Expense Tracker
+# 💸 Floww
 
-A smart, mobile-first personal finance app that uses AI to automatically track your spending from receipts and Gmail purchase emails.
+A smart, mobile-first personal finance app that uses AI to automatically track your spending from receipts and bank statements.
 
-> Built with Next.js · TypeScript · tRPC · Prisma · Groq AI · Gmail API · Tailwind CSS
+> Built with Next.js · TypeScript · tRPC · Prisma · Google Gemini · Tailwind CSS
 
 ---
 
 ## ✨ Features
 
-- 📷 **Receipt Scanner** — Snap a photo, AI fills in all the details
-- 📧 **Gmail AI Sync** — Auto-imports purchase emails as expenses
-- 💬 **AI Chatbot** — Ask natural-language questions about your spending
+- 📷 **Document Intelligence** — Snap a photo of a receipt or bank statement, AI extracts all the details
+- 🤖 **Auto-categorization** — AI automatically assigns the correct category based on your data
+- 💬 **Agent Floww** — Ask natural-language questions about your spending and financial data
 - 📊 **Analytics Dashboard** — Income vs expenses, category breakdowns, budget tracking
 - 🎯 **Budget Management** — Set monthly budgets per category with real-time alerts
 - 🔒 **Privacy Mode** — Blur all amounts with one tap
@@ -23,10 +23,9 @@ A smart, mobile-first personal finance app that uses AI to automatically track y
 |---|---|
 | Framework | Next.js 15 (App Router) |
 | API | tRPC |
-| Database | PostgreSQL + Prisma (Supabase) |
-| Auth | NextAuth.js |
-| AI | Groq (LLaMA 3) |
-| Email | Gmail API (OAuth 2.0) |
+| Database | PostgreSQL + Prisma (Neon) |
+| Auth | NextAuth.js (Google OAuth) |
+| AI | Google Gemini 2.5 Flash |
 | Styling | Tailwind CSS + Framer Motion |
 | Deploy | Netlify |
 

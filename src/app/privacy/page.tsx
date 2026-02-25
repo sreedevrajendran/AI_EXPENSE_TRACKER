@@ -102,7 +102,7 @@ export default function PrivacyPage() {
                     </p>
                     <ul className="list-disc list-inside space-y-1.5 text-sm text-[#3A3A3C] dark:text-[#EBEBF5]">
                         <li><strong>Google OAuth</strong> — authentication</li>
-                        <li><strong>Supabase (PostgreSQL)</strong> — secure database hosting</li>
+                        <li><strong>Neon (PostgreSQL)</strong> — secure database hosting</li>
                         <li><strong>Google Gemini API</strong> — receipt/document scanning, AI Coach insights, and Agent Floww chatbot</li>
                         <li><strong>Cloudinary</strong> — receipt image storage</li>
                         <li><strong>Netlify</strong> — app hosting and deployment</li>
