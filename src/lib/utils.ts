@@ -53,7 +53,7 @@ export function getBudgetColor(status: "safe" | "warning" | "danger"): string {
     }
 }
 
-export async function compressImage(file: File, maxDimension = 1600): Promise<File> {
+export async function compressImage(file: File, maxDimension = 800): Promise<File> {
     if (!file.type.startsWith('image/')) return file;
 
     return new Promise((resolve) => {
@@ -86,7 +86,7 @@ export async function compressImage(file: File, maxDimension = 1600): Promise<Fi
                     } else {
                         resolve(file);
                     }
-                }, 'image/jpeg', 0.8);
+                }, 'image/jpeg', 0.6);
             };
             img.onerror = (err) => {
                 console.error("Image load failed for compression:", err);
