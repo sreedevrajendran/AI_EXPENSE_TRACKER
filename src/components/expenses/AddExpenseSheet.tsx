@@ -104,7 +104,7 @@ export function AddExpenseSheet({ open, onOpenChange, onSuccess, editData, editI
         },
         onError: (err) => {
             console.error("Expense creation failed:", err);
-            setError(err.message || "Failed to add expense. Please try again.");
+            setError("Failed to add expense. Please try again.");
         }
     });
 
@@ -116,7 +116,7 @@ export function AddExpenseSheet({ open, onOpenChange, onSuccess, editData, editI
             onSuccess?.();
         },
         onError: (err) => {
-            setError(err.message || "Failed to update expense.");
+            setError("Failed to update expense. Please try again.");
         }
     });
 
@@ -244,7 +244,7 @@ export function AddExpenseSheet({ open, onOpenChange, onSuccess, editData, editI
                 if (!res.ok) throw new Error(data.error || "Upload failed");
                 receiptUrl = data.url;
             } catch (err: any) {
-                setError(err.message || "Failed to upload file");
+                setError("Failed to upload file. Please try again.");
                 setUploading(false);
                 return;
             }

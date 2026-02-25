@@ -87,7 +87,7 @@ export function StatementReviewSheet({ open, onOpenChange, transactions }: State
             handleClose();
         } catch (error: any) {
             console.error("Failed to save statement:", error);
-            toast.error(error.message || "Failed to save transactions.");
+            toast.error("Failed to save transactions. Please try again.");
         } finally {
             setIsSaving(false);
         }

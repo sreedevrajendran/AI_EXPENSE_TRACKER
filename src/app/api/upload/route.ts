@@ -58,6 +58,6 @@ export async function POST(req: NextRequest) {
 
     } catch (error: any) {
         console.error("Cloudinary Upload Error:", error);
-        return NextResponse.json({ error: error.message || "Failed to upload file to cloud storage" }, { status: 500 });
+        return NextResponse.json({ error: "Failed to upload file to cloud storage" }, { status: 500 });
     }
 }

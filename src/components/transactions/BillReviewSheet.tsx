@@ -103,7 +103,7 @@ export function BillReviewSheet({ open, onOpenChange, billData }: BillReviewShee
             toast.success(`Saved ${selectedItems.length} item${selectedItems.length > 1 ? "s" : ""} — ₹${selectedTotal.toFixed(2)}`);
             onOpenChange(false);
         } catch (err: any) {
-            toast.error(err.message || "Failed to save the bill.");
+            toast.error("Failed to save the bill. Please try again.");
         } finally {
             setIsSaving(false);
         }

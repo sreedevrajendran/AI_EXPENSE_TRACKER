@@ -125,7 +125,8 @@ export function GlobalActionSheet({ open, onOpenChange }: GlobalActionSheetProps
                     }
                 } catch (err: any) {
                     setIsScanning(false);
-                    setScanError(err.message || "Failed to analyze document.");
+                    console.error("Scan error:", err);
+                    setScanError("Failed to analyze document. Please try again.");
                     onOpenChange(true); // Re-open drawer to show error
                 }
             };
@@ -137,7 +138,8 @@ export function GlobalActionSheet({ open, onOpenChange }: GlobalActionSheetProps
             };
         } catch (err: any) {
             setIsScanning(false);
-            setScanError(err.message || "Failed to process image.");
+            console.error("Image processing error:", err);
+            setScanError("Failed to process image. Please try again.");
             onOpenChange(true);
         }
 

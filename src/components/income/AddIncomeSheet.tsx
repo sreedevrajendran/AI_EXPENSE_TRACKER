@@ -106,7 +106,7 @@ export function AddIncomeSheet({ open, onOpenChange, onSuccess, editData, editId
             onSuccess?.();
         },
         onError: (err) => {
-            setError(err.message || "Failed to add income. Please try again.");
+            setError("Failed to add income. Please try again.");
         }
     });
 
@@ -118,7 +118,7 @@ export function AddIncomeSheet({ open, onOpenChange, onSuccess, editData, editId
             onSuccess?.();
         },
         onError: (err) => {
-            setError(err.message || "Failed to update income.");
+            setError("Failed to update income. Please try again.");
         }
     });
 
@@ -130,7 +130,7 @@ export function AddIncomeSheet({ open, onOpenChange, onSuccess, editData, editId
             onSuccess?.();
         },
         onError: (err) => {
-            setError(err.message || "Failed to delete income.");
+            setError("Failed to delete income. Please try again.");
         }
     });
 
@@ -169,7 +169,7 @@ export function AddIncomeSheet({ open, onOpenChange, onSuccess, editData, editId
                 if (!res.ok) throw new Error(data.error || "Upload failed");
                 receiptUrl = data.url;
             } catch (err: any) {
-                setError(err.message || "Failed to upload file");
+                setError("Failed to upload file. Please try again.");
                 setUploading(false);
                 return;
             }

@@ -61,7 +61,7 @@ If a field is missing, use null.`;
                 }
             } catch (error: any) {
                 console.error("Gemini API error:", error);
-                throw new Error(`AI processing failed: ${error.message || "Unknown error"}`);
+                throw new Error("Failed to process the receipt. Please try again.");
             }
         }),
 
@@ -225,7 +225,7 @@ IMPORTANT: Prefer 'bill' type over 'expense' whenever you can see individual lin
                 }
             } catch (error: any) {
                 console.error("Unified Document Scan API error:", error);
-                throw new Error(`AI processing failed: ${error.message || "Unknown error"}`);
+                throw new Error("Failed to analyze the document. Please ensure the image is clear and try again.");
             }
         }),
 
@@ -288,7 +288,7 @@ If a field is missing in an income doc, use null.`;
                 }
             } catch (error: any) {
                 console.error("Income doc scan error:", error);
-                throw new Error(`AI processing failed: ${error.message || "Unknown error"}`);
+                throw new Error("Failed to process the income document. Please try again.");
             }
         }),
 
