@@ -1,21 +1,25 @@
 # 💸 Floww
 
-A smart, mobile-first personal finance app that uses AI to automatically track your spending from receipts and bank statements.
+👉 **AI Document Intelligence + Financial Analytics Platform**
 
-> Built with Next.js · TypeScript · tRPC · Prisma · Google Gemini · Tailwind CSS
+Floww transcends the traditional "expense tracker" by operating as a powerful **Cross-Domain Core Engine**. It ingests unstructured data (images, PDFs, text) and pipelines it into structured, actionable financial insights. 
 
 ---
 
-## ✨ Features
+## ⚡ Core Reusable Modules (The Engine)
 
-- 📷 **Document Intelligence** — Snap a photo of a receipt or bank statement, AI extracts all the details
-- 🤖 **Auto-categorization** — AI automatically assigns the correct category based on your data
-- 💬 **Agent Floww** — Ask natural-language questions about your spending and financial data
-- 📊 **Analytics Dashboard** — Income vs expenses, category breakdowns, budget tracking
-- 🎯 **Budget Management** — Set monthly budgets per category with real-time alerts
-- 🔒 **Privacy Mode** — Blur all amounts with one tap
-- 📱 **PWA** — Install on iOS/Android like a native app
-- 🌙 **Dark Mode** — Full dark/light theme support
+At the heart of Floww is a modular, scalable architecture designed to be extensible. These core modules can be adapted and domain plugins can be built on top of them:
+
+- 📷 **OCR/Vision AI** — Intelligent extraction of data from receipts, itemized bills, and multi-page bank statements.
+- 🤖 **Auto Categorization** — NLP-powered fuzzy-matching to automatically route and classify extracted data streams.
+- 🎯 **Budget Engine** — Real-time tracking and threshold alerting system built on top of live data streams.
+- 🧠 **Insights Engine** — Automated trend analysis and predictive anomaly detection for financial health.
+- 💬 **Chatbot (Agent Floww)** — A context-aware LLM agent capable of querying the user's live database via natural language.
+- 📊 **Reports** — Dynamic, interactive charting and analytics dashboards.
+
+---
+
+## 🏗️ Technical Capabilities
 
 ## 🛠️ Tech Stack
 
