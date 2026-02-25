@@ -104,7 +104,7 @@ export default function PrivacyPage() {
                     <ul className="list-disc list-inside space-y-1.5 text-sm text-[#3A3A3C] dark:text-[#EBEBF5]">
                         <li><strong>Google OAuth</strong> — authentication</li>
                         <li><strong>Supabase (PostgreSQL)</strong> — secure database hosting</li>
-                        <li><strong>Groq (Llama 4 AI)</strong> — receipt/document scanning, AI Coach insights, and Agent Floww chatbot</li>
+                        <li><strong>Google Gemini (Gemini 2.5 Flash API)</strong> — receipt/document scanning, AI Coach insights, and Agent Floww chatbot</li>
                         <li><strong>Cloudinary</strong> — receipt image storage</li>
                         <li><strong>Netlify</strong> — app hosting and deployment</li>
                     </ul>

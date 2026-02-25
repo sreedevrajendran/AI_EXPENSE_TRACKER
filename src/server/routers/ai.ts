@@ -1,13 +1,13 @@
 import { z } from "zod";
 import { protectedProcedure, router } from "../trpc";
-import Groq from "groq-sdk";
+import { GoogleGenAI } from "@google/genai";
 
-// Initialize Groq dynamically on request to ensure process.env.GROQ_API_KEY is available in serverless environments (like Netlify)
-const getGroqClient = () => {
-    if (!process.env.GROQ_API_KEY) {
-        throw new Error("Missing GROQ_API_KEY environment variable");
+// Initialize Gemini dynamically on request to ensure process.env.GEMINI_API_KEY is available in serverless environments
+const getGeminiClient = () => {
+    if (!process.env.GEMINI_API_KEY) {
+        throw new Error("Missing GEMINI_API_KEY environment variable");
     }
-    return new Groq({ apiKey: process.env.GROQ_API_KEY });
+    return new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
 };
 
 export const aiRouter = router({
@@ -20,14 +20,7 @@ export const aiRouter = router({
         )
         .mutation(async ({ input }) => {
             try {
-                const chatCompletion = await getGroqClient().chat.completions.create({
-                    messages: [
-                        {
-                            role: "user",
-                            content: [
-                                {
-                                    type: "text",
-                                    text: `Extract receipt data from this image. Return ONLY a raw JSON object. Do not include markdown formatting, backticks, or any conversational text.
+                const prompt = `Extract receipt data from this image. Return ONLY a raw JSON object. Do not include markdown formatting, backticks, or any conversational text.
 {
   "amount": <number only>,
   "merchant": "<string>",
@@ -38,22 +31,27 @@ export const aiRouter = router({
 }
 CRITICAL: The "category" field MUST be exactly one of the following, do NOT invent categories: "Food & Dining", "Transport", "Shopping", "Entertainment", "Health", "Bills & Utilities", "Travel", "Groceries", "Education", or "Other".
 CRITICAL: The "paymentMethod" field MUST be exactly one of the following: "CASH", "CARD", "UPI", "BANK_TRANSFER", or "OTHER".
-If a field is missing, use null.`
-                                },
-                                {
-                                    type: "image_url",
-                                    image_url: {
-                                        url: `data:${input.mimeType};base64,${input.imageBase64}`,
-                                    }
-                                }
-                            ]
-                        }
+If a field is missing, use null.`;
+
+                const ai = getGeminiClient();
+                const response = await ai.models.generateContent({
+                    model: "gemini-2.5-flash",
+                    contents: [
+                        prompt,
+                        {
+                            inlineData: {
+                                data: input.imageBase64,
+                                mimeType: input.mimeType,
+                            },
+                        },
                     ],
-                    model: "meta-llama/llama-4-scout-17b-16e-instruct",
-                    temperature: 0,
+                    config: {
+                        temperature: 0,
+                        responseMimeType: "application/json",
+                    },
                 });
 
-                const text = chatCompletion.choices[0]?.message?.content || "{}";
+                const text = response.text || "{}";
                 try {
                     return JSON.parse(text);
                 } catch {
@@ -62,7 +60,7 @@ If a field is missing, use null.`
                     return { amount: null, merchant: null, date: null, category: null, paymentMethod: null, note: null };
                 }
             } catch (error: any) {
-                console.error("Groq API error:", error);
+                console.error("Gemini API error:", error);
                 throw new Error(`AI processing failed: ${error.message || "Unknown error"}`);
             }
         }),
@@ -173,56 +171,54 @@ IMPORTANT: Prefer 'bill' type over 'expense' whenever you can see individual lin
 
             try {
                 let rawText: string;
+                const ai = getGeminiClient();
 
                 if (isPdf) {
-                    // PDFs: decode to text, use text model with json_object for reliable output
-                    const pdfRawText = Buffer.from(input.imageBase64, "base64").toString("utf-8");
-                    const printable = pdfRawText.replace(/[^\x20-\x7E\n\t]/g, " ").replace(/\s{3,}/g, "  ").trim();
-                    const truncated = printable.slice(0, 12000);
-                    const pdfCompletion = await getGroqClient().chat.completions.create({
-                        messages: [
+                    // With Gemini 2.5 flash, we can pass pdf directly as inlineData!
+                    const response = await ai.models.generateContent({
+                        model: "gemini-2.5-flash",
+                        contents: [
+                            prompt,
                             {
-                                role: "user",
-                                content: `${prompt}\n\nDocument text:\n\n${truncated}`,
-                            }
+                                inlineData: {
+                                    data: input.imageBase64,
+                                    mimeType: "application/pdf",
+                                },
+                            },
                         ],
-                        model: "llama-3.3-70b-versatile",
-                        temperature: 0,
-                        response_format: { type: "json_object" }, // text-only models support this
+                        config: {
+                            temperature: 0,
+                            responseMimeType: "application/json",
+                        },
                     });
-                    rawText = pdfCompletion.choices[0]?.message?.content || "{}";
+                    rawText = response.text || "{}";
                 } else {
-                    // Images: vision model — response_format is NOT supported with image_url content
-                    const imgCompletion = await getGroqClient().chat.completions.create({
-                        messages: [
+                    const response = await ai.models.generateContent({
+                        model: "gemini-2.5-flash",
+                        contents: [
+                            prompt,
                             {
-                                role: "user",
-                                content: [
-                                    { type: "text", text: prompt },
-                                    {
-                                        type: "image_url",
-                                        image_url: {
-                                            url: `data:${input.mimeType};base64,${input.imageBase64}`,
-                                        }
-                                    }
-                                ]
-                            }
+                                inlineData: {
+                                    data: input.imageBase64,
+                                    mimeType: input.mimeType,
+                                },
+                            },
                         ],
-                        model: "meta-llama/llama-4-scout-17b-16e-instruct",
-                        temperature: 0,
-                        // DO NOT add response_format here — vision model doesn't support it
+                        config: {
+                            temperature: 0,
+                            responseMimeType: "application/json",
+                        },
                     });
-                    rawText = imgCompletion.choices[0]?.message?.content || "{}";
+                    rawText = response.text || "{}";
                 }
 
-                console.log("--- GROQ SCAN RESPONSE ---");
+                console.log("--- GEMINI SCAN RESPONSE ---");
                 console.log(rawText.slice(0, 600));
                 console.log("--------------------------");
 
                 try {
                     return JSON.parse(rawText);
                 } catch {
-                    // Strip markdown code fences if model wraps in ```json ... ```
                     const jsonMatch = rawText.match(/\{[\s\S]*\}/);
                     if (jsonMatch) return JSON.parse(jsonMatch[0]);
                     return { type: "unknown", reason: "Could not parse the document into valid JSON." };
@@ -242,14 +238,7 @@ IMPORTANT: Prefer 'bill' type over 'expense' whenever you can see individual lin
         )
         .mutation(async ({ input }) => {
             try {
-                const chatCompletion = await getGroqClient().chat.completions.create({
-                    messages: [
-                        {
-                            role: "user",
-                            content: [
-                                {
-                                    type: "text",
-                                    text: `Analyse this document image. First determine if it is an income-related document (e.g. salary slip, payslip, bank credit statement, freelance invoice, dividend notice, pension statement, or any document showing money received).
+                const prompt = `Analyse this document image. First determine if it is an income-related document (e.g. salary slip, payslip, bank credit statement, freelance invoice, dividend notice, pension statement, or any document showing money received).
 
 Return ONLY a raw JSON object. Do not include markdown formatting, backticks, or any conversational text.
 
@@ -269,22 +258,27 @@ If it is NOT an income document (e.g. it is an expense receipt, a random photo, 
   "reason": "<brief human-readable reason why this is not an income document, max 12 words>"
 }
 
-If a field is missing in an income doc, use null.`
-                                },
-                                {
-                                    type: "image_url",
-                                    image_url: {
-                                        url: `data:${input.mimeType};base64,${input.imageBase64}`,
-                                    }
-                                }
-                            ]
-                        }
+If a field is missing in an income doc, use null.`;
+
+                const ai = getGeminiClient();
+                const response = await ai.models.generateContent({
+                    model: "gemini-2.5-flash",
+                    contents: [
+                        prompt,
+                        {
+                            inlineData: {
+                                data: input.imageBase64,
+                                mimeType: input.mimeType,
+                            },
+                        },
                     ],
-                    model: "meta-llama/llama-4-scout-17b-16e-instruct",
-                    temperature: 0,
+                    config: {
+                        temperature: 0,
+                        responseMimeType: "application/json",
+                    },
                 });
 
-                const text = chatCompletion.choices[0]?.message?.content || "{}";
+                const text = response.text || "{}";
                 try {
                     return JSON.parse(text);
                 } catch {
@@ -301,20 +295,21 @@ If a field is missing in an income doc, use null.`
     mapIcon: protectedProcedure
         .input(z.object({ query: z.string() }))
         .mutation(async ({ input }) => {
-            const chatCompletion = await getGroqClient().chat.completions.create({
-                messages: [
-                    {
-                        role: "user",
-                        content: `Given the merchant or category name "${input.query}", return a JSON object with a single key "icon" containing the Lucide icon name (kebab-case) that best represents it.
+            const prompt = `Given the merchant or category name "${input.query}", return a JSON object with a single key "icon" containing the Lucide icon name (kebab-case) that best represents it.
 Examples: "Starbucks" -> {"icon": "coffee"}, "Amazon" -> {"icon": "shopping-cart"}, "Netflix" -> {"icon": "film"}
-Do not return any extra text.`
-                    }
-                ],
-                model: "llama-3.1-8b-instant",
-                temperature: 0,
-                response_format: { type: "json_object" },
+Do not return any extra text.`;
+
+            const ai = getGeminiClient();
+            const response = await ai.models.generateContent({
+                model: "gemini-2.5-flash",
+                contents: [{ role: "user", parts: [{ text: prompt }] }],
+                config: {
+                    temperature: 0,
+                    responseMimeType: "application/json",
+                },
             });
-            const text = chatCompletion.choices[0]?.message?.content || "{}";
+
+            const text = response.text || "{}";
             try {
                 const parsed = JSON.parse(text);
                 return { icon: parsed.icon || "circle" };
@@ -388,13 +383,16 @@ Return ONLY valid JSON (no markdown):
 }`;
 
         try {
-            const chatCompletion = await getGroqClient().chat.completions.create({
-                messages: [{ role: "user", content: prompt }],
-                model: "llama-3.1-8b-instant",
-                temperature: 0,
-                response_format: { type: "json_object" },
+            const ai = getGeminiClient();
+            const response = await ai.models.generateContent({
+                model: "gemini-2.5-flash",
+                contents: [{ role: "user", parts: [{ text: prompt }] }],
+                config: {
+                    temperature: 0,
+                    responseMimeType: "application/json",
+                },
             });
-            const text = chatCompletion.choices[0]?.message?.content || "{}";
+            const text = response.text || "{}";
 
             try {
                 const parsed = JSON.parse(text);
@@ -474,27 +472,40 @@ Active Budgets:
 ${budgets.map(b => `- ${b.category?.name || 'Overall'}: ₹${b.amount}`).join('\n')}
 `;
 
-            const systemMessage = {
-                role: "system" as const,
-                content: `You are Agent Floww, a helpful, intelligent, and concise AI financial assistant built into the Floww app. 
+            const systemInstruction = `You are Agent Floww, a helpful, intelligent, and concise AI financial assistant built into the Floww app. 
 You help the user manage their cash, track their spending, and answer questions about their habits.
 Use the provided financial context to give precise, personalized answers.
 Be conversational but direct. Do not use markdown headers unless necessary, keep formatting simple.
 If the user asks about something outside their financial data or app usage, nicely pivot back to their finances.
 
 Context Information:
-${contextData}`
-            };
+${contextData}`;
 
-            const chatCompletion = await getGroqClient().chat.completions.create({
-                messages: [systemMessage, ...input.messages],
-                model: "llama-3.1-8b-instant",
-                temperature: 0.7,
-                max_tokens: 500,
-            });
+            const formattedMessages = input.messages.map(m => ({
+                role: m.role === "assistant" ? "model" : "user",
+                parts: [{ text: m.content }]
+            }));
 
-            return {
-                reply: chatCompletion.choices[0]?.message?.content || "I'm having trouble processing that right now."
-            };
+            try {
+                const ai = getGeminiClient();
+                const response = await ai.models.generateContent({
+                    model: "gemini-2.5-flash",
+                    contents: formattedMessages,
+                    config: {
+                        systemInstruction: { parts: [{ text: systemInstruction }] },
+                        temperature: 0.7,
+                        maxOutputTokens: 500,
+                    }
+                });
+
+                return {
+                    reply: response.text || "I'm having trouble processing that right now."
+                };
+            } catch (err) {
+                console.error("Chat error:", err);
+                return {
+                    reply: "I'm having trouble communicating with the API right now."
+                };
+            }
         }),
 });
