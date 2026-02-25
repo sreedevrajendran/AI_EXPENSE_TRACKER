@@ -3,8 +3,8 @@ import "./globals.css";
 import { Providers } from "@/components/providers";
 
 export const metadata: Metadata = {
-    title: "Floww — AI Expense Tracker",
-    description: "Track your expenses intelligently with AI-powered insights",
+    title: "Floww — Document Intelligence & Analytics Platform",
+    description: "Scan documents, categorize automatically, and get actionable financial insights.",
     manifest: "/manifest.json",
     appleWebApp: {
         capable: true,

@@ -27,10 +27,10 @@ export function DesktopSidebar() {
         <>
             <aside className="hidden md:flex flex-col w-64 h-dvh sticky top-0 border-r ios-separator ios-glass pb-6">
                 {/* Branding / App Info */}
-                <div className="p-6 pb-2 flex flex-col items-center">
+                <div className="p-6 pb-2 flex flex-col items-center text-center">
                     <img src="/logo.png?v=3" alt="Floww Logo" className="w-20 h-20 rounded-[20px] shadow-sm mb-3" />
                     <h1 className="text-xl font-bold ios-text-primary tracking-tight">Floww</h1>
-                    <p className="text-xs ios-text-secondary font-medium tracking-wide">AI EXPENSE TRACKER</p>
+                    <p className="text-[10px] ios-text-secondary font-bold tracking-widest uppercase mt-1">Document Intelligence</p>
                 </div>
 
                 {/* Navigation Links */}

@@ -2,7 +2,7 @@ import Link from "next/link";
 
 export const metadata = {
     title: "Terms of Service | Floww",
-    description: "Terms of Service for Floww — AI Expense Tracker.",
+    description: "Terms of Service for Floww — Document Intelligence & Analytics Platform.",
 };
 
 export default function TermsPage() {

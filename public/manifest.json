@@ -1,7 +1,7 @@
 {
     "name": "Floww",
     "short_name": "Floww",
-    "description": "Floww — AI-Powered Expense Tracker",
+    "description": "Floww — Document Intelligence & Analytics Platform",
     "start_url": "/",
     "display": "standalone",
     "orientation": "portrait",

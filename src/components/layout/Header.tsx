@@ -11,7 +11,7 @@ interface HeaderProps {
     title?: string;
 }
 
-export function Header({ title = "Expense Tracker" }: HeaderProps) {
+export function Header({ title = "Floww" }: HeaderProps) {
     const { isPrivate, togglePrivacy } = usePrivacy();
     const [chatOpen, setChatOpen] = useState(false);
 
@@ -40,7 +40,7 @@ export function Header({ title = "Expense Tracker" }: HeaderProps) {
                     <div className="flex-[2] flex justify-center items-center gap-2">
                         <img src="/logo.png?v=3" alt="Floww Logo" className="w-7 h-7 rounded-lg" />
                         <h1 className="text-[17px] font-semibold ios-text-primary tracking-tight truncate">
-                            {title === "Expense Tracker" ? "Floww" : title}
+                            {title === "Floww" ? "Floww" : title}
                         </h1>
                     </div>
 
