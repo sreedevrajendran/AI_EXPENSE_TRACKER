@@ -74,24 +74,24 @@ export default function LoginPage() {
                 {/* Deep static gradient */}
                 <div className="absolute inset-0 bg-gradient-to-br from-[#050714] via-[#0a0f2e] to-[#06081a]" />
 
-                {/* Animated mesh orbs */}
+                {/* Animated mesh orbs - optimized for performance */}
                 <motion.div
                     className="absolute top-[-20%] left-[-10%] w-[700px] h-[700px] rounded-full"
-                    style={{ background: "radial-gradient(circle, rgba(0,122,255,0.18) 0%, transparent 65%)" }}
-                    animate={{ x: [0, 40, 0], y: [0, -30, 0], scale: [1, 1.05, 1] }}
-                    transition={{ duration: 12, repeat: Infinity, ease: "easeInOut" }}
+                    style={{ background: "radial-gradient(circle, rgba(0,122,255,0.15) 0%, transparent 65%)", willChange: "opacity" }}
+                    animate={{ opacity: [0.6, 1, 0.6] }}
+                    transition={{ duration: 8, repeat: Infinity, ease: "easeInOut" }}
                 />
                 <motion.div
                     className="absolute bottom-[-20%] right-[-10%] w-[700px] h-[700px] rounded-full"
-                    style={{ background: "radial-gradient(circle, rgba(88,86,214,0.2) 0%, transparent 65%)" }}
-                    animate={{ x: [0, -30, 0], y: [0, 20, 0], scale: [1, 1.08, 1] }}
-                    transition={{ duration: 15, repeat: Infinity, ease: "easeInOut" }}
+                    style={{ background: "radial-gradient(circle, rgba(88,86,214,0.15) 0%, transparent 65%)", willChange: "opacity" }}
+                    animate={{ opacity: [0.5, 0.9, 0.5] }}
+                    transition={{ duration: 10, repeat: Infinity, ease: "easeInOut" }}
                 />
                 <motion.div
                     className="absolute top-[30%] right-[-5%] w-[400px] h-[400px] rounded-full"
-                    style={{ background: "radial-gradient(circle, rgba(255,159,10,0.12) 0%, transparent 65%)" }}
-                    animate={{ x: [0, 20, 0], y: [0, -30, 0] }}
-                    transition={{ duration: 10, repeat: Infinity, ease: "easeInOut" }}
+                    style={{ background: "radial-gradient(circle, rgba(255,159,10,0.1) 0%, transparent 65%)", willChange: "opacity" }}
+                    animate={{ opacity: [0.7, 1, 0.7] }}
+                    transition={{ duration: 7, repeat: Infinity, ease: "easeInOut" }}
                 />
 
                 {/* Fine grid */}
@@ -125,16 +125,15 @@ export default function LoginPage() {
                     >
                         {/* Logo */}
                         <div className="relative">
-                            <motion.div
-                                className="absolute inset-0 rounded-[28px]"
-                                style={{ background: "rgba(0,122,255,0.35)", filter: "blur(20px)" }}
-                                animate={{ opacity: [0.5, 0.9, 0.5] }}
-                                transition={{ duration: 3, repeat: Infinity }}
+                            <div
+                                className="absolute inset-0 rounded-[28px] opacity-70"
+                                style={{ background: "rgba(0,122,255,0.35)", filter: "blur(20px)", willChange: "transform" }}
                             />
                             <motion.div
                                 className="relative w-[88px] h-[88px] rounded-[28px] overflow-hidden ring-1 ring-white/10 shadow-2xl"
                                 animate={{ rotateY: [0, 6, -6, 0] }}
                                 transition={{ duration: 7, repeat: Infinity, ease: "easeInOut" }}
+                                style={{ willChange: "transform" }}
                             >
                                 <img src="/logo.png?v=3" alt="Floww" className="w-full h-full object-contain p-1" />
                             </motion.div>
@@ -195,7 +194,8 @@ export default function LoginPage() {
                         <motion.div
                             className="flex gap-3 w-max"
                             animate={{ x: ["0%", "-50%"] }}
-                            transition={{ duration: 20, repeat: Infinity, ease: "linear" }}
+                            transition={{ duration: 25, repeat: Infinity, ease: "linear" }}
+                            style={{ willChange: "transform" }}
                         >
                             {[...features, ...features].map(({ icon: Icon, label, color }, i) => (
                                 <div
