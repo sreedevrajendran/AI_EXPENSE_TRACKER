@@ -15,11 +15,12 @@ export async function sendWelcomeEmail(email: string, name: string) {
 
     try {
         const firstName = name?.split(' ')[0] || 'there';
+        const loginUrl = process.env.NEXTAUTH_URL || "https://floww.finance";
         const { data, error } = await resend.emails.send({
             from: `Floww <${SENDER_EMAIL}>`,
             to: email, // Free tier requires this to be your verified email if domain isn't verified
             subject: 'Welcome to Floww ✨ Your financial clarity starts here.',
-            react: WelcomeEmail({ userFirstname: firstName }),
+            react: WelcomeEmail({ userFirstname: firstName, loginUrl }),
         });
 
         if (error) {
@@ -43,11 +44,12 @@ export async function sendLoginEmail(email: string, name: string) {
 
     try {
         const firstName = name?.split(' ')[0] || 'there';
+        const loginUrl = process.env.NEXTAUTH_URL || "https://floww.finance";
         const { data, error } = await resend.emails.send({
             from: `Floww Security <${SENDER_EMAIL}>`,
             to: email, // Free tier: must be verified email
             subject: 'Secure sign-in to Floww 🔒',
-            react: LoginEmail({ userFirstname: firstName }),
+            react: LoginEmail({ userFirstname: firstName, loginUrl }),
         });
 
         if (error) {

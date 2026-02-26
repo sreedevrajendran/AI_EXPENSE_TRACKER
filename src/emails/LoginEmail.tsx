@@ -13,9 +13,10 @@ import * as React from "react";
 
 interface LoginEmailProps {
     userFirstname: string;
+    loginUrl?: string;
 }
 
-export const LoginEmail = ({ userFirstname }: LoginEmailProps) => {
+export const LoginEmail = ({ userFirstname, loginUrl = "https://floww.finance" }: LoginEmailProps) => {
     return (
         <Html>
             <Head />
@@ -40,7 +41,7 @@ export const LoginEmail = ({ userFirstname }: LoginEmailProps) => {
                         <strong>The Floww Team</strong>
                     </Text>
                     <Section style={btnContainer}>
-                        <Button style={button} href="https://flowwexpensetracker.netlify.app">
+                        <Button style={button} href={loginUrl}>
                             Open Floww
                         </Button>
                     </Section>
