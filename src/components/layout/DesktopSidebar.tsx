@@ -30,7 +30,10 @@ export function DesktopSidebar() {
                 <div className="p-6 pb-2 flex flex-col items-center text-center">
                     <img src="/logo.png?v=3" alt="Floww Logo" className="w-20 h-20 rounded-[20px] shadow-sm mb-3" />
                     <h1 className="text-xl font-bold ios-text-primary tracking-tight">Floww</h1>
-                    <p className="text-[10px] ios-text-secondary font-bold tracking-widest uppercase mt-1">Document Intelligence</p>
+                    <p className="text-[9px] ios-text-secondary font-bold tracking-widest uppercase mt-1 leading-tight px-2">
+                        AI Document Intelligence
+                        <br />+ Financial Analytics
+                    </p>
                 </div>
 
                 {/* Navigation Links */}

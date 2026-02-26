@@ -2,7 +2,7 @@ import Link from "next/link";
 
 export const metadata = {
     title: "Privacy Policy | Floww",
-    description: "Privacy Policy for Floww — Document Intelligence & Analytics Platform. Learn how we collect, use, and protect your data.",
+    description: "Privacy Policy for Floww — AI Document Intelligence + Financial Analytics Platform. Learn how we collect, use, and protect your data.",
 };
 
 export default function PrivacyPage() {

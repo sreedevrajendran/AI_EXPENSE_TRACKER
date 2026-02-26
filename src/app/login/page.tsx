@@ -143,7 +143,7 @@ export default function LoginPage() {
                         {/* App name */}
                         <div className="text-center">
                             <h1 className="text-[40px] font-black text-white tracking-tight leading-none">Floww</h1>
-                            <p className="text-[11px] font-semibold text-white/35 tracking-[0.2em] uppercase mt-1">Document Intelligence Platform</p>
+                            <p className="text-[11px] font-semibold text-white/35 tracking-[0.2em] uppercase mt-1">AI Document Intelligence + Financial Analytics Platform</p>
                         </div>
 
                         {/* Typewriter tagline */}

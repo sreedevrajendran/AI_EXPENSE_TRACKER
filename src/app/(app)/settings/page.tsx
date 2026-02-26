@@ -171,7 +171,7 @@ function SettingsContent() {
             />
             <div>
               <h3 className="text-[19px] font-bold ios-text-primary tracking-tight">
-                Floww — Document Intelligence Platform
+                Floww — AI Document Intelligence + Financial Analytics Platform
               </h3>
               <p className="text-[13px] ios-text-secondary mt-0.5">
                 Version 1.0.0

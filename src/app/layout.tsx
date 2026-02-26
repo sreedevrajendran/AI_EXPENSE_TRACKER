@@ -3,7 +3,7 @@ import "./globals.css";
 import { Providers } from "@/components/providers";
 
 export const metadata: Metadata = {
-    title: "Floww — Document Intelligence & Analytics Platform",
+    title: "Floww — AI Document Intelligence + Financial Analytics Platform",
     description: "Scan documents, categorize automatically, and get actionable financial insights.",
     manifest: "/manifest.json",
     appleWebApp: {

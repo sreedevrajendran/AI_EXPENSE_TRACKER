@@ -1,7 +1,7 @@
 {
     "name": "Floww",
     "short_name": "Floww",
-    "description": "Floww — Document Intelligence & Analytics Platform",
+    "description": "Floww — AI Document Intelligence + Financial Analytics Platform",
     "start_url": "/",
     "display": "standalone",
     "orientation": "portrait",
