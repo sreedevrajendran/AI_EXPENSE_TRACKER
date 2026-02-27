@@ -98,168 +98,41 @@ If it is an ITEMIZED BILL (grocery, shopping, restaurant with line items):
   "total": <grand total as number>
 }
 
-If it is a single EXPENSE document (no line items):
+If it is a general EXPENSE:
 {
   "type": "expense",
-  "data": {
-    "amount": <number only>,
-    "merchant": "<string>",
-    "date": "<YYYY-MM-DD>",
-    "category": "<exactly one of: Food & Dining, Transport, Shopping, Entertainment, Health, Bills & Utilities, Travel, Groceries, Education, Other>",
-    "paymentMethod": "<exactly one of: CASH, CARD, UPI, BANK_TRANSFER, OTHER>",
-    "note": "<string>"
-  }
+  "merchant": "<name>",
+  "date": "<YYYY-MM-DD>",
+  "amount": <number>,
+  "paymentMethod": "<exactly one of: CASH, CARD, UPI, BANK_TRANSFER, OTHER>",
+  "category": "<exactly one of: Food & Dining, Transport, Entertainment, Bills & Utilities, Travel, Other>"
 }
 
-If it is an INCOME document:
+If it is INCOME:
 {
   "type": "income",
-  "data": {
-    "amount": <number only>,
-    "source": "<employer name or income source>",
-    "sourceType": "<exactly one of: Salary, Freelance, Investment, Business, Gifts, Refund>",
-    "date": "<YYYY-MM-DD>",
-    "note": "<string>"
-  }
+  "source": "<employer/sender name>",
+  "date": "<YYYY-MM-DD>",
+  "amount": <number>
 }
 
-If it is a BANK STATEMENT with multiple transactions:
+If it is a BANK STATEMENT:
 {
   "type": "statement",
-  "data": [
+  "bankName": "<name>",
+  "statementPeriod": "<e.g., Jan 2024>",
+  "transactions": [
     {
-      "type": "<exactly 'expense' or 'income'>",
-      "amount": <number only, always positive>,
-      "title": "<merchant name for expense, or income source for income — be specific, e.g. 'Swiggy', 'Amazon', 'HDFC Bank Salary'>",
-      "date": "<YYYY-MM-DD, the exact transaction date — CRITICAL, extract from each row>",
-      "category": "<for expenses: MUST be exactly one of: 'Food & Dining', 'Transport', 'Shopping', 'Entertainment', 'Health', 'Bills & Utilities', 'Travel', 'Groceries', 'Education', 'Other'. For income: one of: 'Salary', 'Freelance', 'Investment', 'Business', 'Gifts', 'Refund'>",
-      "paymentMethod": "<for expense only: exactly one of CASH, CARD, UPI, BANK_TRANSFER, OTHER. If unsure, use BANK_TRANSFER>"
+      "date": "<YYYY-MM-DD>",
+      "description": "<string>",
+      "amount": <number>,
+      "type": "<exactly EXPENSE or INCOME>",
+      "category": "<guess best category, e.g. Transport, Food, Salary>"
     }
   ]
-}
-
-CATEGORIZATION RULES FOR BANK STATEMENTS:
-- Swiggy, Zomato, Dunzo, restaurant names, café → "Food & Dining"
-- Ola, Uber, Rapido, metro, petrol, fuel stations, BMTC, KSRTC → "Transport"
-- Amazon, Flipkart, Myntra, Nykaa, Ajio, Meesho, retail stores → "Shopping"
-- Netflix, Spotify, Amazon Prime, Disney+, cinema, gaming → "Entertainment"
-- Apollo, Practo, pharmacy, hospital, medical, insurance premium → "Health"
-- Electricity, water, gas, broadband, internet, phone bill, BESCOM, BSNL, Airtel, Jio, mobile recharge → "Bills & Utilities"
-- Flights, hotel bookings, MakeMyTrip, Yatra, Airbnb, OYO → "Travel"
-- Big Bazaar, DMart, More, grocery stores, vegetables → "Groceries"
-- Fees, tuition, school, college, Udemy, Coursera, books → "Education"
-- Bank charges, ATM withdrawals, processing fees, unknown → "Other"
-- Salary credit, payroll, employer name → income type "Salary"
-- Interest credit, dividend, stock gains → income type "Investment"
-- Refund, cashback, reversal → income type "Refund"
-
-CRITICAL RULES:
-- Every transaction MUST have a date in YYYY-MM-DD format — this is mandatory.
-- Debit entries (money going out) = expense. Credit entries (money coming in) = income.
-- Do NOT merge multiple rows; extract each transaction separately.
-- If paymentMethod is unclear from a bank statement, default to "BANK_TRANSFER".
-
-If unreadable or none of the above:
-{
-  "type": "unknown",
-  "reason": "<brief reason>"
-}
-
-IMPORTANT: Prefer 'bill' type over 'expense' whenever you can see individual line items in the document. If a field is missing, use null.`;
-
-            const isPdf = input.mimeType === "application/pdf";
+}`;
 
             try {
-                let rawText: string;
-                const ai = getGeminiClient();
-
-                if (isPdf) {
-                    // With Gemini 2.5 flash, we can pass pdf directly as inlineData!
-                    const response = await ai.models.generateContent({
-                        model: "gemini-2.5-flash",
-                        contents: [
-                            prompt,
-                            {
-                                inlineData: {
-                                    data: input.imageBase64,
-                                    mimeType: "application/pdf",
-                                },
-                            },
-                        ],
-                        config: {
-                            temperature: 0,
-                            responseMimeType: "application/json",
-                        },
-                    });
-                    rawText = response.text || "{}";
-                } else {
-                    const response = await ai.models.generateContent({
-                        model: "gemini-2.5-flash",
-                        contents: [
-                            prompt,
-                            {
-                                inlineData: {
-                                    data: input.imageBase64,
-                                    mimeType: input.mimeType,
-                                },
-                            },
-                        ],
-                        config: {
-                            temperature: 0,
-                            responseMimeType: "application/json",
-                        },
-                    });
-                    rawText = response.text || "{}";
-                }
-
-                console.log("--- GEMINI SCAN RESPONSE ---");
-                console.log(rawText.slice(0, 600));
-                console.log("--------------------------");
-
-                try {
-                    return JSON.parse(rawText);
-                } catch {
-                    const jsonMatch = rawText.match(/\{[\s\S]*\}/);
-                    if (jsonMatch) return JSON.parse(jsonMatch[0]);
-                    return { type: "unknown", reason: "Could not parse the document into valid JSON." };
-                }
-            } catch (error: any) {
-                console.error("Unified Document Scan API error:", error);
-                throw new Error("Failed to analyze the document. Please ensure the image is clear and try again.");
-            }
-        }),
-
-    scanIncomeDoc: protectedProcedure
-        .input(
-            z.object({
-                imageBase64: z.string(),
-                mimeType: z.string().default("image/jpeg"),
-            })
-        )
-        .mutation(async ({ input }) => {
-            try {
-                const prompt = `Analyse this document image. First determine if it is an income-related document (e.g. salary slip, payslip, bank credit statement, freelance invoice, dividend notice, pension statement, or any document showing money received).
-
-Return ONLY a raw JSON object. Do not include markdown formatting, backticks, or any conversational text.
-
-If it IS an income document:
-{
-  "isIncomeDoc": true,
-  "amount": <number, net/take-home amount if visible, else gross>,
-  "source": "<employer name or income source, e.g. 'Infosys', 'Freelance - Upwork', 'Bank Interest'>",
-  "sourceType": "<classify the income type. MUST be exactly one of: 'Salary', 'Freelance', 'Investment', 'Business', 'Gifts', 'Refund'. Use 'Salary' for payslips/salary slips. Use 'Freelance' for invoices/gig work. Use 'Investment' for dividends/interest. Use 'Business' for business revenue. Use 'Gifts' for gift/bonus payments. Use 'Refund' for refunds/cashbacks.>",
-  "date": "<YYYY-MM-DD, the payslip or credit date>",
-  "note": "<short descriptive note e.g. 'March 2025 Salary' or 'Q1 dividend payout'>"
-}
-
-If it is NOT an income document (e.g. it is an expense receipt, a random photo, a food bill, a utility bill, etc.):
-{
-  "isIncomeDoc": false,
-  "reason": "<brief human-readable reason why this is not an income document, max 12 words>"
-}
-
-If a field is missing in an income doc, use null.`;
-
                 const ai = getGeminiClient();
                 const response = await ai.models.generateContent({
                     model: "gemini-2.5-flash",
@@ -284,19 +157,48 @@ If a field is missing in an income doc, use null.`;
                 } catch {
                     const jsonMatch = text.match(/\{[\s\S]*\}/);
                     if (jsonMatch) return JSON.parse(jsonMatch[0]);
-                    return { isIncomeDoc: false, reason: "Could not parse the document." };
+                    throw new Error("Could not parse document data");
                 }
             } catch (error: any) {
-                console.error("Income doc scan error:", error);
-                throw new Error("Failed to process the income document. Please try again.");
+                console.error("Gemini Scan Error:", error);
+                throw new Error("Failed to process the document.");
             }
         }),
 
-    mapIcon: protectedProcedure
-        .input(z.object({ query: z.string() }))
+    suggestCategory: protectedProcedure
+        .input(z.object({ merchant: z.string(), note: z.string().optional() }))
         .mutation(async ({ input }) => {
-            const prompt = `Given the merchant or category name "${input.query}", return a JSON object with a single key "icon" containing the Lucide icon name (kebab-case) that best represents it.
-Examples: "Starbucks" -> {"icon": "coffee"}, "Amazon" -> {"icon": "shopping-cart"}, "Netflix" -> {"icon": "film"}
+            const prompt = `Based on the merchant "${input.merchant}" and note "${input.note || ''}", suggest a category.
+Valid categories are: Food & Dining, Transport, Shopping, Entertainment, Health, Bills & Utilities, Travel, Groceries, Education, Other.
+Return ONLY a raw JSON object: {"category": "<valid_category_name>"}
+Do not return any extra text.`;
+
+            const ai = getGeminiClient();
+            const response = await ai.models.generateContent({
+                model: "gemini-2.5-flash",
+                contents: [{ role: "user", parts: [{ text: prompt }] }],
+                config: {
+                    temperature: 0,
+                    responseMimeType: "application/json",
+                },
+            });
+
+            const text = response.text || "{}";
+            try {
+                const parsed = JSON.parse(text);
+                return { category: parsed.category || "Other" };
+            } catch {
+                return { category: "Other" };
+            }
+        }),
+
+    suggestIcon: protectedProcedure
+        .input(z.object({ name: z.string() }))
+        .mutation(async ({ input }) => {
+            const prompt = `Based on the name "${input.name}", suggest a visual icon representing it.
+Choose ONE from this exact list of Lucide React icon names:
+utensils, car, shopping-bag, film, heart-pulse, zap, plane, shopping-cart, book-open, coffee, home, monitor, smartphone, wifi, droplet, flame, bus, train, shirt, gift, game-pad, music, scissors, brief-case
+Return ONLY a raw JSON object: {"icon": "<icon_name>"}
 Do not return any extra text.`;
 
             const ai = getGeminiClient();
@@ -321,19 +223,23 @@ Do not return any extra text.`;
     getInsights: protectedProcedure.query(async ({ ctx }) => {
         const userId = ctx.session.user.id!;
         const now = new Date();
-        const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+        const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1).toISOString();
 
-        const [expenses, budgets] = await Promise.all([
-            ctx.db.expense.findMany({
-                where: { userId, date: { gte: startOfMonth } },
-                include: { category: true },
-                orderBy: { amount: "desc" },
-            }),
-            ctx.db.budget.findMany({
-                where: { userId },
-                include: { category: true },
-            }),
+        const [expensesSnap, budgetsSnap, categoriesSnap] = await Promise.all([
+            ctx.db.collection("expenses").where("userId", "==", userId).where("date", ">=", startOfMonth).get(),
+            ctx.db.collection("budgets").where("userId", "==", userId).get(),
+            ctx.db.collection("categories").where("userId", "==", userId).get()
         ]);
+
+        const categories = categoriesSnap.docs.map(d => ({ id: d.id, ...d.data() as any }));
+        const expenses = expensesSnap.docs.map(d => {
+            const data = d.data() as any;
+            return {
+                ...data,
+                category: data.categoryId ? categories.find(c => c.id === data.categoryId) : null
+            };
+        });
+        const budgets = budgetsSnap.docs.map(d => d.data() as any);
 
         if (expenses.length === 0) {
             return {
@@ -349,13 +255,13 @@ Do not return any extra text.`;
             };
         }
 
-        const totalSpent = expenses.reduce((sum, e) => sum + e.amount, 0);
-        const totalBudget = budgets.reduce((sum, b) => sum + b.amount, 0);
+        const totalSpent = expenses.reduce((sum, e) => sum + (e.amount || 0), 0);
+        const totalBudget = budgets.reduce((sum, b) => sum + (b.amount || 0), 0);
 
         const categoryMap = new Map<string, number>();
         expenses.forEach((e) => {
             const cat = e.category?.name ?? "Other";
-            categoryMap.set(cat, (categoryMap.get(cat) ?? 0) + e.amount);
+            categoryMap.set(cat, (categoryMap.get(cat) ?? 0) + (e.amount || 0));
         });
 
         const topCategories = Array.from(categoryMap.entries())
@@ -433,40 +339,50 @@ Return ONLY valid JSON (no markdown):
         .mutation(async ({ ctx, input }) => {
             const userId = ctx.session.user.id!;
             const now = new Date();
-            const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+            const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1).toISOString();
 
-            // Fetch contextual data
-            const [expenses, incomes, budgets] = await Promise.all([
-                ctx.db.expense.findMany({
-                    where: { userId, date: { gte: startOfMonth } },
-                    include: { category: true },
-                    orderBy: { date: "desc" },
-                }),
-                ctx.db.income.findMany({
-                    where: { userId, date: { gte: startOfMonth } },
-                    include: { category: true },
-                    orderBy: { date: "desc" },
-                }),
-                ctx.db.budget.findMany({
-                    where: { userId },
-                    include: { category: true },
-                }),
+            // Fetch contextual data from Firestore
+            const [expensesSnap, incomesSnap, budgetsSnap, categoriesSnap] = await Promise.all([
+                ctx.db.collection("expenses").where("userId", "==", userId).where("date", ">=", startOfMonth).orderBy("date", "desc").get(),
+                ctx.db.collection("incomes").where("userId", "==", userId).where("date", ">=", startOfMonth).orderBy("date", "desc").get(),
+                ctx.db.collection("budgets").where("userId", "==", userId).get(),
+                ctx.db.collection("categories").where("userId", "==", userId).get()
             ]);
 
-            const totalSpent = expenses.reduce((sum, e) => sum + e.amount, 0);
-            const totalIncome = incomes.reduce((sum, i) => sum + i.amount, 0);
-            const totalBudget = budgets.reduce((sum, b) => sum + b.amount, 0);
+            const categories = categoriesSnap.docs.map(d => ({ id: d.id, ...d.data() as any }));
 
-            let contextData = `User's Current Month Financials (Since ${startOfMonth.toLocaleDateString()}):
+            const expenses = expensesSnap.docs.map(d => {
+                const data = d.data() as any;
+                return {
+                    ...data,
+                    category: data.categoryId ? categories.find(c => c.id === data.categoryId) : null
+                };
+            });
+
+            const incomes = incomesSnap.docs.map(d => d.data() as any);
+
+            const budgets = budgetsSnap.docs.map(d => {
+                const data = d.data() as any;
+                return {
+                    ...data,
+                    category: data.categoryId ? categories.find(c => c.id === data.categoryId) : null
+                };
+            });
+
+            const totalSpent = expenses.reduce((sum, e) => sum + (e.amount || 0), 0);
+            const totalIncome = incomes.reduce((sum, i) => sum + (i.amount || 0), 0);
+            const totalBudget = budgets.reduce((sum, b) => sum + (b.amount || 0), 0);
+
+            let contextData = `User's Current Month Financials (Since ${new Date(startOfMonth).toLocaleDateString()}):
 Total Income: ₹${totalIncome.toFixed(2)}
 Total Spent: ₹${totalSpent.toFixed(2)}
 Total Budget Configured: ₹${totalBudget.toFixed(2)}
 
 Recent Expenses:
-${expenses.slice(0, 10).map(e => `- ₹${e.amount} at ${e.merchant} (${e.category?.name || 'Uncategorized'}) on ${e.date.toLocaleDateString()}`).join('\n')}
+${expenses.slice(0, 10).map(e => `- ₹${e.amount} at ${e.merchant} (${e.category?.name || 'Uncategorized'}) on ${new Date(e.date).toLocaleDateString()}`).join('\n')}
 
 Recent Incomes:
-${incomes.slice(0, 5).map(i => `- ₹${i.amount} from ${i.source} on ${i.date.toLocaleDateString()}`).join('\n')}
+${incomes.slice(0, 5).map(i => `- ₹${i.amount} from ${i.source} on ${new Date(i.date).toLocaleDateString()}`).join('\n')}
 
 Active Budgets:
 ${budgets.map(b => `- ${b.category?.name || 'Overall'}: ₹${b.amount}`).join('\n')}
@@ -499,13 +415,11 @@ ${contextData}`;
                 });
 
                 return {
-                    reply: response.text || "I'm having trouble processing that right now."
+                    message: response.text || "I'm sorting through some numbers, could you repeat that?",
                 };
-            } catch (err) {
-                console.error("Chat error:", err);
-                return {
-                    reply: "I'm having trouble communicating with the API right now."
-                };
+            } catch (error: any) {
+                console.error("Gemini Chat Error:", error);
+                throw new Error("Floww AI is currently unavailable.");
             }
         }),
 });

@@ -4,7 +4,16 @@ import { useState, useRef } from "react";
 import { Drawer } from "vaul";
 import { motion, AnimatePresence } from "framer-motion";
 import { trpc } from "@/trpc/client";
-import { PaymentMethod } from "@prisma/client";
+const PaymentMethod = {
+    CASH: "CASH",
+    CREDIT_CARD: "CREDIT_CARD",
+    DEBIT_CARD: "DEBIT_CARD",
+    UPI: "UPI",
+    NET_BANKING: "NET_BANKING",
+    BANK_TRANSFER: "BANK_TRANSFER",
+    OTHER: "OTHER"
+} as const;
+type PaymentMethod = keyof typeof PaymentMethod;
 import { X, Camera, Loader2, ChevronDown, CreditCard, Banknote, Smartphone, Building2, MoreHorizontal, Paperclip } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { getLucideIcon } from "@/lib/icons";
@@ -31,7 +40,7 @@ interface AddExpenseSheetProps {
 }
 const PAYMENT_METHODS: { value: PaymentMethod; label: string; icon: React.ElementType }[] = [
     { value: "CASH", label: "Cash", icon: Banknote },
-    { value: "CARD", label: "Card", icon: CreditCard },
+    { value: "CREDIT_CARD", label: "Card", icon: CreditCard },
     { value: "UPI", label: "UPI", icon: Smartphone },
     { value: "BANK_TRANSFER", label: "Bank", icon: Building2 },
     { value: "OTHER", label: "Other", icon: MoreHorizontal },
@@ -128,7 +137,7 @@ export function AddExpenseSheet({ open, onOpenChange, onSuccess, editData, editI
             onSuccess?.();
         },
     });
-    const mapIcon = trpc.ai.mapIcon.useMutation();
+    const mapIcon = trpc.ai.suggestIcon.useMutation();
     const seedCategories = trpc.category.seedDefaults.useMutation({
         onSuccess: () => utils.category.listAll.invalidate(),
     });
@@ -201,7 +210,7 @@ export function AddExpenseSheet({ open, onOpenChange, onSuccess, editData, editI
                 // Auto-map icon and color based on name for custom category
                 let customIcon = "circle";
                 try {
-                    const iconResult = await mapIcon.mutateAsync({ query: customCategoryName.trim() });
+                    const iconResult = await mapIcon.mutateAsync({ name: customCategoryName.trim() });
                     if (iconResult.icon) customIcon = iconResult.icon;
                 } catch { /* fallback to circle */ }
 
@@ -221,7 +230,7 @@ export function AddExpenseSheet({ open, onOpenChange, onSuccess, editData, editI
         let mappedIcon: string | undefined = undefined;
         if (!categoryId && merchant && !isCustom) {
             try {
-                const mapRes = await mapIcon.mutateAsync({ query: merchant });
+                const mapRes = await mapIcon.mutateAsync({ name: merchant });
                 mappedIcon = mapRes.icon;
             } catch { /* ignore */ }
         }

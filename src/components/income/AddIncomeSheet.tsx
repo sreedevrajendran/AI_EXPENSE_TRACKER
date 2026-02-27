@@ -134,7 +134,7 @@ export function AddIncomeSheet({ open, onOpenChange, onSuccess, editData, editId
         }
     });
 
-    const mapIcon = trpc.ai.mapIcon.useMutation();
+    const mapIcon = trpc.ai.suggestIcon.useMutation();
 
     const resetForm = () => {
         setAmount("");
@@ -177,7 +177,7 @@ export function AddIncomeSheet({ open, onOpenChange, onSuccess, editData, editId
 
         let mappedIcon: string | undefined = undefined;
         try {
-            const mapRes = await mapIcon.mutateAsync({ query: source.trim() });
+            const mapRes = await mapIcon.mutateAsync({ name: source.trim() });
             mappedIcon = mapRes.icon;
         } catch { /* ignore */ }
 

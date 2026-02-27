@@ -55,7 +55,7 @@ export function AgentOasisChatSheet({ open, onOpenChange }: AgentOasisChatSheetP
             setMessages(prev => [...prev, {
                 id: Date.now().toString(),
                 role: "assistant",
-                content: response.reply
+                content: response.message
             }]);
         } catch (error) {
             console.error("Chat error:", error);
@@ -80,7 +80,7 @@ export function AgentOasisChatSheet({ open, onOpenChange }: AgentOasisChatSheetP
             setMessages(prev => [...prev, {
                 id: Date.now().toString(),
                 role: "assistant",
-                content: response.reply
+                content: response.message
             }]);
         } catch (error) {
             console.error("Chat error:", error);

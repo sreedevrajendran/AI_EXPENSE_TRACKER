@@ -1,13 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
-import { v2 as cloudinary, UploadApiResponse } from "cloudinary";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/auth";
+import { UTApi } from "uploadthing/server";
 
-cloudinary.config({
-    cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
-    api_key: process.env.CLOUDINARY_API_KEY,
-    api_secret: process.env.CLOUDINARY_API_SECRET,
-});
+const utapi = new UTApi();
 
 export async function POST(req: NextRequest) {
     try {
@@ -33,31 +29,23 @@ export async function POST(req: NextRequest) {
             return NextResponse.json({ error: "File too large (max 5MB)" }, { status: 400 });
         }
 
-        const buffer = Buffer.from(await file.arrayBuffer());
+        // Upload using UploadThing's UTApi
+        const response = await utapi.uploadFiles(file);
 
-        // Upload directly to Cloudinary via stream
-        const uploadResult = await new Promise<UploadApiResponse>((resolve, reject) => {
-            const uploadStream = cloudinary.uploader.upload_stream(
-                {
-                    folder: "ai_expense_tracker_receipts",
-                    resource_type: "auto", // Handles both images and raw files like PDF
-                },
-                (error, result) => {
-                    if (error) return reject(error);
-                    if (result) return resolve(result);
-                    reject(new Error("Cloudinary upload failed without error details"));
-                }
-            );
-            uploadStream.end(buffer);
-        });
+        if (response.error) {
+            throw new Error(response.error.message);
+        }
 
         return NextResponse.json({
             success: true,
-            url: uploadResult.secure_url
+            url: response.data.url
         });
 
     } catch (error: any) {
-        console.error("Cloudinary Upload Error:", error);
-        return NextResponse.json({ error: "Failed to upload file to cloud storage" }, { status: 500 });
+        console.error("UploadThing Upload Error:", error);
+        return NextResponse.json(
+            { error: "Upload failed", details: error.message },
+            { status: 500 }
+        );
     }
 }

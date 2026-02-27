@@ -2,7 +2,7 @@ import { initTRPC, TRPCError } from "@trpc/server";
 import superjson from "superjson";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/auth";
-import { db } from "@/lib/db";
+import { db } from "@/lib/firebase/admin";
 
 export const createTRPCContext = async () => {
     const session = await getServerSession(authOptions);

@@ -1,6 +1,15 @@
 import { z } from "zod";
 import { protectedProcedure, router } from "../trpc";
-import { PaymentMethod } from "@prisma/client";
+// Define local PaymentMethod enum since Prisma is removed
+const PaymentMethod = {
+    CASH: "CASH",
+    CREDIT_CARD: "CREDIT_CARD",
+    DEBIT_CARD: "DEBIT_CARD",
+    UPI: "UPI",
+    NET_BANKING: "NET_BANKING",
+    BANK_TRANSFER: "BANK_TRANSFER",
+    OTHER: "OTHER"
+} as const;
 
 export const expenseRouter = router({
     list: protectedProcedure
@@ -16,64 +25,79 @@ export const expenseRouter = router({
         )
         .query(async ({ ctx, input }) => {
             const userId = ctx.session.user.id!;
-            const expenses = await ctx.db.expense.findMany({
-                where: {
-                    userId,
-                    ...(input?.categoryId && { categoryId: input.categoryId }),
-                    ...(input?.paymentMethod && { paymentMethod: input.paymentMethod }),
-                    ...(input?.startDate || input?.endDate
-                        ? {
-                            date: {
-                                ...(input.startDate && { gte: input.startDate }),
-                                ...(input.endDate && { lte: input.endDate }),
-                            },
-                        }
-                        : {}),
-                },
-                include: { category: true },
-                orderBy: { date: "desc" },
-                take: input?.limit ?? 50,
-                ...(input?.cursor && {
-                    skip: 1,
-                    cursor: { id: input.cursor },
-                }),
-            });
-            return expenses;
+            let query = ctx.db.collection("expenses").where("userId", "==", userId);
+
+            if (input?.categoryId) {
+                query = query.where("categoryId", "==", input.categoryId);
+            }
+            if (input?.paymentMethod) {
+                query = query.where("paymentMethod", "==", input.paymentMethod);
+            }
+            if (input?.startDate) {
+                query = query.where("date", ">=", input.startDate.toISOString());
+            }
+            if (input?.endDate) {
+                query = query.where("date", "<=", input.endDate.toISOString());
+            }
+
+            query = query.orderBy("date", "desc").limit(input?.limit ?? 50);
+
+            const snapshot = await query.get();
+            const expenses = snapshot.docs.map(d => ({ id: d.id, ...d.data() })) as any[];
+
+            // Fetch categories to populate relation
+            const catSnapshot = await ctx.db.collection("categories").where("userId", "==", userId).get();
+            const categories = catSnapshot.docs.map(d => ({ id: d.id, ...d.data() }));
+
+            return expenses.map(exp => ({
+                ...exp,
+                date: new Date(exp.date),
+                category: exp.categoryId ? categories.find(c => c.id === exp.categoryId) : null
+            }));
         }),
 
     getMonthTotal: protectedProcedure.query(async ({ ctx }) => {
         const userId = ctx.session.user.id!;
         const now = new Date();
         const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
-        const result = await ctx.db.expense.aggregate({
-            where: { userId, date: { gte: startOfMonth } },
-            _sum: { amount: true },
-        });
-        return result._sum.amount ?? 0;
+        const snapshot = await ctx.db.collection("expenses")
+            .where("userId", "==", userId)
+            .where("date", ">=", startOfMonth.toISOString())
+            .get();
+        return snapshot.docs.reduce((sum, doc) => sum + (doc.data().amount || 0), 0);
     }),
 
     getRecentExpenses: protectedProcedure
         .input(z.object({ limit: z.number().default(5) }))
         .query(async ({ ctx, input }) => {
             const userId = ctx.session.user.id!;
-            return ctx.db.expense.findMany({
-                where: { userId },
-                include: { category: true },
-                orderBy: { date: "desc" },
-                take: input.limit,
-            });
+            const snapshot = await ctx.db.collection("expenses")
+                .where("userId", "==", userId)
+                .orderBy("date", "desc")
+                .limit(input.limit)
+                .get();
+
+            const expenses = snapshot.docs.map(d => ({ id: d.id, ...d.data() })) as any[];
+            const catSnapshot = await ctx.db.collection("categories").where("userId", "==", userId).get();
+            const categories = catSnapshot.docs.map(d => ({ id: d.id, ...d.data() }));
+
+            return expenses.map(exp => ({
+                ...exp,
+                date: new Date(exp.date),
+                category: exp.categoryId ? categories.find(c => c.id === exp.categoryId) : null
+            }));
         }),
 
     getMonthlyChartData: protectedProcedure.query(async ({ ctx }) => {
         const userId = ctx.session.user.id!;
         const now = new Date();
         const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
-        const expenses = await ctx.db.expense.findMany({
-            where: { userId, date: { gte: startOfMonth } },
-            select: { amount: true, date: true },
-            orderBy: { date: "asc" },
-        });
+        const snapshot = await ctx.db.collection("expenses")
+            .where("userId", "==", userId)
+            .where("date", ">=", startOfMonth.toISOString())
+            .get();
 
+        const expenses = snapshot.docs.map(d => ({ amount: d.data().amount, date: new Date(d.data().date) }));
         const dailyTotals = Array.from({ length: now.getDate() }, (_, i) => ({
             day: i + 1,
             amount: 0,
@@ -94,34 +118,31 @@ export const expenseRouter = router({
         const now = new Date();
         const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
 
-        const expenses = await ctx.db.expense.groupBy({
-            by: ['categoryId'],
-            where: {
-                userId,
-                date: { gte: startOfMonth },
-                categoryId: { not: null }, // Only categorize those with a category
-            },
-            _sum: { amount: true },
+        const snapshot = await ctx.db.collection("expenses")
+            .where("userId", "==", userId)
+            .where("date", ">=", startOfMonth.toISOString())
+            .get();
+
+        const catSnapshot = await ctx.db.collection("categories").where("userId", "==", userId).get();
+        const categories = catSnapshot.docs.map(d => ({ id: d.id, ...d.data() })) as any[];
+
+        const categorySums: Record<string, number> = {};
+        snapshot.docs.forEach(doc => {
+            const data = doc.data();
+            if (data.categoryId) {
+                categorySums[data.categoryId] = (categorySums[data.categoryId] || 0) + (data.amount || 0);
+            }
         });
 
-        // We need to fetch the category details (name, color) since groupBy only returns the ID
-        const categoryIds = expenses.map(e => e.categoryId).filter(Boolean) as string[];
-
-        const categories = await ctx.db.category.findMany({
-            where: { id: { in: categoryIds } },
-            select: { id: true, name: true, color: true },
-        });
-
-        // Map the results back together
-        const result = expenses.map(e => {
-            const cat = categories.find(c => c.id === e.categoryId);
+        const result = Object.entries(categorySums).map(([categoryId, amount]) => {
+            const cat = categories.find(c => c.id === categoryId);
             return {
-                categoryId: e.categoryId,
+                categoryId,
                 name: cat?.name ?? "Other",
                 color: cat?.color ?? "#8E8E93",
-                amount: e._sum.amount ?? 0,
+                amount,
             };
-        }).sort((a, b) => b.amount - a.amount); // Largest slice first
+        }).sort((a, b) => b.amount - a.amount);
 
         return result;
     }),
@@ -145,13 +166,11 @@ export const expenseRouter = router({
             const { categoryName, ...expenseData } = input;
 
             let finalCategoryId = expenseData.categoryId;
+            let categoryParams = null;
 
-            // Resolve category name if ID is not provided
             if (!finalCategoryId && categoryName) {
-                const userCategories = await ctx.db.category.findMany({
-                    where: { userId },
-                    select: { id: true, name: true },
-                });
+                const catSnapshot = await ctx.db.collection("categories").where("userId", "==", userId).get();
+                const userCategories = catSnapshot.docs.map(d => ({ id: d.id, name: d.data().name }));
 
                 const categoryMap = new Map(
                     userCategories.map(c => [c.name.toLowerCase().trim(), c.id])
@@ -171,15 +190,23 @@ export const expenseRouter = router({
                 }
             }
 
-            console.log("Creating expense for user:", userId, expenseData);
-            return ctx.db.expense.create({
-                data: {
-                    ...expenseData,
-                    categoryId: finalCategoryId,
-                    userId,
-                },
-                include: { category: true },
-            });
+            const newDoc = {
+                ...expenseData,
+                date: input.date.toISOString(),
+                categoryId: finalCategoryId || null,
+                userId,
+                createdAt: new Date().toISOString(),
+                updatedAt: new Date().toISOString(),
+            };
+
+            const added = await ctx.db.collection("expenses").add(newDoc);
+
+            if (finalCategoryId) {
+                const catDoc = await ctx.db.collection("categories").doc(finalCategoryId).get();
+                categoryParams = catDoc.exists ? catDoc.data() : null;
+            }
+
+            return { id: added.id, ...newDoc, category: categoryParams };
         }),
 
     bulkCreate: protectedProcedure
@@ -199,16 +226,25 @@ export const expenseRouter = router({
         )
         .mutation(async ({ ctx, input }) => {
             const userId = ctx.session.user.id!;
-            const data = input.map(item => ({
-                ...item,
-                userId,
-            }));
-            return ctx.db.expense.createMany({
-                data,
+            const batch = ctx.db.batch();
+
+            const created = input.map(item => {
+                const docRef = ctx.db.collection("expenses").doc();
+                const data = {
+                    ...item,
+                    date: item.date.toISOString(),
+                    userId,
+                    createdAt: new Date().toISOString(),
+                    updatedAt: new Date().toISOString(),
+                };
+                batch.set(docRef, data);
+                return { id: docRef.id, ...data };
             });
+
+            await batch.commit();
+            return { count: created.length };
         }),
 
-    // Smart bulk create: accepts categoryName strings and resolves them to IDs
     bulkCreateWithCategories: protectedProcedure
         .input(
             z.array(
@@ -226,28 +262,20 @@ export const expenseRouter = router({
         .mutation(async ({ ctx, input }) => {
             const userId = ctx.session.user.id!;
 
-            // Fetch all user categories once for efficient lookup
-            const userCategories = await ctx.db.category.findMany({
-                where: { userId },
-                select: { id: true, name: true },
-            });
+            const catSnapshot = await ctx.db.collection("categories").where("userId", "==", userId).get();
+            const userCategories = catSnapshot.docs.map(d => ({ id: d.id, name: d.data().name }));
+            const categoryMap = new Map(userCategories.map(c => [c.name.toLowerCase().trim(), c.id]));
 
-            // Build a lowercase name → id map for fast fuzzy matching
-            const categoryMap = new Map(
-                userCategories.map(c => [c.name.toLowerCase().trim(), c.id])
-            );
-
-            const data = input.map(item => {
+            const batch = ctx.db.batch();
+            const created = input.map(item => {
                 const { categoryName, ...rest } = item;
-                let categoryId: string | undefined;
+                let categoryId: string | null = null;
 
                 if (categoryName) {
-                    // Exact match first (case-insensitive)
                     const exactMatch = categoryMap.get(categoryName.toLowerCase().trim());
                     if (exactMatch) {
                         categoryId = exactMatch;
                     } else {
-                        // Fuzzy: find a category whose name is contained in the AI name or vice versa
                         const aiNameLower = categoryName.toLowerCase().trim();
                         for (const [catName, catId] of categoryMap.entries()) {
                             if (aiNameLower.includes(catName) || catName.includes(aiNameLower)) {
@@ -258,10 +286,21 @@ export const expenseRouter = router({
                     }
                 }
 
-                return { ...rest, userId, categoryId };
+                const docRef = ctx.db.collection("expenses").doc();
+                const data = {
+                    ...rest,
+                    date: rest.date.toISOString(),
+                    categoryId,
+                    userId,
+                    createdAt: new Date().toISOString(),
+                    updatedAt: new Date().toISOString(),
+                };
+                batch.set(docRef, data);
+                return data;
             });
 
-            return ctx.db.expense.createMany({ data });
+            await batch.commit();
+            return { count: created.length };
         }),
 
     createWithItems: protectedProcedure
@@ -289,17 +328,10 @@ export const expenseRouter = router({
             const totalAmount = items.reduce((sum, i) => sum + i.price, 0);
 
             let finalCategoryId = expenseData.categoryId;
-
-            // Resolve category name if ID is not provided
             if (!finalCategoryId && categoryName) {
-                const userCategories = await ctx.db.category.findMany({
-                    where: { userId },
-                    select: { id: true, name: true },
-                });
-
-                const categoryMap = new Map(
-                    userCategories.map(c => [c.name.toLowerCase().trim(), c.id])
-                );
+                const catSnapshot = await ctx.db.collection("categories").where("userId", "==", userId).get();
+                const userCategories = catSnapshot.docs.map(d => ({ id: d.id, name: d.data().name }));
+                const categoryMap = new Map(userCategories.map(c => [c.name.toLowerCase().trim(), c.id]));
 
                 const exactMatch = categoryMap.get(categoryName.toLowerCase().trim());
                 if (exactMatch) {
@@ -315,22 +347,19 @@ export const expenseRouter = router({
                 }
             }
 
-            return ctx.db.expense.create({
-                data: {
-                    ...expenseData,
-                    categoryId: finalCategoryId,
-                    amount: totalAmount,
-                    userId,
-                    items: {
-                        create: items.map(item => ({
-                            name: item.name,
-                            quantity: item.quantity,
-                            price: item.price,
-                        })),
-                    },
-                },
-                include: { category: true, items: true },
-            });
+            const newDoc = {
+                ...expenseData,
+                categoryId: finalCategoryId || null,
+                amount: totalAmount,
+                date: input.date.toISOString(),
+                userId,
+                items, // Embedded documents in NoSQL!
+                createdAt: new Date().toISOString(),
+                updatedAt: new Date().toISOString(),
+            };
+
+            const added = await ctx.db.collection("expenses").add(newDoc);
+            return { id: added.id, ...newDoc };
         }),
 
     update: protectedProcedure
@@ -348,42 +377,50 @@ export const expenseRouter = router({
             })
         )
         .mutation(async ({ ctx, input }) => {
-            const { id, ...data } = input;
-            return ctx.db.expense.update({
-                where: { id, userId: ctx.session.user.id! },
-                data,
-                include: { category: true },
-            });
+            const { id, date, ...data } = input;
+            const docRef = ctx.db.collection("expenses").doc(id);
+            const doc = await docRef.get();
+            if (!doc.exists || doc.data()?.userId !== ctx.session.user.id!) {
+                throw new Error("Not authorized");
+            }
+
+            const updateData: any = { ...data, updatedAt: new Date().toISOString() };
+            if (date) updateData.date = date.toISOString();
+
+            await docRef.update(updateData);
+            return { id, ...doc.data(), ...updateData };
         }),
 
     delete: protectedProcedure
         .input(z.object({ id: z.string() }))
         .mutation(async ({ ctx, input }) => {
-            return ctx.db.expense.delete({
-                where: { id: input.id, userId: ctx.session.user.id! },
-            });
+            const docRef = ctx.db.collection("expenses").doc(input.id);
+            const doc = await docRef.get();
+            if (!doc.exists || doc.data()?.userId !== ctx.session.user.id!) {
+                throw new Error("Not authorized");
+            }
+            await docRef.delete();
+            return { success: true };
         }),
 
     getDailyExpenses: protectedProcedure.query(async ({ ctx }) => {
         const userId = ctx.session.user.id!;
         const now = new Date();
         const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
-        const daysInMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0).getDate();
-
-        const expenses = await ctx.db.expense.findMany({
-            where: { userId, date: { gte: startOfMonth } },
-            select: { amount: true, date: true },
-        });
-
-        // Build a map: day number → total amount
-        const dayMap: Record<number, number> = {};
-        expenses.forEach((e) => {
-            const day = e.date.getDate();
-            dayMap[day] = (dayMap[day] ?? 0) + e.amount;
-        });
-
-        // Fill all days up to today with 0 for missing days
         const today = now.getDate();
+
+        const snapshot = await ctx.db.collection("expenses")
+            .where("userId", "==", userId)
+            .where("date", ">=", startOfMonth.toISOString())
+            .get();
+
+        const dayMap: Record<number, number> = {};
+        snapshot.docs.forEach((doc) => {
+            const data = doc.data();
+            const day = new Date(data.date).getDate();
+            dayMap[day] = (dayMap[day] ?? 0) + (data.amount || 0);
+        });
+
         return Array.from({ length: today }, (_, i) => ({
             day: i + 1,
             label: `${i + 1}`,
@@ -394,19 +431,17 @@ export const expenseRouter = router({
     getYearlyIncomeExpenseChart: protectedProcedure.query(async ({ ctx }) => {
         const userId = ctx.session.user.id!;
         const now = new Date();
-        const currentYear = now.getFullYear();
-        const startOfYear = new Date(currentYear, 0, 1);
+        const startOfYear = new Date(now.getFullYear(), 0, 1).toISOString();
 
-        const expenses = await ctx.db.expense.findMany({
-            where: { userId, date: { gte: startOfYear } },
-            select: { amount: true, date: true },
-        });
+        const expSnapshot = await ctx.db.collection("expenses")
+            .where("userId", "==", userId)
+            .where("date", ">=", startOfYear)
+            .get();
 
-        // Use any to bypass Prisma type error in client temporarily
-        const incomes = await (ctx.db as any).income.findMany({
-            where: { userId, date: { gte: startOfYear } },
-            select: { amount: true, date: true },
-        });
+        const incSnapshot = await ctx.db.collection("incomes")
+            .where("userId", "==", userId)
+            .where("date", ">=", startOfYear)
+            .get();
 
         const months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
         const monthlyData = Array.from({ length: 12 }, (_, i) => ({
@@ -416,14 +451,16 @@ export const expenseRouter = router({
             sortOrder: i,
         }));
 
-        expenses.forEach((e) => {
-            const monthIndex = e.date.getMonth();
-            monthlyData[monthIndex]!.expense += e.amount;
+        expSnapshot.docs.forEach((doc) => {
+            const data = doc.data();
+            const monthIndex = new Date(data.date).getMonth();
+            monthlyData[monthIndex]!.expense += (data.amount || 0);
         });
 
-        incomes.forEach((i: any) => {
-            const monthIndex = i.date.getMonth();
-            monthlyData[monthIndex]!.income += i.amount;
+        incSnapshot.docs.forEach((doc) => {
+            const data = doc.data();
+            const monthIndex = new Date(data.date).getMonth();
+            monthlyData[monthIndex]!.income += (data.amount || 0);
         });
 
         return monthlyData;

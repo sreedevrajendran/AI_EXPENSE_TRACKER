@@ -3,19 +3,38 @@ import { protectedProcedure, router } from "../trpc";
 
 export const categoryRouter = router({
     list: protectedProcedure.query(async ({ ctx }) => {
-        return ctx.db.category.findMany({
-            where: { userId: ctx.session.user.id!, parentId: null },
-            include: { children: true },
-            orderBy: { name: "asc" },
-        });
+        const snapshot = await ctx.db.collection("categories")
+            .where("userId", "==", ctx.session.user.id!)
+            .where("parentId", "==", null)
+            .orderBy("name", "asc")
+            .get();
+
+        const docs = snapshot.docs.map(d => ({ id: d.id, ...d.data() }));
+        // Note: In NoSQL, fetching nested relationships (like children) requires either multiple queries 
+        // or a flat list that the client constructs. We will fetch all and construct.
+        const allSnapshot = await ctx.db.collection("categories")
+            .where("userId", "==", ctx.session.user.id!)
+            .get();
+        const allDocs = allSnapshot.docs.map(d => ({ id: d.id, ...d.data() })) as any[];
+
+        return docs.map((parent: any) => ({
+            ...parent,
+            children: allDocs.filter(child => child.parentId === parent.id),
+        }));
     }),
 
     listAll: protectedProcedure.query(async ({ ctx }) => {
-        return ctx.db.category.findMany({
-            where: { userId: ctx.session.user.id! },
-            include: { children: true, parent: true },
-            orderBy: { name: "asc" },
-        });
+        const snapshot = await ctx.db.collection("categories")
+            .where("userId", "==", ctx.session.user.id!)
+            .orderBy("name", "asc")
+            .get();
+
+        const allDocs = snapshot.docs.map(d => ({ id: d.id, ...d.data() })) as any[];
+        return allDocs.map(doc => ({
+            ...doc,
+            children: allDocs.filter(child => child.parentId === doc.id),
+            parent: doc.parentId ? allDocs.find(p => p.id === doc.parentId) || null : null,
+        }));
     }),
 
     create: protectedProcedure
@@ -29,25 +48,26 @@ export const categoryRouter = router({
         )
         .mutation(async ({ ctx, input }) => {
             const userId = ctx.session.user.id!;
+            const categoriesRef = ctx.db.collection("categories");
 
-            // Check if category already exists (case-insensitive)
-            const existing = await ctx.db.category.findFirst({
-                where: {
-                    userId,
-                    name: {
-                        equals: input.name,
-                        mode: "insensitive",
-                    }
-                }
-            });
+            // Note: Firestore doesn't provide case-insensitive search easily. 
+            // We fetch all by User ID and check manually to enforce uniqueness.
+            const snapshot = await categoriesRef.where("userId", "==", userId).get();
+            const existing = snapshot.docs.find(d => d.data().name.toLowerCase() === input.name.toLowerCase());
 
             if (existing) {
-                return existing;
+                return { id: existing.id, ...existing.data() };
             }
 
-            return ctx.db.category.create({
-                data: { ...input, userId },
-            });
+            const newDoc = {
+                ...input,
+                userId,
+                parentId: input.parentId || null,
+                createdAt: new Date().toISOString(),
+                updatedAt: new Date().toISOString(),
+            };
+            const added = await categoriesRef.add(newDoc);
+            return { id: added.id, ...newDoc };
         }),
 
     update: protectedProcedure
@@ -61,18 +81,26 @@ export const categoryRouter = router({
         )
         .mutation(async ({ ctx, input }) => {
             const { id, ...data } = input;
-            return ctx.db.category.update({
-                where: { id, userId: ctx.session.user.id! },
-                data,
-            });
+            const docRef = ctx.db.collection("categories").doc(id);
+            const doc = await docRef.get();
+            if (!doc.exists || doc.data()?.userId !== ctx.session.user.id!) {
+                throw new Error("Not authorized");
+            }
+
+            await docRef.update({ ...data, updatedAt: new Date().toISOString() });
+            return { id, ...doc.data(), ...data };
         }),
 
     delete: protectedProcedure
         .input(z.object({ id: z.string() }))
         .mutation(async ({ ctx, input }) => {
-            return ctx.db.category.delete({
-                where: { id: input.id, userId: ctx.session.user.id! },
-            });
+            const docRef = ctx.db.collection("categories").doc(input.id);
+            const doc = await docRef.get();
+            if (!doc.exists || doc.data()?.userId !== ctx.session.user.id!) {
+                throw new Error("Not authorized");
+            }
+            await docRef.delete();
+            return { success: true };
         }),
 
     seedDefaults: protectedProcedure.mutation(async ({ ctx }) => {
@@ -90,19 +118,30 @@ export const categoryRouter = router({
             { name: "Other", icon: "circle", color: "#8E8E93" },
         ];
 
+        const batch = ctx.db.batch();
         let seededCount = 0;
+        const categoriesRef = ctx.db.collection("categories");
+
+        const existingSnapshot = await categoriesRef.where("userId", "==", userId).get();
+        const existingNames = new Set(existingSnapshot.docs.map(d => d.data().name));
+
         for (const d of defaults) {
-            const exists = await ctx.db.category.findFirst({
-                where: { userId, name: d.name },
-            });
-            if (!exists) {
-                await ctx.db.category.create({
-                    data: { ...d, userId },
+            if (!existingNames.has(d.name)) {
+                const newRef = categoriesRef.doc();
+                batch.set(newRef, {
+                    ...d,
+                    userId,
+                    parentId: null,
+                    createdAt: new Date().toISOString(),
+                    updatedAt: new Date().toISOString(),
                 });
                 seededCount++;
             }
         }
 
-        return { seeded: seededCount > 0, count: seededCount };
+        if (seededCount > 0) {
+            await batch.commit();
+        }
+        return { seeded: seededCount };
     }),
 });

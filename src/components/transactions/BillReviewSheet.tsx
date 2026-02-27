@@ -82,9 +82,12 @@ export function BillReviewSheet({ open, onOpenChange, billData }: BillReviewShee
         setIsSaving(true);
         try {
             const selectedItems = billData.items.filter((_, i) => selectedIndices.has(i));
-            const paymentMethod = (["CASH", "CARD", "UPI", "BANK_TRANSFER", "OTHER"].includes(billData.paymentMethod ?? ""))
-                ? billData.paymentMethod as "CASH" | "CARD" | "UPI" | "BANK_TRANSFER" | "OTHER"
-                : "CASH";
+            let paymentMethod: "CASH" | "CREDIT_CARD" | "DEBIT_CARD" | "UPI" | "NET_BANKING" | "BANK_TRANSFER" | "OTHER" = "CASH";
+            const pm = billData.paymentMethod;
+            if (pm === "CARD") paymentMethod = "CREDIT_CARD";
+            else if (pm === "UPI") paymentMethod = "UPI";
+            else if (pm === "BANK_TRANSFER") paymentMethod = "BANK_TRANSFER";
+            else if (pm === "OTHER") paymentMethod = "OTHER";
 
             await createWithItems.mutateAsync({
                 merchant: billData.merchant || "Unknown Store",
