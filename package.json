@@ -6,14 +6,9 @@
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "dev": "next dev",
-    "build": "prisma generate && next build",
+    "build": "next build",
     "start": "next start",
-    "lint": "next lint",
-    "postinstall": "prisma generate",
-    "db:generate": "prisma generate",
-    "db:push": "prisma db push",
-    "db:migrate": "prisma migrate dev",
-    "db:studio": "prisma studio"
+    "lint": "next lint"
   },
   "keywords": [],
   "author": "",
@@ -21,7 +16,6 @@
   "dependencies": {
     "@ai-sdk/google": "^3.0.30",
     "@auth/firebase-adapter": "^2.11.1",
-    "@auth/prisma-adapter": "^2.11.1",
     "@google/genai": "^1.42.0",
     "@google/generative-ai": "^0.24.1",
     "@react-email/components": "^1.0.8",
