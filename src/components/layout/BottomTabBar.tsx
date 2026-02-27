@@ -7,6 +7,7 @@ import { Home, List, PiggyBank, Settings, Plus, Wallet, Receipt } from "lucide-r
 import { motion, AnimatePresence } from "framer-motion";
 import { cn } from "@/lib/utils";
 import { GlobalActionSheet } from "@/components/layout/GlobalActionSheet";
+import { trpc } from "@/trpc/client";
 
 const navItems = [
     { href: "/", label: "Home", icon: Home },
@@ -18,6 +19,7 @@ const navItems = [
 
 export function BottomTabBar() {
     const pathname = usePathname();
+    const utils = trpc.useUtils();
     const [actionSheetOpen, setActionSheetOpen] = useState(false);
 
     return (
@@ -49,6 +51,20 @@ export function BottomTabBar() {
                             <Link
                                 key={item.href}
                                 href={item.href!}
+                                onClick={() => {
+                                    if (item.href === '/expenses') {
+                                        utils.expense.list.prefetch({ limit: 100 });
+                                        utils.expense.getMonthTotal.prefetch();
+                                    } else if (item.href === '/incomes') {
+                                        utils.income.list.prefetch({ limit: 100 });
+                                        utils.income.getMonthTotal.prefetch();
+                                    } else if (item.href === '/budgets') {
+                                        utils.budget.list.prefetch();
+                                    } else if (item.href === '/') {
+                                        utils.expense.getRecentExpenses.prefetch({ limit: 5 });
+                                        utils.income.getRecentIncomes.prefetch({ limit: 5 });
+                                    }
+                                }}
                                 className="flex flex-col items-center justify-center flex-1 h-full gap-1 relative"
                             >
                                 <motion.div

@@ -9,6 +9,7 @@ import { useState } from "react";
 import { AgentOasisChatSheet } from "@/components/ai/AgentOasisChatSheet";
 import { GlobalActionSheet } from "@/components/layout/GlobalActionSheet";
 import { Plus } from "lucide-react";
+import { trpc } from "@/trpc/client";
 
 const tabs = [
     { href: "/", label: "Home", icon: Home },
@@ -20,6 +21,7 @@ const tabs = [
 
 export function DesktopSidebar() {
     const pathname = usePathname();
+    const utils = trpc.useUtils();
     const [actionSheetOpen, setActionSheetOpen] = useState(false);
     const [chatOpen, setChatOpen] = useState(false);
 
@@ -44,6 +46,20 @@ export function DesktopSidebar() {
                             <Link
                                 key={href}
                                 href={href}
+                                onMouseEnter={() => {
+                                    if (href === '/expenses') {
+                                        utils.expense.list.prefetch({ limit: 100 });
+                                        utils.expense.getMonthTotal.prefetch();
+                                    } else if (href === '/incomes') {
+                                        utils.income.list.prefetch({ limit: 100 });
+                                        utils.income.getMonthTotal.prefetch();
+                                    } else if (href === '/budgets') {
+                                        utils.budget.list.prefetch();
+                                    } else if (href === '/') {
+                                        utils.expense.getRecentExpenses.prefetch({ limit: 5 });
+                                        utils.income.getRecentIncomes.prefetch({ limit: 5 });
+                                    }
+                                }}
                                 className={cn(
                                     "flex items-center gap-3 px-4 py-3 rounded-ios-sm transition-all duration-200 font-medium",
                                     isActive
