@@ -4,6 +4,8 @@ import { createTRPCContext } from "@/server/trpc";
 import { appRouter } from "@/server/routers";
 import superjson from "superjson";
 
+export const maxDuration = 60; // Allow up to 60 seconds for Gemini 2.5 Pro statement parsing
+
 const handler = (req: NextRequest) =>
     fetchRequestHandler({
         endpoint: "/api/trpc",

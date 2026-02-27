@@ -116,11 +116,11 @@ If it is INCOME:
   "amount": <number>
 }
 
-If it is a BANK STATEMENT:
+If it is a BANK STATEMENT (can be up to 6 months long):
 {
   "type": "statement",
   "bankName": "<name>",
-  "statementPeriod": "<e.g., Jan 2024>",
+  "statementPeriod": "<e.g., Jan-Jun 2024>",
   "transactions": [
     {
       "date": "<YYYY-MM-DD>",

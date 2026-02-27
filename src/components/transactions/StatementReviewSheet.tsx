@@ -50,19 +50,19 @@ export function StatementReviewSheet({ open, onOpenChange, transactions }: State
 
         const VALID_PAYMENT_METHODS = ["CASH", "CARD", "UPI", "BANK_TRANSFER", "OTHER"];
 
-        const expenses = selected.filter(t => t.type === "expense").map(t => ({
+        const expenses = selected.filter(t => t.type?.toLowerCase() === "expense").map(t => ({
             amount: Number(t.amount) || 0,
-            merchant: t.title || "Unknown Merchant",
+            merchant: t.description || t.title || "Unknown Merchant",
             date: t.date ? new Date(t.date) : new Date(),
             categoryName: t.category || undefined, // Pass the AI category name for server-side resolution
-            paymentMethod: t.paymentMethod && VALID_PAYMENT_METHODS.includes(t.paymentMethod)
-                ? (t.paymentMethod as any)
+            paymentMethod: t.paymentMethod && VALID_PAYMENT_METHODS.includes(t.paymentMethod?.toUpperCase())
+                ? (t.paymentMethod.toUpperCase() as any)
                 : "BANK_TRANSFER",
         }));
 
-        const incomes = selected.filter(t => t.type === "income").map(t => ({
+        const incomes = selected.filter(t => t.type?.toLowerCase() === "income").map(t => ({
             amount: Number(t.amount) || 0,
-            source: t.title || "Unknown Source",
+            source: t.description || t.title || "Unknown Source",
             date: t.date ? new Date(t.date) : new Date(),
             categoryId: undefined,
         }));
@@ -123,7 +123,7 @@ export function StatementReviewSheet({ open, onOpenChange, transactions }: State
                         <AnimatePresence>
                             {transactions.map((t, index) => {
                                 const isSelected = selectedIndices.has(index);
-                                const isIncome = t.type === "income";
+                                const isIncome = t.type?.toLowerCase() === "income";
                                 const Icon = isIncome ? ArrowUpRight : TrendingDown;
                                 const colorClass = isIncome ? "text-[#34C759]" : "text-[#FF453A]";
                                 const bgClass = isIncome ? "bg-[#34C759]/10" : "bg-[#FF453A]/10";
@@ -153,7 +153,7 @@ export function StatementReviewSheet({ open, onOpenChange, transactions }: State
 
                                         <div className="flex-1 min-w-0">
                                             <div className="flex justify-between items-start">
-                                                <p className="font-semibold ios-text-primary truncate pr-2 text-[15px]">{t.title}</p>
+                                                <p className="font-semibold ios-text-primary truncate pr-2 text-[15px]">{t.description || t.title}</p>
                                                 <p className={`font-bold whitespace-nowrap ${colorClass}`}>
                                                     {isIncome ? "+" : "-"}{formatCurrency(t.amount)}
                                                 </p>

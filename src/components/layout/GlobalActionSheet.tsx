@@ -117,7 +117,7 @@ export function GlobalActionSheet({ open, onOpenChange }: GlobalActionSheetProps
                         setPrefillData(result.data);
                         setAddIncomeOpen(true);
                     } else if (result.type === "statement") {
-                        setStatementData(result.data || []);
+                        setStatementData(result.transactions || []);
                         setStatementReviewOpen(true);
                     } else {
                         setScanError(result.reason || "This document could not be recognized as an expense or income.");
