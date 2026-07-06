@@ -100,7 +100,8 @@ export const incomeRouter = router({
                 createdAt: new Date().toISOString(),
                 updatedAt: new Date().toISOString(),
             };
-            const added = await ctx.db.collection("incomes").add(newDoc);
+            const cleanDoc = Object.fromEntries(Object.entries(newDoc).filter(([_, v]) => v !== undefined));
+            const added = await ctx.db.collection("incomes").add(cleanDoc);
             return { id: added.id, ...newDoc };
         }),
 
@@ -163,7 +164,8 @@ export const incomeRouter = router({
             const updateData: any = { ...data, updatedAt: new Date().toISOString() };
             if (date) updateData.date = date.toISOString();
 
-            await docRef.update(updateData);
+            const cleanUpdateData = Object.fromEntries(Object.entries(updateData).filter(([_, v]) => v !== undefined));
+            await docRef.update(cleanUpdateData);
             return { id, ...doc.data(), ...updateData };
         }),
 

@@ -14,6 +14,7 @@ if (!admin.apps.length) {
                 privateKey: privateKey,
             }),
         });
+        admin.firestore().settings({ ignoreUndefinedProperties: true });
         console.log('Firebase Admin SDK initialized successfully.');
     } catch (error) {
         console.error('Firebase Admin SDK initialization error', error);
