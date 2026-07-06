@@ -1,0 +1,317 @@
+"use client";
+
+import { useState } from "react";
+import { motion, AnimatePresence } from "framer-motion";
+import { Plus, ArrowUpRight, TrendingDown, Paperclip, Mail } from "lucide-react";
+import Link from "next/link";
+import { trpc } from "@/trpc/client";
+import { formatCurrency, formatDate, getBudgetColor, getBudgetStatus, cn } from "@/lib/utils";
+import { PrivacyWrapper } from "@/components/ui/PrivacyWrapper";
+import { AddExpenseSheet } from "@/components/expenses/AddExpenseSheet";
+import { ExpenseChart } from "@/components/expenses/ExpenseChart";
+import { CategoryChart } from "@/components/expenses/CategoryChart";
+import { IncomeExpenseChart } from "@/components/dashboard/IncomeExpenseChart";
+import { DailyExpenseChart } from "@/components/expenses/DailyExpenseChart";
+import { AddIncomeSheet } from "@/components/income/AddIncomeSheet";
+import toast from "react-hot-toast";
+import { TransactionsModal, ModalTransaction } from "@/components/dashboard/TransactionsModal";
+import { PullToRefresh } from "@/components/ui/PullToRefresh";
+import * as LucideIcons from "lucide-react";
+import { useSession } from "next-auth/react";
+
+function getIcon(name: string) {
+    const key = name.split("-").map((w) => w.charAt(0).toUpperCase() + w.slice(1)).join("");
+    return (LucideIcons as unknown as Record<string, React.ElementType>)[key] ?? LucideIcons.Circle;
+}
+
+export default function HomePage() {
+    const { data: session } = useSession();
+    const userName = session?.user?.name?.split(' ')[0] || "there";
+
+    const [addExpenseOpen, setAddExpenseOpen] = useState(false);
+    const [addIncomeOpen, setAddIncomeOpen] = useState(false);
+    const [actionMenuOpen, setActionMenuOpen] = useState(false);
+    const [editExpenseId, setEditExpenseId] = useState<string | null>(null);
+    const [editIncomeId, setEditIncomeId] = useState<string | null>(null);
+
+    // Modal State
+    const [modalOpen, setModalOpen] = useState(false);
+    const [modalTitle, setModalTitle] = useState("");
+    const [modalTransactions, setModalTransactions] = useState<ModalTransaction[]>([]);
+
+    const utils = trpc.useUtils();
+
+
+    const { data: monthTotal } = trpc.expense.getMonthTotal.useQuery();
+    const { data: monthIncomeTotal } = trpc.income.getMonthTotal.useQuery();
+    const { data: recentExpenses } = trpc.expense.getRecentExpenses.useQuery({ limit: 50 }); // Fetch more for modal
+    const { data: recentIncomes } = trpc.income.getRecentIncomes.useQuery({ limit: 50 }); // Fetch more for modal
+    const { data: budgets } = trpc.budget.list.useQuery();
+
+    const allTransactions: ModalTransaction[] = [...(recentExpenses ?? []), ...(recentIncomes ?? [])]
+        .map(t => ({
+            id: t.id,
+            type: 'merchant' in t ? 'expense' as const : 'income' as const,
+            amount: t.amount,
+            title: 'merchant' in t ? t.merchant : t.source,
+            date: t.date,
+            receiptUrl: t.receiptUrl,
+            category: t.category,
+            icon: (t as any).icon,
+        }))
+        .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+
+    const recentTransactions = allTransactions.slice(0, 5);
+
+    const handleRefresh = async () => {
+        await Promise.all([
+            utils.expense.getMonthTotal.invalidate(),
+            utils.income.getMonthTotal.invalidate(),
+            utils.expense.getRecentExpenses.invalidate(),
+            utils.income.getRecentIncomes.invalidate(),
+            utils.budget.list.invalidate(),
+            utils.ai.getInsights.invalidate()
+        ]);
+    };
+
+    const totalBudget = budgets?.reduce((s, b) => s + b.amount, 0) ?? 0;
+    const budgetStatus = getBudgetStatus(monthTotal ?? 0, totalBudget);
+    const budgetColor = getBudgetColor(budgetStatus);
+
+    return (
+        <>
+            <PullToRefresh onRefresh={handleRefresh}>
+                <div className="px-4 pt-3 pb-6 space-y-4 md:px-8 md:pt-6">
+                    {/* Greeting */}
+                    <div className="mb-2">
+                        <h1 className="text-2xl font-bold ios-text-primary">Hi, {userName} 👋</h1>
+                    </div>
+
+                    <div className="md:grid md:grid-cols-12 md:gap-6 md:space-y-0 space-y-4">
+                        {/* Left Column (Stats & Chart) */}
+                        <div className="md:col-span-7 space-y-4">
+                            {/* Combined Stats Card */}
+                            <motion.div
+                                initial={{ opacity: 0, y: 20 }}
+                                animate={{ opacity: 1, y: 0 }}
+                                className="rounded-[28px] overflow-hidden mb-4"
+                                style={{ background: "linear-gradient(135deg, #007AFF 0%, #5856D6 100%)" }}
+                            >
+                                <div className="p-6 text-white space-y-6">
+                                    <div
+                                        className="cursor-pointer active:scale-[0.98] transition-transform"
+                                        onClick={() => {
+                                            setModalTitle("All Transactions");
+                                            setModalTransactions(allTransactions);
+                                            setModalOpen(true);
+                                        }}
+                                    >
+                                        <p className="text-[14px] text-white/70 font-medium uppercase tracking-wider mb-1">Balance This Month</p>
+                                        <PrivacyWrapper>
+                                            <p className="text-5xl font-bold tracking-tight">
+                                                {formatCurrency((monthIncomeTotal ?? 0) - (monthTotal ?? 0))}
+                                            </p>
+                                        </PrivacyWrapper>
+                                    </div>
+
+                                    <div className="h-[1px] w-full bg-white/20 rounded-full" />
+
+                                    <div className="pt-2 flex items-center gap-4">
+                                        <div
+                                            className="flex-1 flex flex-col justify-center cursor-pointer active:scale-[0.98] transition-transform"
+                                            onClick={() => {
+                                                setModalTitle("Total Income");
+                                                setModalTransactions(allTransactions.filter(t => t.type === 'income'));
+                                                setModalOpen(true);
+                                            }}
+                                        >
+                                            <p className="text-[12px] text-white/70 font-medium uppercase tracking-wider mb-0.5">Total Income</p>
+                                            <PrivacyWrapper>
+                                                <p className="text-xl font-bold tracking-tight text-white flex items-center gap-1.5 mt-0.5">
+                                                    <span className="w-5 h-5 rounded-full bg-white/10 flex items-center justify-center inline-flex">
+                                                        <ArrowUpRight size={12} className="text-white" />
+                                                    </span>
+                                                    {formatCurrency(monthIncomeTotal ?? 0)}
+                                                </p>
+                                            </PrivacyWrapper>
+                                        </div>
+
+                                        <div className="w-[1px] h-10 bg-white/20 rounded-full" />
+
+                                        <div
+                                            className="flex-1 flex flex-col justify-center cursor-pointer active:scale-[0.98] transition-transform"
+                                            onClick={() => {
+                                                setModalTitle("Total Spent");
+                                                setModalTransactions(allTransactions.filter(t => t.type === 'expense'));
+                                                setModalOpen(true);
+                                            }}
+                                        >
+                                            <p className="text-[12px] text-white/70 font-medium uppercase tracking-wider mb-0.5 pl-2">Total Spent</p>
+                                            <PrivacyWrapper>
+                                                <p className="text-xl font-bold tracking-tight text-white flex items-center gap-1.5 mt-0.5 pl-2">
+                                                    <span className="w-5 h-5 rounded-full bg-white/10 flex items-center justify-center inline-flex">
+                                                        <TrendingDown size={12} className="text-white" />
+                                                    </span>
+                                                    {formatCurrency(monthTotal ?? 0)}
+                                                </p>
+                                            </PrivacyWrapper>
+                                        </div>
+                                    </div>
+                                </div>
+                            </motion.div>
+
+                            {/* Quick Stats: Budget */}
+                            {budgets && budgets.length > 0 && (
+                                <div className="space-y-3 mb-4">
+                                    {budgets.map((budget) => {
+                                        const isOverall = !budget.category;
+                                        const title = isOverall ? "Overall Budget" : `${budget.category?.name ?? "Category"} Budget`;
+                                        const spent = (budget as any).spent ?? 0;
+                                        const remaining = Math.max(budget.amount - spent, 0);
+                                        const percent = budget.amount > 0 ? Math.min((spent / budget.amount) * 100, 100) : 0;
+                                        const color = getBudgetColor(getBudgetStatus(spent, budget.amount));
+
+                                        return (
+                                            <button
+                                                key={budget.id}
+                                                className="w-full block bg-white/60 dark:bg-[#1C1C1E]/60 backdrop-blur-2xl border border-white/50 dark:border-white/5 shadow-[0_4px_24px_-4px_rgba(0,0,0,0.05)] rounded-[24px] p-5 active:scale-[0.98] transition-all text-left"
+                                                onClick={() => {
+                                                    setModalTitle(title);
+                                                    // Filter transactions by expense and the correct category id 
+                                                    const filtered = allTransactions.filter(t =>
+                                                        t.type === 'expense' &&
+                                                        (isOverall ? true : t.category?.id === budget.categoryId)
+                                                    );
+                                                    setModalTransactions(filtered);
+                                                    setModalOpen(true);
+                                                }}
+                                            >
+                                                <div className="flex justify-between items-center mb-2">
+                                                    <p className="text-[15px] font-semibold ios-text-primary">{title}</p>
+                                                    <PrivacyWrapper>
+                                                        <p className="text-[15px] font-bold" style={{ color }}>
+                                                            {formatCurrency(remaining)} left
+                                                        </p>
+                                                    </PrivacyWrapper>
+                                                </div>
+                                                <div className="h-2 rounded-full bg-black/5 dark:bg-white/5 overflow-hidden">
+                                                    <motion.div
+                                                        className="h-full rounded-full"
+                                                        style={{ backgroundColor: color }}
+                                                        initial={{ width: 0 }}
+                                                        animate={{ width: `${percent}%` }}
+                                                        transition={{ duration: 0.8, ease: "easeOut" }}
+                                                    />
+                                                </div>
+                                                <div className="flex justify-between items-center mt-2.5">
+                                                    <p className="text-xs ios-text-secondary font-medium">Used: {percent.toFixed(0)}%</p>
+                                                    <PrivacyWrapper>
+                                                        <p className="text-xs ios-text-secondary font-medium">{formatCurrency(spent)} of {formatCurrency(budget.amount)}</p>
+                                                    </PrivacyWrapper>
+                                                </div>
+                                            </button>
+                                        );
+                                    })}
+                                </div>
+                            )}
+                            <IncomeExpenseChart />
+                            <DailyExpenseChart />
+                            <CategoryChart />
+                        </div> {/* End Left Column */}
+
+                        {/* Right Column (Transactions) */}
+                        <div className="md:col-span-5">
+
+                            {/* Recent Transactions */}
+                            <div>
+                                <div className="flex items-center justify-between mb-3">
+                                    <h2 className="text-[20px] font-bold ios-text-primary">Recent</h2>
+                                    <div className="flex items-center gap-3">
+                                        <a href="/expenses" className="text-ios-blue dark:text-ios-blue-dark text-sm font-medium flex items-center gap-1">
+                                            See all <ArrowUpRight size={14} />
+                                        </a>
+                                    </div>
+                                </div>
+
+                                {recentTransactions.length === 0 ? (
+                                    <div className="bg-white/60 dark:bg-[#1C1C1E]/60 backdrop-blur-2xl border border-white/50 dark:border-white/5 shadow-sm rounded-[24px] p-8 text-center">
+                                        <TrendingDown size={32} className="mx-auto mb-3 ios-text-secondary opacity-50" />
+                                        <p className="ios-text-secondary text-sm">No recent transactions.</p>
+                                        <p className="text-xs ios-text-secondary mt-1 opacity-60">Tap + to add your first one!</p>
+                                    </div>
+                                ) : (
+                                    <div className="bg-white/60 dark:bg-[#1C1C1E]/60 backdrop-blur-2xl border border-white/50 dark:border-white/5 shadow-sm rounded-[24px] overflow-hidden divide-y divide-[#E5E5EA] dark:divide-[#3A3A3C]">
+                                        {recentTransactions.map((t, i) => {
+                                            const isIncome = t.type === 'income';
+                                            const title = isIncome ? (t as any).source : (t as any).merchant;
+                                            const Icon = getIcon(t.category?.icon ?? t.icon ?? "circle");
+                                            const color = isIncome ? "#34C759" : (t.category?.color ?? "#007AFF");
+
+                                            return (
+                                                <motion.div
+                                                    key={`${t.type}-${t.id}`}
+                                                    initial={{ opacity: 0, x: -20 }}
+                                                    animate={{ opacity: 1, x: 0 }}
+                                                    transition={{ delay: i * 0.05 }}
+                                                    onClick={() => {
+                                                        if (isIncome) {
+                                                            setEditIncomeId(t.id);
+                                                            setAddIncomeOpen(true);
+                                                        } else {
+                                                            setEditExpenseId(t.id);
+                                                            setAddExpenseOpen(true);
+                                                        }
+                                                    }}
+                                                    className="flex items-center gap-3 px-4 py-3.5 flex-shrink-0 cursor-pointer active:bg-black/5 dark:active:bg-white/5 transition-colors"
+                                                >
+                                                    <div
+                                                        className="w-10 h-10 rounded-[10px] flex items-center justify-center flex-shrink-0"
+                                                        style={{ backgroundColor: `${color}20` }}
+                                                    >
+                                                        <Icon size={18} style={{ color }} />
+                                                    </div>
+                                                    <div className="flex-1 min-w-0">
+                                                        <div className="flex items-center gap-2">
+                                                            <p className="text-[15px] font-medium ios-text-primary truncate">{title}</p>
+                                                            {t.receiptUrl && (
+                                                                <a href={t.receiptUrl} target="_blank" rel="noopener noreferrer" className="text-ios-blue hover:opacity-80 transition-opacity flex-shrink-0" onClick={(e) => e.stopPropagation()} title="View Attachment">
+                                                                    <Paperclip size={14} />
+                                                                </a>
+                                                            )}
+                                                        </div>
+                                                        <p className="text-xs ios-text-secondary">
+                                                            {isIncome ? "Income" : (t.category?.name ?? "Uncategorized")} · {formatDate(t.date)}
+                                                        </p>
+                                                    </div>
+                                                    <PrivacyWrapper>
+                                                        <p className={cn(
+                                                            "text-[15px] font-semibold whitespace-nowrap",
+                                                            isIncome ? "text-[#34C759] dark:text-[#32D74B]" : "ios-text-primary"
+                                                        )}>
+                                                            {isIncome ? "+" : "-"}{formatCurrency(t.amount)}
+                                                        </p>
+                                                    </PrivacyWrapper>
+                                                </motion.div>
+                                            );
+                                        })}
+                                    </div>
+                                )}
+                            </div>
+                        </div> {/* End Right Column */}
+                    </div> {/* End Grid */}
+                </div> {/* End Main Content Area */}
+            </PullToRefresh>
+
+            <AddExpenseSheet open={addExpenseOpen} onOpenChange={(open) => { setAddExpenseOpen(open); if (!open) setTimeout(() => setEditExpenseId(null), 300); }} editId={editExpenseId} />
+            <AddIncomeSheet open={addIncomeOpen} onOpenChange={(open) => { setAddIncomeOpen(open); if (!open) setTimeout(() => setEditIncomeId(null), 300); }} editId={editIncomeId} />
+
+            {/* Detailed Transaction Modals */}
+            <TransactionsModal
+                open={modalOpen}
+                onOpenChange={setModalOpen}
+                title={modalTitle}
+                transactions={modalTransactions}
+            />
+        </>
+    );
+}

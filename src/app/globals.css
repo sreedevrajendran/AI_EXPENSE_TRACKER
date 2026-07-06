@@ -1,0 +1,119 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --ios-blue: #007AFF;
+    --ios-bg: #FFFFFF;
+    --ios-surface: #F2F2F7;
+    --ios-surface2: #FFFFFF;
+    --ios-text-primary: #000000;
+    --ios-text-secondary: #6C6C70;
+    --ios-separator: rgba(60, 60, 67, 0.12);
+    --bottom-nav-height: 83px;
+  }
+
+  .dark {
+    --ios-blue: #0A84FF;
+    --ios-bg: #000000;
+    --ios-surface: #1C1C1E;
+    --ios-surface2: #2C2C2E;
+    --ios-text-primary: #FFFFFF;
+    --ios-text-secondary: #8E8E93;
+    --ios-separator: rgba(84, 84, 88, 0.36);
+  }
+
+  html {
+    -webkit-tap-highlight-color: transparent;
+    overscroll-behavior: none;
+  }
+
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", "Helvetica Neue", Arial, sans-serif;
+    background-color: var(--ios-bg);
+    color: var(--ios-text-primary);
+    min-height: 100dvh;
+    overscroll-behavior: none;
+  }
+
+  * {
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    box-sizing: border-box;
+  }
+}
+
+@layer components {
+  .ios-card {
+    @apply rounded-ios bg-white dark:bg-[#1C1C1E] shadow-ios;
+  }
+
+  .ios-card-elevated {
+    @apply rounded-ios bg-white dark:bg-[#2C2C2E] shadow-ios-lg;
+  }
+
+  .ios-glass {
+    @apply bg-white/70 dark:bg-black/70 backdrop-blur-ios border border-white/20 dark:border-white/10;
+  }
+
+  .ios-surface {
+    @apply bg-[#F2F2F7] dark:bg-[#1C1C1E];
+  }
+
+  .ios-text-primary {
+    @apply text-black dark:text-white;
+  }
+
+  .ios-text-secondary {
+    @apply text-[#6C6C70] dark:text-[#8E8E93];
+  }
+
+  .ios-separator {
+    @apply border-[rgba(60,60,67,0.12)] dark:border-[rgba(84,84,88,0.36)];
+  }
+
+  .ios-btn-primary {
+    @apply bg-ios-blue text-white font-semibold rounded-ios-sm px-6 py-3 text-[17px] active:opacity-80 transition-opacity;
+  }
+
+  .ios-input {
+    @apply w-full bg-[#F2F2F7] dark:bg-[#2C2C2E] rounded-ios-sm px-4 py-3 text-[17px] ios-text-primary outline-none focus:ring-2 focus:ring-ios-blue transition-all;
+  }
+
+  .tab-bar-safe {
+    padding-bottom: max(env(safe-area-inset-bottom), 8px);
+  }
+
+  /* Custom scrollbar */
+  ::-webkit-scrollbar { width: 0; }
+}
+
+@layer utilities {
+  .safe-top {
+    padding-top: env(safe-area-inset-top);
+  }
+
+  .safe-bottom {
+    padding-bottom: env(safe-area-inset-bottom);
+  }
+
+  .privacy-blur {
+    @apply blur-lg select-none;
+  }
+
+  /* Budget progress bar colors */
+  .budget-safe { @apply bg-ios-green; }
+  .budget-warning { @apply bg-ios-yellow; }
+  .budget-danger { @apply bg-ios-red; }
+
+  /* Squircle simulation */
+  .squircle { border-radius: 22.4%; }
+
+  /* shimmer loading */
+  .shimmer-bg {
+    background: linear-gradient(90deg, transparent 25%, rgba(255,255,255,0.15) 50%, transparent 75%);
+    background-size: 200% 100%;
+    animation: shimmer 1.5s infinite;
+  }
+}

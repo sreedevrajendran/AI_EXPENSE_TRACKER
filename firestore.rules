@@ -1,0 +1,36 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // NextAuth adapter collections — only backend service account should access these
+    match /users/{userId} {
+      allow read, write: if false;
+    }
+    match /accounts/{accountId} {
+      allow read, write: if false;
+    }
+    match /sessions/{sessionId} {
+      allow read, write: if false;
+    }
+    match /verification_tokens/{tokenId} {
+      allow read, write: if false;
+    }
+
+    // App data — users can only access their own documents
+    match /expenses/{docId} {
+      allow read, write: if request.auth != null && request.auth.uid == resource.data.userId;
+      allow create: if request.auth != null && request.resource.data.userId == request.auth.uid;
+    }
+    match /incomes/{docId} {
+      allow read, write: if request.auth != null && request.auth.uid == resource.data.userId;
+      allow create: if request.auth != null && request.resource.data.userId == request.auth.uid;
+    }
+    match /budgets/{docId} {
+      allow read, write: if request.auth != null && request.auth.uid == resource.data.userId;
+      allow create: if request.auth != null && request.resource.data.userId == request.auth.uid;
+    }
+    match /categories/{docId} {
+      allow read, write: if request.auth != null && request.auth.uid == resource.data.userId;
+      allow create: if request.auth != null && request.resource.data.userId == request.auth.uid;
+    }
+  }
+}
