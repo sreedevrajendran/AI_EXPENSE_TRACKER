@@ -4,16 +4,6 @@ import { NextRequest, NextResponse } from "next/server";
 
 const nextAuthHandler = NextAuth(authOptions);
 
-const GUEST_SESSION = {
-    user: {
-        id: "guest-user",
-        name: "Guest User",
-        email: "guest@floww.local",
-        image: null,
-    },
-    expires: new Date(Date.now() + 30 * 86400000).toISOString(),
-};
-
 async function handler(req: NextRequest, ctx: any) {
     const host = req.headers.get("x-forwarded-host") || req.headers.get("host") || "localhost:3000";
     const proto = req.headers.get("x-forwarded-proto") || (host.includes("localhost") || host.includes("127.0.0.1") || host.startsWith("192.168.") || host.startsWith("10.") ? "http" : "https");
@@ -23,19 +13,6 @@ async function handler(req: NextRequest, ctx: any) {
     process.env.NEXTAUTH_URL = currentOrigin;
 
     const res = await nextAuthHandler(req, ctx);
-    const { pathname } = req.nextUrl;
-
-    if (pathname.endsWith("/session")) {
-        try {
-            const clone = res.clone();
-            const data = await clone.json();
-            if (!data || Object.keys(data).length === 0 || !data.user) {
-                return NextResponse.json(GUEST_SESSION);
-            }
-        } catch {
-            return NextResponse.json(GUEST_SESSION);
-        }
-    }
 
     // Intercept redirect responses and rewrite any localhost:3000 target to currentOrigin
     const location = res.headers.get("location");

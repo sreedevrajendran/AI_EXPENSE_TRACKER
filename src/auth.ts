@@ -5,6 +5,19 @@ import CredentialsProvider from "next-auth/providers/credentials";
 import { db, isFirebaseConfigured } from "@/lib/firebase/admin";
 import { sendWelcomeEmail, sendLoginEmail } from "@/lib/email";
 
+import crypto from "crypto";
+
+function hashPassword(password: string, existingSalt?: string) {
+    const salt = existingSalt || crypto.randomBytes(16).toString("hex");
+    const hash = crypto.pbkdf2Sync(password, salt, 10000, 64, "sha512").toString("hex");
+    return { hash, salt };
+}
+
+function verifyPassword(password: string, hash: string, salt: string) {
+    const check = crypto.pbkdf2Sync(password, salt, 10000, 64, "sha512").toString("hex");
+    return check === hash;
+}
+
 export const authOptions: NextAuthOptions = {
     adapter: isFirebaseConfigured && db ? (FirestoreAdapter(db) as any) : undefined,
     providers: [
@@ -18,6 +31,97 @@ export const authOptions: NextAuthOptions = {
                     access_type: "offline",
                     response_type: "code",
                 },
+            },
+        }),
+        CredentialsProvider({
+            id: "credentials",
+            name: "Email and Password",
+            credentials: {
+                email: { label: "Email", type: "email" },
+                password: { label: "Password", type: "password" },
+                name: { label: "Name", type: "text" },
+                action: { label: "Action", type: "text" },
+            },
+            async authorize(credentials) {
+                const rawEmail = credentials?.email;
+                const rawPassword = credentials?.password;
+
+                if (!rawEmail || !rawPassword) {
+                    throw new Error("Please enter both email and password.");
+                }
+
+                const email = rawEmail.trim().toLowerCase();
+                const password = String(rawPassword);
+                const name = credentials?.name?.trim() || email.split("@")[0];
+                const action = credentials?.action || "signin";
+
+                if (password.length < 6) {
+                    throw new Error("Password must be at least 6 characters.");
+                }
+
+                if (isFirebaseConfigured && db) {
+                    const usersRef = db.collection("users");
+                    const snapshot = await usersRef.where("email", "==", email).limit(1).get();
+
+                    if (snapshot.empty) {
+                        // User does not exist yet -> automatically create new account
+                        const docRef = usersRef.doc();
+                        const { hash, salt } = hashPassword(password);
+                        const newUser = {
+                            id: docRef.id,
+                            email,
+                            name,
+                            image: `https://api.dicebear.com/7.x/initials/svg?seed=${encodeURIComponent(email)}`,
+                            passwordHash: hash,
+                            salt,
+                            createdAt: new Date(),
+                        };
+                        await docRef.set(newUser);
+                        return {
+                            id: docRef.id,
+                            name: newUser.name,
+                            email: newUser.email,
+                            image: newUser.image,
+                        };
+                    }
+
+                    const userDoc = snapshot.docs[0];
+                    const userData = userDoc.data();
+
+                    if (action === "signup" && userData.passwordHash) {
+                        throw new Error("An account with this email already exists. Please sign in.");
+                    }
+
+                    if (userData.passwordHash && userData.salt) {
+                        const isValid = verifyPassword(password, userData.passwordHash, userData.salt);
+                        if (!isValid) {
+                            throw new Error("Incorrect password. Please verify and try again.");
+                        }
+                    } else {
+                        // Existing account without password -> link password now
+                        const { hash, salt } = hashPassword(password);
+                        await userDoc.ref.update({
+                            passwordHash: hash,
+                            salt,
+                            name: userData.name || name,
+                        });
+                    }
+
+                    return {
+                        id: userDoc.id,
+                        name: userData.name || name,
+                        email: userData.email || email,
+                        image: userData.image || `https://api.dicebear.com/7.x/initials/svg?seed=${encodeURIComponent(email)}`,
+                    };
+                }
+
+                // Offline fallback
+                return {
+                    id: `user_${email.replace(/[^a-zA-Z0-9]/g, "_")}`,
+                    name,
+                    email,
+                    image: `https://api.dicebear.com/7.x/initials/svg?seed=${encodeURIComponent(email)}`,
+                };
             },
         }),
         CredentialsProvider({
@@ -44,12 +148,18 @@ export const authOptions: NextAuthOptions = {
         jwt({ token, user }) {
             if (user) {
                 token.id = user.id;
+                token.email = user.email;
+                token.name = user.name;
+                token.picture = user.image;
             }
             return token;
         },
         session({ session, user, token }) {
             if (session.user) {
                 session.user.id = user?.id || (token?.id as string) || (token?.sub as string);
+                if (token?.email) session.user.email = token.email as string;
+                if (token?.name) session.user.name = token.name as string;
+                if (token?.picture) session.user.image = token.picture as string;
             }
             return session;
         },
