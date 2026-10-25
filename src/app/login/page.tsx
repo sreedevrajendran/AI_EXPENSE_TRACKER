@@ -115,10 +115,10 @@ export default function LoginPage() {
             setIsLoading(false);
             const msg = String(err?.message || err);
             // If user closed or dismissed the account picker dialog
-            if (msg.includes("cancelled") || msg.includes("Cancelled") || msg.includes("12501") || msg.includes("16")) {
+            if (msg.toLowerCase().includes("cancel") || msg.includes("12501") || msg.includes("16")) {
                 return;
             }
-            setErrorMessage("Sign-in was interrupted. Please try again.");
+            setErrorMessage(err?.message || "Sign-in was interrupted. Please try again.");
         }
     };
 
