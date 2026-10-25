@@ -156,9 +156,12 @@ export function BillReviewSheet({ open, onOpenChange, billData, initialFile }: B
             const isAllSelected = selectedIndices.size === items.length;
             const finalTotal = isAllSelected && billData.total && billData.total > 0 ? billData.total : selectedTotal;
 
+            const billDate = billData.date ? new Date(billData.date) : new Date();
+            const validDate = !isNaN(billDate.getTime()) ? billDate : new Date();
+
             await createWithItems.mutateAsync({
                 merchant: billData.merchant || "Unknown Store",
-                date: new Date(), // Always log with Today's date when scanned today
+                date: validDate,
                 paymentMethod,
                 categoryName: billData.category || undefined,
                 note: compiledNote,
