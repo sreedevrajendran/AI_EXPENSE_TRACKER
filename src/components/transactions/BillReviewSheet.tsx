@@ -53,9 +53,10 @@ interface BillReviewSheetProps {
     open: boolean;
     onOpenChange: (open: boolean) => void;
     billData: BillData | null;
+    initialFile?: File | null;
 }
 
-export function BillReviewSheet({ open, onOpenChange, billData }: BillReviewSheetProps) {
+export function BillReviewSheet({ open, onOpenChange, billData, initialFile }: BillReviewSheetProps) {
     const [selectedIndices, setSelectedIndices] = useState<Set<number>>(new Set());
     const [isSaving, setIsSaving] = useState(false);
 
@@ -130,6 +131,25 @@ export function BillReviewSheet({ open, onOpenChange, billData }: BillReviewShee
 
             const compiledNote = noteParts.length > 0 ? noteParts.join(" • ") : (billData.note || undefined);
 
+            let receiptUrl: string | undefined = undefined;
+            if (initialFile) {
+                try {
+                    const formData = new FormData();
+                    formData.append("file", initialFile);
+                    const res = await fetch("/api/upload", {
+                        method: "POST",
+                        body: formData,
+                        credentials: "include",
+                    });
+                    if (res.ok) {
+                        const data = await res.json();
+                        receiptUrl = data.url;
+                    }
+                } catch (upErr) {
+                    console.error("Failed to upload bill receipt image:", upErr);
+                }
+            }
+
             const isAllSelected = selectedIndices.size === items.length;
             const finalTotal = isAllSelected && billData.total && billData.total > 0 ? billData.total : selectedTotal;
 
@@ -149,6 +169,7 @@ export function BillReviewSheet({ open, onOpenChange, billData }: BillReviewShee
                 dueDate: billData.dueDate || undefined,
                 upiId: billData.upiId || undefined,
                 cardLast4: billData.cardLast4 || undefined,
+                receiptUrl,
                 items: selectedItems.map(item => ({
                     name: item.name,
                     quantity: item.quantity ?? 1,
@@ -157,6 +178,10 @@ export function BillReviewSheet({ open, onOpenChange, billData }: BillReviewShee
             });
 
             // Invalidate entire tRPC query cache across all endpoints
+            await utils.expense.invalidate();
+            await utils.income.invalidate();
+            await utils.budget.invalidate();
+            await utils.category.invalidate();
             await utils.invalidate();
 
             if (typeof window !== "undefined") {

@@ -19,6 +19,7 @@ export type ModalTransaction = {
     amount: number;
     title: string;
     date: Date;
+    createdAt?: Date;
     receiptUrl?: string | null;
     category?: {
         id?: string;

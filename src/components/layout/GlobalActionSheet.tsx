@@ -658,6 +658,7 @@ export function GlobalActionSheet({ open, onOpenChange }: GlobalActionSheetProps
                 open={billReviewOpen}
                 onOpenChange={setBillReviewOpen}
                 billData={billData}
+                initialFile={initialFile}
             />
         </>
     );

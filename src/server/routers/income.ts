@@ -28,7 +28,12 @@ export const incomeRouter = router({
                 incomes = incomes.filter(i => new Date(i.date).getTime() <= endMs);
             }
 
-            incomes.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+            incomes.sort((a, b) => {
+                const timeA = new Date(a.date).getTime();
+                const timeB = new Date(b.date).getTime();
+                if (timeA !== timeB) return timeB - timeA;
+                return new Date(b.createdAt || 0).getTime() - new Date(a.createdAt || 0).getTime();
+            });
             if (input?.limit) {
                 incomes = incomes.slice(0, input.limit);
             }
@@ -39,6 +44,7 @@ export const incomeRouter = router({
             return incomes.map(inc => ({
                 ...inc,
                 date: new Date(inc.date),
+                createdAt: inc.createdAt ? new Date(inc.createdAt) : undefined,
                 category: inc.categoryId ? categories.find(c => c.id === inc.categoryId) : null
             }));
         }),
@@ -77,7 +83,11 @@ export const incomeRouter = router({
             const snapshot = await ctx.db.collection("incomes").where("userId", "==", userId).get();
 
             let incomes = snapshot.docs.map(d => ({ id: d.id, ...d.data() })) as any[];
-            incomes.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+            incomes.sort((a, b) => {
+                const timeA = new Date(a.createdAt || a.date).getTime();
+                const timeB = new Date(b.createdAt || b.date).getTime();
+                return timeB - timeA;
+            });
             incomes = incomes.slice(0, input.limit);
 
             const catSnapshot = await ctx.db.collection("categories").where("userId", "==", userId).get();
@@ -86,6 +96,7 @@ export const incomeRouter = router({
             return incomes.map(inc => ({
                 ...inc,
                 date: new Date(inc.date),
+                createdAt: inc.createdAt ? new Date(inc.createdAt) : undefined,
                 category: inc.categoryId ? categories.find(c => c.id === inc.categoryId) : null
             }));
         }),

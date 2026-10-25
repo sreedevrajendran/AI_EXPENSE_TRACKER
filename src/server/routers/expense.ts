@@ -97,7 +97,12 @@ export const expenseRouter = router({
                 expenses = expenses.filter(e => new Date(e.date).getTime() <= endMs);
             }
 
-            expenses.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+            expenses.sort((a, b) => {
+                const timeA = new Date(a.date).getTime();
+                const timeB = new Date(b.date).getTime();
+                if (timeA !== timeB) return timeB - timeA;
+                return new Date(b.createdAt || 0).getTime() - new Date(a.createdAt || 0).getTime();
+            });
             if (input?.limit) {
                 expenses = expenses.slice(0, input.limit);
             }
@@ -108,6 +113,7 @@ export const expenseRouter = router({
             return expenses.map(exp => ({
                 ...exp,
                 date: new Date(exp.date),
+                createdAt: exp.createdAt ? new Date(exp.createdAt) : undefined,
                 category: exp.categoryId ? categories.find(c => c.id === exp.categoryId) : null
             }));
         }),
@@ -151,7 +157,11 @@ export const expenseRouter = router({
             const snapshot = await ctx.db.collection("expenses").where("userId", "==", userId).get();
 
             let expenses = snapshot.docs.map(d => ({ id: d.id, ...d.data() })) as any[];
-            expenses.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+            expenses.sort((a, b) => {
+                const timeA = new Date(a.createdAt || a.date).getTime();
+                const timeB = new Date(b.createdAt || b.date).getTime();
+                return timeB - timeA;
+            });
             expenses = expenses.slice(0, input.limit);
 
             const catSnapshot = await ctx.db.collection("categories").where("userId", "==", userId).get();
@@ -160,6 +170,7 @@ export const expenseRouter = router({
             return expenses.map(exp => ({
                 ...exp,
                 date: new Date(exp.date),
+                createdAt: exp.createdAt ? new Date(exp.createdAt) : undefined,
                 category: exp.categoryId ? categories.find(c => c.id === exp.categoryId) : null
             }));
         }),
@@ -501,6 +512,7 @@ export const expenseRouter = router({
                 dueDate: z.string().optional(),
                 upiId: z.string().optional(),
                 cardLast4: z.string().optional(),
+                receiptUrl: z.string().optional(),
                 items: z.array(
                     z.object({
                         name: z.string().min(1),

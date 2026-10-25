@@ -60,13 +60,22 @@ export default function HomePage() {
             receiptUrl: t.receiptUrl,
             category: t.category,
             icon: (t as any).icon,
+            createdAt: (t as any).createdAt,
         }))
-        .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+        .sort((a, b) => {
+            const timeA = new Date((a as any).createdAt || a.date).getTime();
+            const timeB = new Date((b as any).createdAt || b.date).getTime();
+            return timeB - timeA;
+        });
 
     const recentTransactions = allTransactions.slice(0, 5);
 
     useEffect(() => {
         const handleUpdate = () => {
+            utils.expense.invalidate();
+            utils.income.invalidate();
+            utils.budget.invalidate();
+            utils.category.invalidate();
             utils.invalidate();
         };
         window.addEventListener("app:transactions-updated", handleUpdate);
