@@ -6,6 +6,10 @@ Floww is an open-source financial operating system designed to eliminate manual 
 
 Built for both **Modern Web (v2.0.1)** and **Native Android** via Capacitor.
 
+### 🌐 Live Production Web App
+Access the web application directly:
+- 🚀 **[floww.vercel.app](https://floww.vercel.app)**
+
 ### 📱 Android APK Download
 Download and install the native Android build directly:
 - 📦 **[Download Floww v2.0.1 APK (Official Release)](https://github.com/sreedevrajendran/Floww/releases/download/v2.0.1/Floww-v2.0.1.apk)** (~8.9 MB)
