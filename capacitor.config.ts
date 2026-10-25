@@ -10,10 +10,7 @@ const config: CapacitorConfig = {
     cleartext: false,
     errorPath: 'index.html',
     allowNavigation: [
-      'accounts.google.com',
-      '*.google.com',
-      '*.googleusercontent.com',
-      'floww.vercel.app',
+      '*',
     ],
   },
   android: {

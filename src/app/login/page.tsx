@@ -1,7 +1,7 @@
 "use client";
 
 import { signIn } from "next-auth/react";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion } from "framer-motion";
 import {
     Camera,
     Brain,
@@ -12,11 +12,6 @@ import {
     ArrowRight,
     Check,
     Lock,
-    Mail,
-    Eye,
-    EyeOff,
-    User,
-    AlertCircle,
     Loader2,
 } from "lucide-react";
 import { useState, useEffect } from "react";
@@ -47,14 +42,6 @@ const highlights = [
 
 export default function LoginPage() {
     const [isLoading, setIsLoading] = useState(false);
-    const [isGoogleLoading, setIsGoogleLoading] = useState(false);
-    const [isSignUp, setIsSignUp] = useState(false);
-    const [email, setEmail] = useState("");
-    const [password, setPassword] = useState("");
-    const [name, setName] = useState("");
-    const [showPassword, setShowPassword] = useState(false);
-    const [error, setError] = useState<string | null>(null);
-
     const [taglineIdx, setTaglineIdx] = useState(0);
     const [displayed, setDisplayed] = useState("");
     const [isDeleting, setIsDeleting] = useState(false);
@@ -77,65 +64,13 @@ export default function LoginPage() {
         return () => clearTimeout(timeout);
     }, [displayed, isDeleting, taglineIdx]);
 
-    const handleCredentialsSubmit = async (e: React.FormEvent) => {
-        e.preventDefault();
-        setError(null);
-
-        const cleanEmail = email.trim().toLowerCase();
-        if (!cleanEmail || !password) {
-            setError("Please fill in both email and password.");
-            return;
-        }
-
-        if (password.length < 6) {
-            setError("Password must be at least 6 characters.");
-            return;
-        }
-
-        setIsLoading(true);
-
-        try {
-            const res = await signIn("credentials", {
-                redirect: false,
-                email: cleanEmail,
-                password,
-                name: isSignUp ? name.trim() || cleanEmail.split("@")[0] : undefined,
-                action: isSignUp ? "signup" : "signin",
-                callbackUrl: "/",
-            });
-
-            if (res?.error) {
-                // Friendly error formatting
-                if (res.error.includes("CredentialsSignin")) {
-                    setError("Incorrect email or password. Please try again.");
-                } else {
-                    setError(res.error);
-                }
-                setIsLoading(false);
-            } else if (res?.ok) {
-                // Successful sign-in -> navigate straight into the app
-                window.location.href = "/";
-            } else {
-                setError("Authentication failed. Please verify credentials.");
-                setIsLoading(false);
-            }
-        } catch (err: any) {
-            setError(err?.message || "An unexpected error occurred. Please try again.");
-            setIsLoading(false);
-        }
-    };
-
     const handleGoogleSignIn = async () => {
-        setIsGoogleLoading(true);
-        setError(null);
-        const currentOrigin = typeof window !== "undefined" ? window.location.origin : "";
-        const callbackUrl = `${currentOrigin}/`;
-
+        setIsLoading(true);
         try {
-            await signIn("google", { callbackUrl });
-        } catch (err: any) {
-            setError("Google sign in could not be completed. You can sign in with email & password above.");
-            setIsGoogleLoading(false);
+            await signIn("google", { callbackUrl: "/" });
+        } catch (err) {
+            console.error("Sign in error:", err);
+            setIsLoading(false);
         }
     };
 
@@ -171,7 +106,7 @@ export default function LoginPage() {
             </div>
 
             {/* ─── Main Center Container ──────────────────────────── */}
-            <main className="relative z-10 w-full max-w-[430px] mx-auto px-5 pt-[max(env(safe-area-inset-top,20px),2.5rem)] pb-6 flex flex-col gap-6">
+            <main className="relative z-10 w-full max-w-[430px] mx-auto px-5 pt-[max(env(safe-area-inset-top,24px),3rem)] pb-6 flex flex-col gap-6">
 
                 {/* Brand Hero */}
                 <motion.div
@@ -228,194 +163,50 @@ export default function LoginPage() {
                     initial={{ opacity: 0, y: 16 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ delay: 0.35, duration: 0.6 }}
-                    className="rounded-[28px] bg-[#0E132A]/90 backdrop-blur-xl border border-white/[0.1] shadow-[0_16px_40px_rgba(0,0,0,0.5)] p-5 sm:p-6 space-y-4"
+                    className="rounded-[28px] bg-[#0E132A]/85 backdrop-blur-xl border border-white/[0.09] shadow-[0_16px_40px_rgba(0,0,0,0.5)] p-6 space-y-5"
                 >
-                    {/* Mode Segmented Toggle: Sign In vs Create Account */}
-                    <div className="grid grid-cols-2 p-1 rounded-xl bg-white/[0.06] border border-white/10 text-xs font-semibold">
-                        <button
-                            type="button"
-                            onClick={() => {
-                                setIsSignUp(false);
-                                setError(null);
-                            }}
-                            className={`py-2 rounded-lg transition-all ${
-                                !isSignUp
-                                    ? "bg-blue-600 text-white shadow-md shadow-blue-600/30 font-bold"
-                                    : "text-neutral-400 hover:text-white"
-                            }`}
-                        >
-                            Sign In
-                        </button>
-                        <button
-                            type="button"
-                            onClick={() => {
-                                setIsSignUp(true);
-                                setError(null);
-                            }}
-                            className={`py-2 rounded-lg transition-all ${
-                                isSignUp
-                                    ? "bg-blue-600 text-white shadow-md shadow-blue-600/30 font-bold"
-                                    : "text-neutral-400 hover:text-white"
-                            }`}
-                        >
-                            Create Account
-                        </button>
+                    {/* Benefits List */}
+                    <div className="space-y-2.5">
+                        {highlights.map((text) => (
+                            <div key={text} className="flex items-center gap-2.5">
+                                <div className="w-5 h-5 rounded-full bg-blue-500/15 flex items-center justify-center flex-shrink-0 text-blue-400">
+                                    <Check size={11} strokeWidth={3} />
+                                </div>
+                                <span className="text-[12.5px] text-neutral-300 font-medium leading-snug">{text}</span>
+                            </div>
+                        ))}
                     </div>
 
-                    {/* Email & Password Form */}
-                    <form onSubmit={handleCredentialsSubmit} className="space-y-3 pt-1">
-                        <AnimatePresence>
-                            {isSignUp && (
-                                <motion.div
-                                    initial={{ opacity: 0, height: 0 }}
-                                    animate={{ opacity: 1, height: "auto" }}
-                                    exit={{ opacity: 0, height: 0 }}
-                                    className="overflow-hidden space-y-1.5"
-                                >
-                                    <label className="text-[11px] font-medium text-neutral-400 uppercase tracking-wider block">
-                                        Your Name
-                                    </label>
-                                    <div className="relative flex items-center">
-                                        <User size={15} className="absolute left-3.5 text-neutral-500 pointer-events-none" />
-                                        <input
-                                            type="text"
-                                            value={name}
-                                            onChange={(e) => setName(e.target.value)}
-                                            placeholder="Your name"
-                                            className="w-full pl-10 pr-4 py-2.5 rounded-xl bg-white/[0.05] border border-white/10 text-sm text-white placeholder-neutral-500 focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-all"
-                                        />
-                                    </div>
-                                </motion.div>
-                            )}
-                        </AnimatePresence>
+                    <div className="h-px bg-white/[0.08]" />
 
-                        {/* Email Input */}
-                        <div className="space-y-1.5">
-                            <label className="text-[11px] font-medium text-neutral-400 uppercase tracking-wider block">
-                                Email Address
-                            </label>
-                            <div className="relative flex items-center">
-                                <Mail size={15} className="absolute left-3.5 text-neutral-500 pointer-events-none" />
-                                <input
-                                    type="email"
-                                    required
-                                    autoComplete="email"
-                                    value={email}
-                                    onChange={(e) => setEmail(e.target.value)}
-                                    placeholder="yourname@gmail.com"
-                                    className="w-full pl-10 pr-4 py-2.5 rounded-xl bg-white/[0.05] border border-white/10 text-sm text-white placeholder-neutral-500 focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-all"
-                                />
-                            </div>
-                        </div>
-
-                        {/* Password Input */}
-                        <div className="space-y-1.5">
-                            <label className="text-[11px] font-medium text-neutral-400 uppercase tracking-wider block">
-                                Password
-                            </label>
-                            <div className="relative flex items-center">
-                                <Lock size={15} className="absolute left-3.5 text-neutral-500 pointer-events-none" />
-                                <input
-                                    type={showPassword ? "text" : "password"}
-                                    required
-                                    autoComplete={isSignUp ? "new-password" : "current-password"}
-                                    value={password}
-                                    onChange={(e) => setPassword(e.target.value)}
-                                    placeholder="Enter your password"
-                                    className="w-full pl-10 pr-10 py-2.5 rounded-xl bg-white/[0.05] border border-white/10 text-sm text-white placeholder-neutral-500 focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-all"
-                                />
-                                <button
-                                    type="button"
-                                    onClick={() => setShowPassword(!showPassword)}
-                                    className="absolute right-3 text-neutral-400 hover:text-white transition-colors"
-                                    tabIndex={-1}
-                                >
-                                    {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
-                                </button>
-                            </div>
-                            {isSignUp && (
-                                <p className="text-[10px] text-neutral-400 pt-0.5">
-                                    Must be at least 6 characters
-                                </p>
-                            )}
-                        </div>
-
-                        {/* Error Alert */}
-                        {error && (
-                            <motion.div
-                                initial={{ opacity: 0, y: -4 }}
-                                animate={{ opacity: 1, y: 0 }}
-                                className="flex items-start gap-2 p-2.5 rounded-xl bg-red-500/15 border border-red-500/30 text-red-300 text-xs"
-                            >
-                                <AlertCircle size={15} className="flex-shrink-0 mt-0.5 text-red-400" />
-                                <span className="leading-tight">{error}</span>
-                            </motion.div>
-                        )}
-
-                        {/* Primary Submit Button */}
-                        <motion.button
-                            type="submit"
-                            disabled={isLoading || isGoogleLoading}
-                            whileTap={{ scale: 0.98 }}
-                            className="w-full mt-2 relative flex items-center justify-center gap-2 py-3 rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white text-sm font-bold shadow-lg shadow-blue-500/25 transition-all disabled:opacity-70 cursor-pointer"
-                        >
-                            {isLoading ? (
-                                <Loader2 size={18} className="animate-spin" />
-                            ) : (
-                                <>
-                                    <span>{isSignUp ? "Create Floww Account" : "Sign In to Floww"}</span>
-                                    <ArrowRight size={15} />
-                                </>
-                            )}
-                        </motion.button>
-                    </form>
-
-                    {/* Divider */}
-                    <div className="flex items-center gap-3 pt-1">
-                        <div className="flex-1 h-px bg-white/10" />
-                        <span className="text-[11px] text-neutral-400 font-semibold uppercase tracking-wider">
-                            or
-                        </span>
-                        <div className="flex-1 h-px bg-white/10" />
-                    </div>
-
-                    {/* Google Sign-in Action */}
+                    {/* Quick Google Sign-in Action */}
                     <motion.button
                         type="button"
                         onClick={handleGoogleSignIn}
-                        disabled={isLoading || isGoogleLoading}
+                        disabled={isLoading}
                         whileTap={{ scale: 0.98 }}
-                        className="w-full relative flex items-center justify-center gap-3 py-3 rounded-xl bg-white text-neutral-900 text-sm font-bold shadow-md hover:bg-neutral-100 transition-colors disabled:opacity-70 cursor-pointer"
+                        className="w-full relative flex items-center justify-center gap-3 py-3.5 rounded-2xl bg-white text-neutral-900 text-[15px] font-bold shadow-xl shadow-blue-500/10 hover:bg-neutral-100 transition-colors disabled:opacity-70 group cursor-pointer"
                     >
-                        {isGoogleLoading ? (
-                            <div className="w-4 h-4 border-2 border-neutral-300 border-t-neutral-800 rounded-full animate-spin" />
+                        {isLoading ? (
+                            <Loader2 size={20} className="animate-spin text-neutral-800" />
                         ) : (
-                            <svg viewBox="0 0 24 24" width="18" height="18" className="flex-shrink-0">
+                            <svg viewBox="0 0 24 24" width="20" height="20" className="flex-shrink-0">
                                 <path fill="#EA4335" d="M5.27 9.76A7.08 7.08 0 0 1 12 4.9c1.76 0 3.35.64 4.59 1.7l3.41-3.4A11.95 11.95 0 0 0 12 1C8.08 1 4.67 3.01 2.73 6.02l2.54 3.74z" />
                                 <path fill="#34A853" d="M16.04 18.01A7.07 7.07 0 0 1 12 19.1c-2.9 0-5.4-1.74-6.59-4.28l-2.68 3.92A11.95 11.95 0 0 0 12 23c3.2 0 6.13-1.17 8.35-3.1l-4.31-1.89z" />
                                 <path fill="#FBBC05" d="M5.41 14.82A7.12 7.12 0 0 1 4.9 12c0-.99.19-1.95.52-2.84L2.73 5.42A11.93 11.93 0 0 0 1 12c0 2.34.67 4.52 1.84 6.38l2.57-3.56z" />
                                 <path fill="#4285F4" d="M23 12.24c0-.77-.07-1.52-.19-2.24H12v4.24h6.18a5.26 5.26 0 0 1-2.28 3.44l4.31 1.89C21.94 17.71 23 15.14 23 12.24z" />
                             </svg>
                         )}
-                        <span>{isGoogleLoading ? "Connecting..." : "Continue with Google"}</span>
+                        <span>{isLoading ? "Signing in..." : "Continue with Google"}</span>
+                        {!isLoading && (
+                            <ArrowRight size={16} className="text-neutral-400 group-hover:translate-x-1 transition-transform" />
+                        )}
                     </motion.button>
-
-                    {/* Highlights bullet points */}
-                    <div className="pt-2 border-t border-white/[0.08] space-y-1.5">
-                        {highlights.slice(0, 2).map((text) => (
-                            <div key={text} className="flex items-center gap-2">
-                                <div className="w-4 h-4 rounded-full bg-blue-500/15 flex items-center justify-center flex-shrink-0 text-blue-400">
-                                    <Check size={9} strokeWidth={3} />
-                                </div>
-                                <span className="text-[11px] text-neutral-400 font-medium leading-snug">{text}</span>
-                            </div>
-                        ))}
-                    </div>
 
                     {/* Security Footnote */}
                     <div className="flex items-center justify-center gap-1.5 text-neutral-400 text-[11px] pt-1">
                         <Lock size={11} className="text-emerald-400" />
-                        <span>Encrypted Firebase Cloud Ledger · 100% Private</span>
+                        <span>OAuth 2.0 Secure · End-to-End Privacy</span>
                     </div>
                 </motion.div>
             </main>
