@@ -176,6 +176,126 @@ function formatPaymentNote(fields: {
     return fields.existingNote || "Receipt Uploaded";
 }
 
+/**
+ * Normalizes any extracted raw date string:
+ * - If relative word like "today", returns current date (YYYY-MM-DD)
+ * - If relative word like "yesterday", returns yesterday's date (YYYY-MM-DD)
+ * - If day/month provided without year (e.g. "24 Oct", "24/10", "Oct 24"), automatically injects current year
+ * - Parses DD/MM/YYYY, MM/DD/YYYY, YYYY-MM-DD, or DD-Mon-YYYY into valid YYYY-MM-DD
+ * - If null or invalid, falls back to today's date
+ */
+export function normalizeTransactionDate(rawDate?: string | null): string {
+    const now = new Date();
+    const currentYear = now.getFullYear();
+    const todayStr = now.toISOString().split("T")[0];
+
+    if (!rawDate || typeof rawDate !== "string" || !rawDate.trim()) {
+        return todayStr;
+    }
+
+    const clean = rawDate.trim().toLowerCase();
+
+    // 1. Handle relative keywords
+    if (clean === "today" || clean.includes("today")) {
+        return todayStr;
+    }
+    if (clean === "yesterday" || clean.includes("yesterday")) {
+        const y = new Date(now);
+        y.setDate(y.getDate() - 1);
+        return y.toISOString().split("T")[0];
+    }
+
+    try {
+        const monthNames: Record<string, string> = {
+            JAN: "01", FEB: "02", MAR: "03", APR: "04", MAY: "05", JUN: "06",
+            JUL: "07", AUG: "08", SEP: "09", OCT: "10", NOV: "11", DEC: "12",
+        };
+
+        // Format: DD-Mon (e.g., 24 Oct, 24-Oct, 24-October) without year -> add current year
+        const noYearText = clean.match(/^(\d{1,2})[-/\s]+([a-z]{3,9})$/i);
+        if (noYearText) {
+            const day = String(parseInt(noYearText[1], 10)).padStart(2, "0");
+            const monKey = noYearText[2].slice(0, 3).toUpperCase();
+            const month = monthNames[monKey];
+            if (month) return `${currentYear}-${month}-${day}`;
+        }
+
+        // Format: Mon-DD (e.g., Oct 24, October 24) without year -> add current year
+        const noYearTextRev = clean.match(/^([a-z]{3,9})[-/\s]+(\d{1,2})$/i);
+        if (noYearTextRev) {
+            const monKey = noYearTextRev[1].slice(0, 3).toUpperCase();
+            const day = String(parseInt(noYearTextRev[2], 10)).padStart(2, "0");
+            const month = monthNames[monKey];
+            if (month) return `${currentYear}-${month}-${day}`;
+        }
+
+        // Format: DD-Mon-YYYY or DD Mon YYYY
+        const textWithYear = clean.match(/^(\d{1,2})[-/\s]+([a-z]{3,9})[-/\s]+(\d{2,4})$/i);
+        if (textWithYear) {
+            const day = String(parseInt(textWithYear[1], 10)).padStart(2, "0");
+            const monKey = textWithYear[2].slice(0, 3).toUpperCase();
+            let year = parseInt(textWithYear[3], 10);
+            if (year < 100) year += 2000;
+            const month = monthNames[monKey];
+            if (month) return `${year}-${month}-${day}`;
+        }
+
+        // Format: DD/MM or DD-MM (without year) -> allocate current year
+        const noYearSlash = clean.match(/^(\d{1,2})[-/.](\d{1,2})$/);
+        if (noYearSlash) {
+            let day = parseInt(noYearSlash[1], 10);
+            let month = parseInt(noYearSlash[2], 10);
+            if (month > 12 && day <= 12) {
+                const t = day; day = month; month = t;
+            }
+            if (month >= 1 && month <= 12 && day >= 1 && day <= 31) {
+                return `${currentYear}-${String(month).padStart(2, "0")}-${String(day).padStart(2, "0")}`;
+            }
+        }
+
+        // Format: DD/MM/YYYY or DD-MM-YYYY
+        const dmy = clean.match(/^(\d{1,2})[-/.](\d{1,2})[-/.](\d{2,4})$/);
+        if (dmy) {
+            let day = parseInt(dmy[1], 10);
+            let month = parseInt(dmy[2], 10);
+            let year = parseInt(dmy[3], 10);
+            if (year < 100) year += 2000;
+            if (month > 12 && day <= 12) {
+                const t = day; day = month; month = t;
+            }
+            if (month >= 1 && month <= 12 && day >= 1 && day <= 31) {
+                return `${year}-${String(month).padStart(2, "0")}-${String(day).padStart(2, "0")}`;
+            }
+        }
+
+        // Standard ISO: YYYY-MM-DD
+        const ymd = clean.match(/^(\d{4})[-/.](\d{1,2})[-/.](\d{1,2})$/);
+        if (ymd) {
+            const year = parseInt(ymd[1], 10);
+            const month = parseInt(ymd[2], 10);
+            const day = parseInt(ymd[3], 10);
+            if (month >= 1 && month <= 12 && day >= 1 && day <= 31) {
+                return `${year}-${String(month).padStart(2, "0")}-${String(day).padStart(2, "0")}`;
+            }
+        }
+
+        // Native Date parser fallback
+        const parsed = new Date(rawDate);
+        if (!isNaN(parsed.getTime())) {
+            let year = parsed.getFullYear();
+            // If parser defaulted to 1970 or 2001 due to missing year in text
+            if (year < 2000) year = currentYear;
+            const m = String(parsed.getMonth() + 1).padStart(2, "0");
+            const d = String(parsed.getDate()).padStart(2, "0");
+            return `${year}-${m}-${d}`;
+        }
+    } catch {
+        // Fallback
+    }
+
+    return todayStr;
+}
+
 export const aiRouter = router({
     scanReceipt: protectedProcedure
         .input(
@@ -269,7 +389,7 @@ export const aiRouter = router({
                 return {
                     amount: typeof parsed.amount === "number" ? parsed.amount : (parseFloat(parsed.amount) || null),
                     merchant: parsed.merchant || "Merchant",
-                    date: parsed.date || new Date().toISOString().split("T")[0],
+                    date: normalizeTransactionDate(parsed.date),
                     time: parsed.time || null,
                     category,
                     paymentMethod: pm,
@@ -600,7 +720,7 @@ Return ONLY a raw JSON object with NO markdown, NO backticks, and NO conversatio
                     txs.forEach((t: any) => {
                         const tAmt = Math.abs(parseFloat(t.amount) || 0);
                         const tDesc = (t.description || "").toLowerCase().trim();
-                        const tDate = t.date ? String(t.date).split("T")[0] : "";
+                        const tDate = t.date ? normalizeTransactionDate(t.date) : "";
                         const exists = existingExp.some((e: any) => {
                             if (Math.abs(Number(e.amount) - tAmt) > 0.05) return false;
                             const eDate = e.date ? new Date(e.date).toISOString().split("T")[0] : "";
@@ -618,14 +738,14 @@ Return ONLY a raw JSON object with NO markdown, NO backticks, and NO conversatio
                     return {
                         type: "statement",
                         bankName: parsed.merchant || "Bank Statement",
-                        statementPeriod: parsed.date || "Recent",
+                        statementPeriod: normalizeTransactionDate(parsed.date),
                         totalTransactions: parsed.statementTransactions.length,
                         isDuplicateStatement,
                         duplicateCount,
                         totalExpenses: parsed.statementTransactions.filter((t: any) => t.type === "EXPENSE").reduce((s: number, t: any) => s + (parseFloat(t.amount) || 0), 0),
                         totalIncomes: parsed.statementTransactions.filter((t: any) => t.type === "INCOME").reduce((s: number, t: any) => s + (parseFloat(t.amount) || 0), 0),
                         transactions: parsed.statementTransactions.map((tx: any) => ({
-                            date: tx.date || new Date().toISOString().split("T")[0],
+                            date: normalizeTransactionDate(tx.date),
                             description: tx.description || "Transaction",
                             amount: Math.abs(parseFloat(tx.amount) || 0),
                             type: tx.type === "INCOME" ? "INCOME" : "EXPENSE",
@@ -644,7 +764,7 @@ Return ONLY a raw JSON object with NO markdown, NO backticks, and NO conversatio
                         data: {
                             source: parsed.merchant || "Income Source",
                             amount: totalAmount,
-                            date: parsed.date || new Date().toISOString().split("T")[0],
+                            date: normalizeTransactionDate(parsed.date),
                             paymentMethod: pm,
                             referenceId: parsed.referenceId || null,
                             note,
@@ -667,7 +787,7 @@ Return ONLY a raw JSON object with NO markdown, NO backticks, and NO conversatio
                             isDuplicate: Boolean(existingDuplicate),
                             duplicateInfo: existingDuplicate,
                             merchant: parsed.merchant || "Store / Restaurant",
-                            date: parsed.date || new Date().toISOString().split("T")[0],
+                            date: normalizeTransactionDate(parsed.date),
                             time: parsed.time || null,
                             paymentMethod: pm,
                             category,
@@ -699,7 +819,7 @@ Return ONLY a raw JSON object with NO markdown, NO backticks, and NO conversatio
                     data: {
                         merchant: parsed.merchant || "Merchant",
                         amount: totalAmount,
-                        date: parsed.date || new Date().toISOString().split("T")[0],
+                        date: normalizeTransactionDate(parsed.date),
                         time: parsed.time || null,
                         category,
                         paymentMethod: pm,
