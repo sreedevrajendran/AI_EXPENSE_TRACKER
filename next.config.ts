@@ -9,6 +9,8 @@ const withPWA = require("next-pwa")({
 
 const nextConfig: NextConfig = {
     turbopack: {},
+    devIndicators: false,
+    poweredByHeader: false,
     serverExternalPackages: ["firebase-admin"],
     images: {
         remotePatterns: [

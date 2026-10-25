@@ -116,4 +116,11 @@
     background-size: 200% 100%;
     animation: shimmer 1.5s infinite;
   }
+
+  /* Hide Next.js Development Indicator badge */
+  nextjs-portal,
+  [data-nextjs-dev-tools],
+  [data-nextjs-toast] {
+    display: none !important;
+  }
 }
