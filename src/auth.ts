@@ -34,6 +34,60 @@ export const authOptions: NextAuthOptions = {
             },
         }),
         CredentialsProvider({
+            id: "google-native",
+            name: "Native Google Account",
+            credentials: {
+                email: { label: "Email", type: "email" },
+                name: { label: "Name", type: "text" },
+                image: { label: "Image", type: "text" },
+                idToken: { label: "idToken", type: "text" },
+            },
+            async authorize(credentials) {
+                const rawEmail = credentials?.email;
+                if (!rawEmail) {
+                    throw new Error("No Google email provided.");
+                }
+
+                const email = rawEmail.trim().toLowerCase();
+                const name = credentials?.name?.trim() || email.split("@")[0];
+                const image = credentials?.image || `https://api.dicebear.com/7.x/initials/svg?seed=${encodeURIComponent(email)}`;
+
+                if (isFirebaseConfigured && db) {
+                    const usersRef = db.collection("users");
+                    const snapshot = await usersRef.where("email", "==", email).limit(1).get();
+
+                    if (snapshot.empty) {
+                        const docRef = usersRef.doc();
+                        const newUser = {
+                            id: docRef.id,
+                            email,
+                            name,
+                            image,
+                            createdAt: new Date(),
+                        };
+                        await docRef.set(newUser);
+                        return newUser;
+                    }
+
+                    const userDoc = snapshot.docs[0];
+                    const userData = userDoc.data();
+                    return {
+                        id: userDoc.id,
+                        name: userData.name || name,
+                        email: userData.email || email,
+                        image: userData.image || image,
+                    };
+                }
+
+                return {
+                    id: `user_${email.replace(/[^a-zA-Z0-9]/g, "_")}`,
+                    name,
+                    email,
+                    image,
+                };
+            },
+        }),
+        CredentialsProvider({
             id: "credentials",
             name: "Email and Password",
             credentials: {
