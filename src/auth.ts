@@ -1,25 +1,48 @@
 import NextAuth, { type NextAuthOptions } from "next-auth";
 import { FirestoreAdapter } from "@auth/firebase-adapter";
 import GoogleProvider from "next-auth/providers/google";
-import { db } from "@/lib/firebase/admin";
+import CredentialsProvider from "next-auth/providers/credentials";
+import { db, isFirebaseConfigured } from "@/lib/firebase/admin";
 import { sendWelcomeEmail, sendLoginEmail } from "@/lib/email";
 
 export const authOptions: NextAuthOptions = {
-    adapter: db ? (FirestoreAdapter(db) as any) : undefined,
+    adapter: isFirebaseConfigured && db ? (FirestoreAdapter(db) as any) : undefined,
     providers: [
         GoogleProvider({
-            clientId: process.env.GOOGLE_CLIENT_ID!,
-            clientSecret: process.env.GOOGLE_CLIENT_SECRET!,
+            clientId: process.env.GOOGLE_CLIENT_ID || "",
+            clientSecret: process.env.GOOGLE_CLIENT_SECRET || "",
             allowDangerousEmailAccountLinking: true,
+        }),
+        CredentialsProvider({
+            id: "guest",
+            name: "Guest Access",
+            credentials: {
+                name: { label: "Name", type: "text" },
+                email: { label: "Email", type: "text" },
+            },
+            async authorize(credentials) {
+                return {
+                    id: "guest-user",
+                    name: credentials?.name || "Guest User",
+                    email: credentials?.email || "guest@floww.local",
+                };
+            },
         }),
     ],
     session: {
-        strategy: "database",
+        strategy: "jwt",
     },
+    secret: process.env.NEXTAUTH_SECRET || "floww-secret-jwt-key-2026-safe-production",
     callbacks: {
-        session({ session, user }) {
+        jwt({ token, user }) {
+            if (user) {
+                token.id = user.id;
+            }
+            return token;
+        },
+        session({ session, user, token }) {
             if (session.user) {
-                session.user.id = user.id;
+                session.user.id = user?.id || (token?.id as string) || (token?.sub as string);
             }
             return session;
         },

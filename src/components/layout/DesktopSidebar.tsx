@@ -2,13 +2,12 @@
 
 import { usePathname } from "next/navigation";
 import Link from "next/link";
-import { Home, List, PiggyBank, Settings, Sparkles, Wallet } from "lucide-react";
+import { Home, List, PiggyBank, Settings, Sparkles, Wallet, Plus } from "lucide-react";
 import { motion } from "framer-motion";
 import { cn } from "@/lib/utils";
-import { useState } from "react";
-import { AgentOasisChatSheet } from "@/components/ai/AgentOasisChatSheet";
+import { useState, useEffect } from "react";
+import { AgentFlowwChatSheet } from "@/components/ai/AgentFlowwChatSheet";
 import { GlobalActionSheet } from "@/components/layout/GlobalActionSheet";
-import { Plus } from "lucide-react";
 import { trpc } from "@/trpc/client";
 
 const tabs = [
@@ -25,6 +24,12 @@ export function DesktopSidebar() {
     const [actionSheetOpen, setActionSheetOpen] = useState(false);
     const [chatOpen, setChatOpen] = useState(false);
 
+    useEffect(() => {
+        const handleOpen = () => setActionSheetOpen(true);
+        window.addEventListener("app:open-action-sheet", handleOpen);
+        return () => window.removeEventListener("app:open-action-sheet", handleOpen);
+    }, []);
+
     return (
         <>
             <aside className="hidden md:flex flex-col w-64 h-dvh sticky top-0 border-r ios-separator ios-glass pb-6">
@@ -32,10 +37,6 @@ export function DesktopSidebar() {
                 <div className="p-6 pb-2 flex flex-col items-center text-center">
                     <img src="/logo.png?v=3" alt="Floww Logo" className="w-20 h-20 rounded-[20px] shadow-sm mb-3" />
                     <h1 className="text-xl font-bold ios-text-primary tracking-tight">Floww</h1>
-                    <p className="text-[9px] ios-text-secondary font-bold tracking-widest uppercase mt-1 leading-tight px-2">
-                        AI Document Intelligence
-                        <br />+ Financial Analytics
-                    </p>
                 </div>
 
                 {/* Navigation Links */}
@@ -95,13 +96,13 @@ export function DesktopSidebar() {
                         className="w-full flex items-center justify-center gap-2 py-3 rounded-ios-sm border-2 border-ios-blue bg-ios-blue/10 dark:bg-ios-blue-dark/20 text-ios-blue dark:text-ios-blue-dark font-semibold group"
                     >
                         <Sparkles size={18} strokeWidth={2.5} className="group-hover:animate-spin-slow" />
-                        Ask Agent Floww
+                        Agent Floww
                     </motion.button>
                 </div>
             </aside>
 
             <GlobalActionSheet open={actionSheetOpen} onOpenChange={setActionSheetOpen} />
-            <AgentOasisChatSheet open={chatOpen} onOpenChange={setChatOpen} />
+            <AgentFlowwChatSheet open={chatOpen} onOpenChange={setChatOpen} />
         </>
     );
 }

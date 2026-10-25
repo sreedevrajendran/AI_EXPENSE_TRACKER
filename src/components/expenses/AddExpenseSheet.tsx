@@ -6,6 +6,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { trpc } from "@/trpc/client";
 const PaymentMethod = {
     CASH: "CASH",
+    CARD: "CARD",
     CREDIT_CARD: "CREDIT_CARD",
     DEBIT_CARD: "DEBIT_CARD",
     UPI: "UPI",
@@ -14,10 +15,12 @@ const PaymentMethod = {
     OTHER: "OTHER"
 } as const;
 type PaymentMethod = keyof typeof PaymentMethod;
-import { X, Camera, Loader2, ChevronDown, CreditCard, Banknote, Smartphone, Building2, MoreHorizontal, Paperclip } from "lucide-react";
+import { X, Camera, Loader2, ChevronDown, CreditCard, Banknote, Smartphone, Building2, MoreHorizontal, Paperclip, Sparkles } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { getLucideIcon } from "@/lib/icons";
 import { useEffect } from "react";
+import { showMatchingAlert } from "@/components/ui/AlertCard";
+import { useCurrency } from "@/context/CurrencyContext";
 
 export interface ExpenseEditData {
     id: string;
@@ -47,6 +50,7 @@ const PAYMENT_METHODS: { value: PaymentMethod; label: string; icon: React.Elemen
 ];
 
 export function AddExpenseSheet({ open, onOpenChange, onSuccess, editData, editId, prefillData, initialFile }: AddExpenseSheetProps) {
+    const { currencySymbol, formatCurrency, convertToBase, convertFromBase } = useCurrency();
     const [amount, setAmount] = useState("");
     const [merchant, setMerchant] = useState("");
     const [note, setNote] = useState("");
@@ -59,6 +63,8 @@ export function AddExpenseSheet({ open, onOpenChange, onSuccess, editData, editI
     const [existingReceiptUrl, setExistingReceiptUrl] = useState<string | null>(null);
     const [uploading, setUploading] = useState(false);
     const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+    const [expenseDate, setExpenseDate] = useState<Date>(new Date());
+    const [paymentMeta, setPaymentMeta] = useState<any>(null);
 
     const hasSeededRef = useRef(false);
 
@@ -72,7 +78,7 @@ export function AddExpenseSheet({ open, onOpenChange, onSuccess, editData, editI
         if (open && editId && allExpenses) {
             const expense = allExpenses.find((e: any) => e.id === editId);
             if (expense) {
-                setAmount(expense.amount.toString());
+                setAmount(Number(convertFromBase(expense.amount).toFixed(2)).toString());
                 setMerchant(expense.merchant);
                 setNote(expense.note || "");
                 setSelectedCategory(expense.categoryId || undefined);
@@ -80,7 +86,7 @@ export function AddExpenseSheet({ open, onOpenChange, onSuccess, editData, editI
                 setExistingReceiptUrl(expense.receiptUrl || null);
             }
         } else if (open && editData) {
-            setAmount(editData.amount.toString());
+            setAmount(Number(convertFromBase(editData.amount).toFixed(2)).toString());
             setMerchant(editData.merchant);
             setNote(editData.note || "");
             setSelectedCategory(editData.categoryId || undefined);
@@ -93,11 +99,10 @@ export function AddExpenseSheet({ open, onOpenChange, onSuccess, editData, editI
 
     const utils = trpc.useUtils();
     const invalidateAll = () => {
-        utils.expense.list.invalidate();
-        utils.expense.getMonthTotal.invalidate();
-        utils.expense.getRecentExpenses.invalidate();
-        utils.budget.list.invalidate();
-        utils.ai.getInsights.invalidate();
+        utils.invalidate();
+        if (typeof window !== "undefined") {
+            window.dispatchEvent(new CustomEvent("app:transactions-updated"));
+        }
     };
 
     const { data: categories } = trpc.category.listAll.useQuery(undefined, { enabled: open });
@@ -106,6 +111,13 @@ export function AddExpenseSheet({ open, onOpenChange, onSuccess, editData, editI
 
     const createExpense = trpc.expense.create.useMutation({
         onSuccess: () => {
+            showMatchingAlert({
+                type: "expense",
+                status: "success",
+                title: "Expense Added Successfully",
+                message: `${merchant || "Expense"} recorded in your transactions`,
+                amount: parseFloat(amount) || undefined,
+            });
             invalidateAll();
             resetForm();
             onOpenChange(false);
@@ -113,29 +125,62 @@ export function AddExpenseSheet({ open, onOpenChange, onSuccess, editData, editI
         },
         onError: (err) => {
             console.error("Expense creation failed:", err);
+            showMatchingAlert({
+                type: "expense",
+                status: "error",
+                title: "Failed to Add Expense",
+                message: "Could not record expense. Please try again.",
+            });
             setError("Failed to add expense. Please try again.");
         }
     });
 
     const updateExpense = trpc.expense.update.useMutation({
         onSuccess: () => {
+            showMatchingAlert({
+                type: "expense",
+                status: "success",
+                title: "Expense Updated Successfully",
+                message: `${merchant || "Expense"} changes saved`,
+                amount: parseFloat(amount) || undefined,
+            });
             invalidateAll();
             resetForm();
             onOpenChange(false);
             onSuccess?.();
         },
         onError: (err) => {
+            showMatchingAlert({
+                type: "expense",
+                status: "error",
+                title: "Failed to Update Expense",
+                message: "Changes could not be saved. Please try again.",
+            });
             setError("Failed to update expense. Please try again.");
         }
     });
 
     const deleteExpense = trpc.expense.delete.useMutation({
         onSuccess: () => {
+            showMatchingAlert({
+                type: "expense",
+                status: "success",
+                title: "Expense Deleted",
+                message: "The expense transaction has been removed",
+            });
             invalidateAll();
             resetForm();
             onOpenChange(false);
             onSuccess?.();
         },
+        onError: () => {
+            showMatchingAlert({
+                type: "expense",
+                status: "error",
+                title: "Failed to Delete Expense",
+                message: "Could not delete expense. Please try again.",
+            });
+        }
     });
     const mapIcon = trpc.ai.suggestIcon.useMutation();
     const seedCategories = trpc.category.seedDefaults.useMutation({
@@ -157,15 +202,27 @@ export function AddExpenseSheet({ open, onOpenChange, onSuccess, editData, editI
             if (prefillData.amount) setAmount(String(prefillData.amount));
             if (prefillData.merchant) setMerchant(prefillData.merchant);
             if (prefillData.note) setNote(prefillData.note);
-            if (prefillData.paymentMethod && ["CASH", "CARD", "UPI", "BANK_TRANSFER", "OTHER"].includes(prefillData.paymentMethod)) {
-                setPaymentMethod(prefillData.paymentMethod as PaymentMethod);
+            if (prefillData.date) {
+                const d = new Date(prefillData.date);
+                if (!isNaN(d.getTime())) setExpenseDate(d);
+            }
+            if (prefillData.paymentMethod) {
+                const pm = String(prefillData.paymentMethod).toUpperCase().replace(/\s+/g, "_");
+                if (pm === "CARD" || pm === "CREDIT_CARD") setPaymentMethod("CREDIT_CARD");
+                else if (pm === "DEBIT_CARD") setPaymentMethod("DEBIT_CARD");
+                else if (pm === "UPI") setPaymentMethod("UPI");
+                else if (pm === "CASH") setPaymentMethod("CASH");
+                else if (pm === "BANK_TRANSFER" || pm === "NET_BANKING") setPaymentMethod("BANK_TRANSFER");
+                else setPaymentMethod("OTHER");
             }
             if (prefillData.category && categories) {
                 const match = categories.find((c: { id: string; name: string }) =>
-                    c.name.toLowerCase().includes(prefillData.category.toLowerCase())
+                    c.name.toLowerCase().includes(prefillData.category.toLowerCase()) ||
+                    prefillData.category.toLowerCase().includes(c.name.toLowerCase())
                 );
                 if (match) setSelectedCategory(match.id);
             }
+            setPaymentMeta(prefillData);
         }
         if (open && initialFile) {
             setFile(initialFile);
@@ -179,6 +236,8 @@ export function AddExpenseSheet({ open, onOpenChange, onSuccess, editData, editI
         setFile(null);
         setError(null);
         setShowDeleteConfirm(false);
+        setExpenseDate(new Date());
+        setPaymentMeta(null);
     };
 
     // Budget Calculations
@@ -259,29 +318,40 @@ export function AddExpenseSheet({ open, onOpenChange, onSuccess, editData, editI
             }
         }
 
+        const baseAmt = convertToBase(parsedAmt);
+
         if (editData) {
             updateExpense.mutate({
                 id: editData.id,
-                amount: parsedAmt,
+                amount: baseAmt,
                 merchant,
                 note: note || undefined,
                 paymentMethod,
                 categoryId,
-                date: new Date(), // We keep current date or could allow editing date later
+                date: expenseDate,
                 receiptUrl: receiptUrl || existingReceiptUrl || undefined,
                 icon: categoryId ? undefined : mappedIcon,
             });
         } else {
             createExpense.mutate({
-                amount: parsedAmt,
+                amount: baseAmt,
                 merchant,
                 note: note || undefined,
                 paymentMethod,
                 categoryId,
                 categoryName: !categoryId && !isCustom && prefillData?.category ? prefillData.category : undefined,
-                date: new Date(),
+                date: expenseDate,
                 receiptUrl,
                 icon: categoryId ? undefined : mappedIcon,
+                referenceId: paymentMeta?.referenceId || prefillData?.referenceId || undefined,
+                invoiceNumber: paymentMeta?.invoiceNumber || prefillData?.invoiceNumber || undefined,
+                tax: paymentMeta?.tax || prefillData?.tax || undefined,
+                subtotal: paymentMeta?.subtotal || prefillData?.subtotal || undefined,
+                discount: paymentMeta?.discount || prefillData?.discount || undefined,
+                billStatus: paymentMeta?.billStatus || prefillData?.billStatus || undefined,
+                dueDate: paymentMeta?.dueDate || prefillData?.dueDate || undefined,
+                upiId: paymentMeta?.upiId || prefillData?.upiId || undefined,
+                cardLast4: paymentMeta?.cardLast4 || prefillData?.cardLast4 || undefined,
             });
         }
         setUploading(false);
@@ -331,7 +401,7 @@ export function AddExpenseSheet({ open, onOpenChange, onSuccess, editData, editI
                         {/* Amount input */}
                         <div className="relative z-10 px-6 pt-6 pb-10 text-center">
                             <div className="flex items-center justify-center gap-2">
-                                <span className={cn("text-5xl font-medium transition-colors duration-300", amount ? "text-rose-500 dark:text-rose-400" : "ios-text-secondary opacity-40")}>₹</span>
+                                <span className={cn("text-5xl font-medium transition-colors duration-300", amount ? "text-rose-500 dark:text-rose-400" : "ios-text-secondary opacity-40")}>{currencySymbol}</span>
                                 <input
                                     type="number"
                                     inputMode="decimal"
@@ -354,7 +424,73 @@ export function AddExpenseSheet({ open, onOpenChange, onSuccess, editData, editI
                                         isOverBudget ? "bg-[#FF3B30]/10 text-[#FF3B30] border-[#FF3B30]/20" : "bg-[#34C759]/10 text-[#34C759] border-[#34C759]/20"
                                     )}
                                 >
-                                    {isOverBudget ? `EXCEEDS ${budgetWarningType.toUpperCase()} LIMIT` : `₹${activeBudgetRemaining.toFixed(0)} REMAINING (${budgetWarningType.toUpperCase()})`}
+                                    {isOverBudget ? `EXCEEDS ${budgetWarningType.toUpperCase()} LIMIT` : `${formatCurrency(activeBudgetRemaining)} REMAINING (${budgetWarningType.toUpperCase()})`}
+                                </motion.div>
+                            )}
+
+                            {prefillData && (
+                                <motion.div
+                                    initial={{ opacity: 0, y: 8 }}
+                                    animate={{ opacity: 1, y: 0 }}
+                                    className="mx-auto max-w-sm mt-5 p-4 bg-gradient-to-r from-rose-500/10 via-purple-500/10 to-blue-500/10 border border-rose-500/20 rounded-2xl text-left space-y-2.5"
+                                >
+                                    <div className="flex items-center justify-between">
+                                        <div className="flex items-center gap-2">
+                                            <div className="w-7 h-7 rounded-lg bg-rose-500/20 text-rose-500 flex items-center justify-center font-bold shrink-0">
+                                                <Sparkles size={14} />
+                                            </div>
+                                            <div>
+                                                <p className="text-[13px] font-bold ios-text-primary">Payment &amp; Bill Extracted</p>
+                                                <p className="text-[11px] text-ios-secondary">Verified by AI Vision &amp; OCR</p>
+                                            </div>
+                                        </div>
+                                        <span className={`text-[10px] font-black tracking-wider uppercase px-2 py-0.5 rounded-full shrink-0 ${
+                                            (paymentMeta?.billStatus === "DUE" || prefillData.status === "DUE")
+                                                ? "bg-amber-500/20 text-amber-600 dark:text-amber-400"
+                                                : "bg-emerald-500/20 text-emerald-600 dark:text-emerald-400"
+                                        }`}>
+                                            {(paymentMeta?.billStatus === "DUE" || prefillData.status === "DUE") ? "Payment Due" : "Verified Paid"}
+                                        </span>
+                                    </div>
+
+                                    {/* Payment reference chips */}
+                                    <div className="flex flex-wrap gap-1.5 pt-1">
+                                        {paymentMeta?.paymentMethod && (
+                                            <span className="text-[10px] font-bold px-2 py-0.5 rounded-md bg-black/5 dark:bg-white/10 text-neutral-700 dark:text-neutral-300">
+                                                {paymentMeta.paymentMethod}
+                                            </span>
+                                        )}
+                                        {paymentMeta?.invoiceNumber && (
+                                            <span className="text-[10px] font-bold px-2 py-0.5 rounded-md bg-blue-500/15 text-blue-600 dark:text-blue-400">
+                                                #{paymentMeta.invoiceNumber}
+                                            </span>
+                                        )}
+                                        {paymentMeta?.referenceId && (
+                                            <span className="text-[10px] font-bold px-2 py-0.5 rounded-md bg-purple-500/15 text-purple-600 dark:text-purple-400">
+                                                Ref: {paymentMeta.referenceId}
+                                            </span>
+                                        )}
+                                        {paymentMeta?.cardLast4 && (
+                                            <span className="text-[10px] font-bold px-2 py-0.5 rounded-md bg-black/5 dark:bg-white/10 text-neutral-600 dark:text-neutral-400">
+                                                •••• {paymentMeta.cardLast4}
+                                            </span>
+                                        )}
+                                        {paymentMeta?.upiId && (
+                                            <span className="text-[10px] font-bold px-2 py-0.5 rounded-md bg-teal-500/15 text-teal-600 dark:text-teal-400">
+                                                {paymentMeta.upiId}
+                                            </span>
+                                        )}
+                                        {paymentMeta?.dueDate && (
+                                            <span className="text-[10px] font-bold px-2 py-0.5 rounded-md bg-amber-500/15 text-amber-600 dark:text-amber-400">
+                                                Due: {paymentMeta.dueDate}
+                                            </span>
+                                        )}
+                                        {paymentMeta?.tax && paymentMeta.tax > 0 && (
+                                            <span className="text-[10px] font-bold px-2 py-0.5 rounded-md bg-neutral-200/60 dark:bg-neutral-800 text-neutral-600 dark:text-neutral-300">
+                                                GST/Tax: {formatCurrency(paymentMeta.tax)}
+                                            </span>
+                                        )}
+                                    </div>
                                 </motion.div>
                             )}
                         </div>
@@ -504,6 +640,32 @@ export function AddExpenseSheet({ open, onOpenChange, onSuccess, editData, editI
                                     );
                                 })}
                             </div>
+                        </div>
+
+                        {/* Primary Action Button */}
+                        <div className="pt-2">
+                            <motion.button
+                                type="button"
+                                whileTap={{ scale: 0.98 }}
+                                onClick={handleSubmit}
+                                disabled={!amount || !merchant || createExpense.isPending || updateExpense.isPending || uploading}
+                                className={cn(
+                                    "w-full py-4 rounded-2xl font-bold text-[17px] flex items-center justify-center gap-2 shadow-lg transition-all",
+                                    !amount || !merchant
+                                        ? "bg-[#E5E5EA] dark:bg-[#2C2C2E] text-ios-text-primary/30 cursor-not-allowed shadow-none"
+                                        : "bg-rose-500 hover:bg-rose-600 text-white shadow-rose-500/30"
+                                )}
+                            >
+                                {createExpense.isPending || updateExpense.isPending || uploading ? (
+                                    <Loader2 size={20} className="animate-spin" />
+                                ) : editData ? (
+                                    "Save Changes"
+                                ) : prefillData ? (
+                                    "✓ Confirm & Add Expense"
+                                ) : (
+                                    "Add Expense"
+                                )}
+                            </motion.button>
                         </div>
 
                         {/* Delete Button (Editing only) */}

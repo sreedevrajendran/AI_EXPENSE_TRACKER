@@ -10,6 +10,7 @@ import { PrivacyWrapper } from "@/components/ui/PrivacyWrapper";
 import { getLucideIcon } from "@/lib/icons";
 import { cn } from "@/lib/utils";
 import { BudgetSheet, type BudgetWithSpent } from "@/components/budgets/BudgetSheet";
+import { PullToRefresh } from "@/components/ui/PullToRefresh";
 
 type BudgetCategory = { id: string; name: string; icon: string; color: string } | null;
 
@@ -23,7 +24,7 @@ function BudgetCard({ budget, onEdit }: { budget: BudgetWithSpent, onEdit: (b: B
         <motion.div
             whileTap={{ scale: 0.98 }}
             onClick={() => onEdit(budget)}
-            className="group relative w-full text-left bg-white dark:bg-[#1C1C1E] rounded-[32px] p-5 shadow-[0_4px_24px_-4px_rgba(0,0,0,0.05)] border border-[#E5E5EA] dark:border-[#3A3A3C] space-y-5 cursor-pointer overflow-hidden transition-all"
+            className="group relative w-full text-left bg-white dark:bg-[#1C1C1E] rounded-[32px] p-5 shadow-[0_4px_24px_-4px_rgba(0,0,0,0.05)] border border-neutral-200/80 dark:border-neutral-800 space-y-5 cursor-pointer overflow-hidden transition-all"
         >
             <div
                 className="absolute top-0 right-0 w-40 h-40 blur-3xl rounded-full opacity-10 pointer-events-none transition-opacity group-hover:opacity-20 -mr-4 -mt-4"
@@ -82,13 +83,27 @@ export default function BudgetsPage() {
     const [sheetOpen, setSheetOpen] = useState(false);
     const [editingBudget, setEditingBudget] = useState<BudgetWithSpent | null>(null);
     const { data: budgets, isLoading } = trpc.budget.list.useQuery();
+    const utils = trpc.useUtils();
+
+    useEffect(() => {
+        const handleUpdate = () => {
+            utils.invalidate();
+        };
+        window.addEventListener("app:transactions-updated", handleUpdate);
+        return () => window.removeEventListener("app:transactions-updated", handleUpdate);
+    }, [utils]);
+
+    const handleRefresh = async () => {
+        await utils.invalidate();
+    };
 
     const totalBudget = budgets?.reduce((s: number, b: BudgetWithSpent) => s + b.amount, 0) ?? 0;
     const totalSpent = budgets?.reduce((s: number, b: BudgetWithSpent) => s + b.spent, 0) ?? 0;
 
     return (
         <>
-            <div className="px-4 pt-3 pb-32 space-y-4">
+            <PullToRefresh onRefresh={handleRefresh}>
+                <div className="px-4 pt-3 pb-32 space-y-4">
                 {totalBudget > 0 && (
                     <div className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-[#1C1C1E] to-[#2C2C2E] dark:from-[#2C2C2E] dark:to-[#3A3A3C] p-6 text-white shadow-xl mb-2 border border-[#E5E5EA] dark:border-white/10">
                         <div className="absolute top-0 right-0 w-48 h-48 rounded-full bg-ios-blue/20 blur-3xl pointer-events-none -mr-10 -mt-10" />
@@ -145,7 +160,8 @@ export default function BudgetsPage() {
                         </motion.div>
                     ))
                 )}
-            </div>
+                </div>
+            </PullToRefresh>
 
 
 

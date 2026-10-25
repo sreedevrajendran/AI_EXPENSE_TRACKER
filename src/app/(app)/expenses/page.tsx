@@ -1,12 +1,13 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
-import { Plus, Receipt, Paperclip, TrendingDown, Hash } from "lucide-react";
+import { Plus, Receipt, Paperclip, TrendingDown, Hash, FileText } from "lucide-react";
 import { trpc } from "@/trpc/client";
 import { formatCurrency, formatDate } from "@/lib/utils";
 import { PrivacyWrapper } from "@/components/ui/PrivacyWrapper";
 import { AddExpenseSheet } from "@/components/expenses/AddExpenseSheet";
+import { TransactionStatementModal } from "@/components/transactions/TransactionStatementModal";
 import { getLucideIcon } from "@/lib/icons";
 import { PullToRefresh } from "@/components/ui/PullToRefresh";
 import { cn } from "@/lib/utils";
@@ -25,11 +26,16 @@ const PM_LABELS: Record<string, string> = {
 
 export default function ExpensesPage() {
     const [addOpen, setAddOpen] = useState(false);
+    const [statementOpen, setStatementOpen] = useState(false);
     const [editExpense, setEditExpense] = useState<ExpenseItem | null>(null);
-    const { data: expenses, isLoading: isListLoading } = trpc.expense.list.useQuery({ limit: 100 });
+    const { data: expenses, isLoading: isListLoading } = trpc.expense.list.useQuery({ limit: 2000 });
+    const { data: incomes } = trpc.income.list.useQuery({ limit: 2000 });
     const { data: monthTotal, isLoading: isTotalLoading } = trpc.expense.getMonthTotal.useQuery();
 
     const isLoading = isListLoading || isTotalLoading;
+    const displayTotal = (expenses && expenses.length > 0)
+        ? expenses.reduce((s, e) => s + (e.amount || 0), 0)
+        : (monthTotal ?? 0);
 
     // Group by date
     const grouped = (expenses ?? []).reduce(
@@ -43,8 +49,16 @@ export default function ExpensesPage() {
     );
 
     const utils = trpc.useUtils();
+    useEffect(() => {
+        const handleUpdate = () => {
+            utils.invalidate();
+        };
+        window.addEventListener("app:transactions-updated", handleUpdate);
+        return () => window.removeEventListener("app:transactions-updated", handleUpdate);
+    }, [utils]);
+
     const handleRefresh = async () => {
-        await utils.expense.list.invalidate();
+        await utils.invalidate();
     };
 
     return (
@@ -52,7 +66,7 @@ export default function ExpensesPage() {
             <PullToRefresh onRefresh={handleRefresh}>
                 <div className="px-4 pt-3 pb-32 space-y-4">
 
-                    {monthTotal !== undefined && (
+                    {displayTotal !== undefined && (
                         <div className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-[#FF3B30]/90 to-[#FF2D55]/90 backdrop-blur-2xl mb-2 border border-white/20 dark:border-white/10">
                             <div className="absolute top-0 right-0 -mr-8 -mt-8 w-32 h-32 rounded-full bg-white/20 blur-2xl pointer-events-none" />
                             <div className="absolute bottom-0 left-0 -ml-8 -mb-8 w-24 h-24 rounded-full bg-black/20 blur-xl pointer-events-none" />
@@ -60,10 +74,20 @@ export default function ExpensesPage() {
                                 <div className="flex items-center justify-between">
                                     <div>
                                         <p className="text-[14px] font-medium text-white/90 tracking-wide uppercase mb-1">Total Expenses</p>
-                                        <PrivacyWrapper><p className="text-4xl font-bold tracking-tight">{formatCurrency(monthTotal)}</p></PrivacyWrapper>
+                                        <PrivacyWrapper><p className="text-4xl font-bold tracking-tight">{formatCurrency(displayTotal)}</p></PrivacyWrapper>
                                     </div>
-                                    <div className="w-14 h-14 rounded-full bg-white/20 backdrop-blur-md flex items-center justify-center border border-white/30 shadow-sm flex-shrink-0">
-                                        <Receipt size={28} className="text-white drop-shadow-sm" />
+                                    <div className="flex items-center gap-2">
+                                        <button
+                                            type="button"
+                                            onClick={() => setStatementOpen(true)}
+                                            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-white/20 hover:bg-white/30 text-white text-xs font-bold transition-colors shadow-xs"
+                                        >
+                                            <FileText size={13} />
+                                            <span>Statement</span>
+                                        </button>
+                                        <div className="w-12 h-12 rounded-full bg-white/20 backdrop-blur-md flex items-center justify-center border border-white/30 shadow-sm flex-shrink-0">
+                                            <Receipt size={24} className="text-white drop-shadow-sm" />
+                                        </div>
                                     </div>
                                 </div>
                                 <div className="h-[1px] w-full bg-white/20 rounded-full" />
@@ -189,6 +213,13 @@ export default function ExpensesPage() {
                     date: editExpense.date,
                     receiptUrl: editExpense.receiptUrl
                 } as any : undefined}
+            />
+
+            <TransactionStatementModal
+                open={statementOpen}
+                onOpenChange={setStatementOpen}
+                expenses={expenses || []}
+                incomes={incomes || []}
             />
         </>
     );

@@ -42,9 +42,9 @@ export async function POST(req: NextRequest) {
         });
 
     } catch (error: any) {
-        console.error("UploadThing Upload Error:", error);
+        console.error("Upload Error:", error);
         return NextResponse.json(
-            { error: "Upload failed", details: error.message },
+            { error: "Unable to upload file. Please ensure the document is under 5MB and in a supported format (JPEG, PNG, WEBP, or PDF)." },
             { status: 500 }
         );
     }

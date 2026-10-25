@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { Plus, Receipt, Paperclip, Wallet, TrendingUp, Hash } from "lucide-react";
 import { trpc } from "@/trpc/client";
@@ -26,10 +26,13 @@ type IncomeItem = {
 export default function IncomesPage() {
     const [addOpen, setAddOpen] = useState(false);
     const [editIncome, setEditIncome] = useState<IncomeItem | null>(null);
-    const { data: incomes, isLoading: isListLoading } = trpc.income.list.useQuery({ limit: 100 });
+    const { data: incomes, isLoading: isListLoading } = trpc.income.list.useQuery({ limit: 2000 });
     const { data: monthTotal, isLoading: isTotalLoading } = trpc.income.getMonthTotal.useQuery();
 
     const isLoading = isListLoading || isTotalLoading;
+    const displayTotal = (incomes && incomes.length > 0)
+        ? incomes.reduce((s, i) => s + (i.amount || 0), 0)
+        : (monthTotal ?? 0);
 
     // Group by date
     const grouped = (incomes ?? []).reduce(
@@ -43,8 +46,16 @@ export default function IncomesPage() {
     );
 
     const utils = trpc.useUtils();
+    useEffect(() => {
+        const handleUpdate = () => {
+            utils.invalidate();
+        };
+        window.addEventListener("app:transactions-updated", handleUpdate);
+        return () => window.removeEventListener("app:transactions-updated", handleUpdate);
+    }, [utils]);
+
     const handleRefresh = async () => {
-        await utils.income.list.invalidate();
+        await utils.invalidate();
     };
 
     return (
@@ -52,7 +63,7 @@ export default function IncomesPage() {
             <PullToRefresh onRefresh={handleRefresh}>
                 <div className="px-4 pt-3 pb-32 space-y-4">
 
-                    {monthTotal !== undefined && (
+                    {displayTotal !== undefined && (
                         <div className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-[#34C759]/90 to-[#30D158]/90 backdrop-blur-2xl mb-2 border border-white/20 dark:border-white/10 shadow-xl shadow-[#34C759]/20">
                             <div className="absolute top-0 right-0 -mr-8 -mt-8 w-32 h-32 rounded-full bg-white/20 blur-2xl pointer-events-none" />
                             <div className="absolute bottom-0 left-0 -ml-8 -mb-8 w-24 h-24 rounded-full bg-black/20 blur-xl pointer-events-none" />
@@ -60,7 +71,7 @@ export default function IncomesPage() {
                                 <div className="flex items-center justify-between">
                                     <div>
                                         <p className="text-[14px] font-medium text-white/90 tracking-wide uppercase mb-1">Total Income</p>
-                                        <PrivacyWrapper><p className="text-4xl font-bold tracking-tight">{formatCurrency(monthTotal)}</p></PrivacyWrapper>
+                                        <PrivacyWrapper><p className="text-4xl font-bold tracking-tight">{formatCurrency(displayTotal)}</p></PrivacyWrapper>
                                     </div>
                                     <div className="w-14 h-14 rounded-full bg-white/20 backdrop-blur-md flex items-center justify-center border border-white/30 shadow-sm flex-shrink-0">
                                         <Wallet size={28} className="text-white drop-shadow-sm" />

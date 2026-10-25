@@ -1,6 +1,8 @@
 import { z } from "zod";
 import { protectedProcedure, router } from "../trpc";
 
+import { getActivePeriodRange } from "./expense";
+
 // Ensure BudgetPeriod enum matches since we ripped out Prisma
 const BudgetPeriod = {
     MONTHLY: "MONTHLY",
@@ -11,8 +13,6 @@ const BudgetPeriod = {
 export const budgetRouter = router({
     list: protectedProcedure.query(async ({ ctx }) => {
         const userId = ctx.session.user.id!;
-        const now = new Date();
-        const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
 
         // Fetch user's budgets
         const budgetsSnapshot = await ctx.db.collection("budgets")
@@ -26,12 +26,25 @@ export const budgetRouter = router({
             .get();
         const categories = categoriesSnapshot.docs.map(d => ({ id: d.id, ...d.data() }));
 
-        // Fetch all expenses for the current month
-        const expensesSnapshot = await ctx.db.collection("expenses")
+        // Fetch all expenses for the active period (fallback to all-time)
+        const period = await getActivePeriodRange(ctx.db, userId);
+        let expQuery = ctx.db.collection("expenses")
             .where("userId", "==", userId)
-            .where("date", ">=", startOfMonth.toISOString())
-            .get();
-        const expenses = expensesSnapshot.docs.map(d => ({ id: d.id, ...d.data() })) as any[];
+            .where("date", ">=", period.startDate);
+
+        if (period.endDate) {
+            expQuery = expQuery.where("date", "<=", period.endDate);
+        }
+
+        const expensesSnapshot = await expQuery.get();
+        let expenses = expensesSnapshot.docs.map(d => ({ id: d.id, ...d.data() })) as any[];
+
+        if (expenses.length === 0) {
+            const allExpSnapshot = await ctx.db.collection("expenses")
+                .where("userId", "==", userId)
+                .get();
+            expenses = allExpSnapshot.docs.map(d => ({ id: d.id, ...d.data() })) as any[];
+        }
 
         // Calculate spent amount for each budget's category in memory
         const budgetsWithSpent = budgets.map((budget) => {

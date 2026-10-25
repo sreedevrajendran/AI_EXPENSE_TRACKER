@@ -23,13 +23,13 @@ export function ExpenseChart() {
         <motion.div
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
-            className="ios-card p-4 space-y-3"
+            className="w-full rounded-[28px] bg-white dark:bg-[#1C1C1E] border border-neutral-200/80 dark:border-neutral-800 p-5 shadow-[0_4px_24px_-4px_rgba(0,0,0,0.04)] space-y-4"
         >
             <h2 className="text-sm font-semibold ios-text-secondary uppercase tracking-wider">
                 Monthly Spending
             </h2>
             <div className="h-40 w-full mt-2">
-                <ResponsiveContainer width="100%" height="100%">
+                <ResponsiveContainer width="100%" height="100%" minWidth={0} minHeight={0}>
                     <BarChart data={data} margin={{ top: 0, right: 0, left: -20, bottom: 0 }}>
                         <XAxis
                             dataKey="day"

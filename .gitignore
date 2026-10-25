@@ -18,6 +18,8 @@
 # misc
 .DS_Store
 *.pem
+.idea/
+*.iml
 
 # debug
 npm-debug.log*
@@ -38,3 +40,10 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# local persistent mock storage
+.data
+
+# user uploads
+/public/uploads/*
+!/public/uploads/.gitkeep

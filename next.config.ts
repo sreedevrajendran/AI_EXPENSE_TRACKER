@@ -9,6 +9,7 @@ const withPWA = require("next-pwa")({
 
 const nextConfig: NextConfig = {
     turbopack: {},
+    serverExternalPackages: ["firebase-admin"],
     images: {
         remotePatterns: [
             { protocol: "https", hostname: "lh3.googleusercontent.com" },

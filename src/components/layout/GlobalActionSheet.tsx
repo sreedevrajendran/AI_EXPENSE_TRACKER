@@ -1,17 +1,18 @@
 "use client";
 
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import { Drawer } from "vaul";
-import { Plus, TrendingDown, ArrowUpRight, Camera, Paperclip, Loader2, ChevronLeft, AlertTriangle, Sparkles } from "lucide-react";
+import { Plus, TrendingDown, ArrowUpRight, Camera, Paperclip, Loader2, ChevronLeft, AlertTriangle, Sparkles, Target, FileText } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { AddExpenseSheet } from "@/components/expenses/AddExpenseSheet";
 import { AddIncomeSheet } from "@/components/income/AddIncomeSheet";
 import { BudgetSheet } from "@/components/budgets/BudgetSheet";
-import { AgentOasisChatSheet } from "@/components/ai/AgentOasisChatSheet";
+import { AgentFlowwChatSheet } from "@/components/ai/AgentFlowwChatSheet";
 import { StatementReviewSheet } from "@/components/transactions/StatementReviewSheet";
 import { BillReviewSheet } from "@/components/transactions/BillReviewSheet";
 import { trpc } from "@/trpc/client";
-import { compressImage } from "@/lib/utils";
+import { compressImage, formatCurrency } from "@/lib/utils";
+import { showMatchingAlert } from "@/components/ui/AlertCard";
 
 interface GlobalActionSheetProps {
     open: boolean;
@@ -28,6 +29,12 @@ export function GlobalActionSheet({ open, onOpenChange }: GlobalActionSheetProps
     const [billReviewOpen, setBillReviewOpen] = useState(false);
     const [billData, setBillData] = useState<any>(null);
 
+    // Duplicate detection modal state
+    const [duplicateReceiptPrompt, setDuplicateReceiptPrompt] = useState<{
+        result: any;
+        duplicateInfo: any;
+    } | null>(null);
+
     // Scanning overlay state (independent of the drawer's open/close)
     const [isScanning, setIsScanning] = useState(false);
     const [scanError, setScanError] = useState<string | null>(null);
@@ -39,6 +46,50 @@ export function GlobalActionSheet({ open, onOpenChange }: GlobalActionSheetProps
     // File inputs are rendered outside the drawer to avoid focus issues
     const cameraRef = useRef<HTMLInputElement>(null);
     const galleryRef = useRef<HTMLInputElement>(null);
+    const statementPdfRef = useRef<HTMLInputElement>(null);
+
+    useEffect(() => {
+        const handleBack = (e: Event) => {
+            if (chatOpen) {
+                e.preventDefault();
+                setChatOpen(false);
+                return;
+            }
+            if (addExpenseOpen) {
+                e.preventDefault();
+                setAddExpenseOpen(false);
+                return;
+            }
+            if (addIncomeOpen) {
+                e.preventDefault();
+                setAddIncomeOpen(false);
+                return;
+            }
+            if (addBudgetOpen) {
+                e.preventDefault();
+                setAddBudgetOpen(false);
+                return;
+            }
+            if (statementReviewOpen) {
+                e.preventDefault();
+                setStatementReviewOpen(false);
+                return;
+            }
+            if (billReviewOpen) {
+                e.preventDefault();
+                setBillReviewOpen(false);
+                return;
+            }
+            if (open) {
+                e.preventDefault();
+                handleOpenChange(false);
+                return;
+            }
+        };
+
+        window.addEventListener("app:back-press", handleBack);
+        return () => window.removeEventListener("app:back-press", handleBack);
+    }, [open, chatOpen, addExpenseOpen, addIncomeOpen, addBudgetOpen, statementReviewOpen, billReviewOpen]);
 
     const handleOpenChange = (isOpen: boolean) => {
         if (!isOpen) {
@@ -72,15 +123,18 @@ export function GlobalActionSheet({ open, onOpenChange }: GlobalActionSheetProps
     };
 
     const triggerCamera = () => {
-        // Close drawer first, then open the file picker
+        cameraRef.current?.click();
         handleOpenChange(false);
-        setTimeout(() => cameraRef.current?.click(), 200);
     };
 
     const triggerGallery = () => {
-        // Close drawer first, then open the file picker
+        galleryRef.current?.click();
         handleOpenChange(false);
-        setTimeout(() => galleryRef.current?.click(), 200);
+    };
+
+    const triggerPdf = () => {
+        statementPdfRef.current?.click();
+        handleOpenChange(false);
     };
 
     const handleProcessDocument = async (selectedFile: File) => {
@@ -100,12 +154,22 @@ export function GlobalActionSheet({ open, onOpenChange }: GlobalActionSheetProps
             reader.onload = async () => {
                 try {
                     const base64String = (reader.result as string).split(",")[1];
+                    const detectedMime = fileToProcess.type || (fileToProcess.name.toLowerCase().endsWith(".pdf") ? "application/pdf" : "image/jpeg");
                     const result = await scanDocumentAI.mutateAsync({
                         imageBase64: base64String,
-                        mimeType: fileToProcess.type,
+                        mimeType: detectedMime,
                     });
 
                     setIsScanning(false);
+
+                    // If receipt was already added previously, prompt user
+                    if (result.isDuplicate && result.duplicateInfo) {
+                        setDuplicateReceiptPrompt({
+                            result,
+                            duplicateInfo: result.duplicateInfo,
+                        });
+                        return;
+                    }
 
                     if (result.type === "bill") {
                         setBillData(result);
@@ -120,14 +184,24 @@ export function GlobalActionSheet({ open, onOpenChange }: GlobalActionSheetProps
                         setStatementData(result.transactions || []);
                         setStatementReviewOpen(true);
                     } else {
+                        showMatchingAlert({
+                            status: "error",
+                            title: "Invalid Document",
+                            message: result.reason || "This image does not contain a valid receipt or transaction details.",
+                            duration: 3500,
+                        });
                         setScanError(result.reason || "This document could not be recognized as an expense or income.");
-                        onOpenChange(true); // Re-open drawer to show error
                     }
                 } catch (err: any) {
                     setIsScanning(false);
                     console.error("Scan error:", err);
+                    showMatchingAlert({
+                        status: "error",
+                        title: "Scan Failed",
+                        message: "Failed to analyze document. Please ensure it is a clear bill or receipt.",
+                        duration: 3500,
+                    });
                     setScanError("Failed to analyze document. Please try again.");
-                    onOpenChange(true); // Re-open drawer to show error
                 }
             };
 
@@ -138,18 +212,137 @@ export function GlobalActionSheet({ open, onOpenChange }: GlobalActionSheetProps
             };
         } catch (err: any) {
             setIsScanning(false);
-            console.error("Image processing error:", err);
-            setScanError("Failed to process image. Please try again.");
+            console.error("Document processing error:", err);
+            setScanError("Unable to analyze document. Please ensure the file is a clear image or readable PDF and try again.");
             onOpenChange(true);
         }
 
-        // Reset the file input so the same file can be picked again
+        // Reset the file inputs so the same file can be picked again
         if (cameraRef.current) cameraRef.current.value = "";
         if (galleryRef.current) galleryRef.current.value = "";
+        if (statementPdfRef.current) statementPdfRef.current.value = "";
+    };
+
+    const handleProceedDuplicate = () => {
+        if (!duplicateReceiptPrompt) return;
+        const { result } = duplicateReceiptPrompt;
+        setDuplicateReceiptPrompt(null);
+
+        if (result.type === "bill") {
+            setBillData(result);
+            setBillReviewOpen(true);
+        } else if (result.type === "expense") {
+            setPrefillData(result.data);
+            setAddExpenseOpen(true);
+        } else if (result.type === "income") {
+            setPrefillData(result.data);
+            setAddIncomeOpen(true);
+        } else if (result.type === "statement") {
+            setStatementData(result.transactions || []);
+            setStatementReviewOpen(true);
+        }
+    };
+
+    const handleCancelDuplicate = () => {
+        setDuplicateReceiptPrompt(null);
+        showMatchingAlert({
+            status: "info",
+            title: "Duplicate Skipped",
+            message: "Your ledger remains clean without duplicate entries.",
+        });
     };
 
     return (
         <>
+            {/* Duplicate Receipt Alert Modal */}
+            <AnimatePresence>
+                {duplicateReceiptPrompt && (
+                    <div className="fixed inset-0 z-[250] flex items-center justify-center p-4">
+                        <motion.div
+                            initial={{ opacity: 0 }}
+                            animate={{ opacity: 1 }}
+                            exit={{ opacity: 0 }}
+                            onClick={handleCancelDuplicate}
+                            className="absolute inset-0 bg-black/60 backdrop-blur-sm"
+                        />
+                        <motion.div
+                            initial={{ opacity: 0, scale: 0.94, y: 16 }}
+                            animate={{ opacity: 1, scale: 1, y: 0 }}
+                            exit={{ opacity: 0, scale: 0.94, y: 16 }}
+                            transition={{ type: "spring", stiffness: 400, damping: 30 }}
+                            className="relative w-full max-w-sm rounded-[28px] bg-white dark:bg-[#1C1C1E] border border-neutral-200 dark:border-neutral-800 p-6 shadow-2xl z-10 space-y-4"
+                        >
+                            <div className="flex items-center gap-3">
+                                <div className="w-11 h-11 rounded-2xl bg-amber-500/15 text-amber-600 dark:text-amber-400 flex items-center justify-center flex-shrink-0">
+                                    <AlertTriangle size={22} />
+                                </div>
+                                <div>
+                                    <h3 className="text-base font-bold text-neutral-900 dark:text-white leading-tight">
+                                        Receipt Already Added
+                                    </h3>
+                                    <p className="text-xs text-neutral-500 dark:text-neutral-400">
+                                        Potential duplicate detected
+                                    </p>
+                                </div>
+                            </div>
+
+                            <div className="p-3.5 rounded-2xl bg-neutral-50 dark:bg-neutral-800/60 border border-neutral-200/70 dark:border-neutral-700/60 space-y-2 text-xs">
+                                <p className="text-neutral-600 dark:text-neutral-300 leading-snug">
+                                    This receipt matches an existing transaction in your ledger:
+                                </p>
+                                <div className="pt-1 space-y-1 font-medium">
+                                    <div className="flex justify-between">
+                                        <span className="text-neutral-400">Merchant:</span>
+                                        <span className="font-bold text-neutral-800 dark:text-neutral-200">
+                                            {duplicateReceiptPrompt.duplicateInfo?.merchant || "Merchant"}
+                                        </span>
+                                    </div>
+                                    <div className="flex justify-between">
+                                        <span className="text-neutral-400">Amount:</span>
+                                        <span className="font-bold text-neutral-800 dark:text-neutral-200">
+                                            {formatCurrency(duplicateReceiptPrompt.duplicateInfo?.amount || 0)}
+                                        </span>
+                                    </div>
+                                    {duplicateReceiptPrompt.duplicateInfo?.date && (
+                                        <div className="flex justify-between">
+                                            <span className="text-neutral-400">Date:</span>
+                                            <span className="text-neutral-700 dark:text-neutral-300">
+                                                {duplicateReceiptPrompt.duplicateInfo.date}
+                                            </span>
+                                        </div>
+                                    )}
+                                    {duplicateReceiptPrompt.duplicateInfo?.matchReason && (
+                                        <div className="flex justify-between">
+                                            <span className="text-neutral-400">Matched By:</span>
+                                            <span className="text-neutral-700 dark:text-neutral-300">
+                                                {duplicateReceiptPrompt.duplicateInfo.matchReason}
+                                            </span>
+                                        </div>
+                                    )}
+                                </div>
+                            </div>
+
+                            <div className="space-y-2 pt-1">
+                                <button
+                                    type="button"
+                                    onClick={handleCancelDuplicate}
+                                    className="w-full h-11 rounded-2xl bg-ios-blue text-white font-bold text-xs shadow-md shadow-ios-blue/20 hover:opacity-90 active:scale-[0.98] transition-all cursor-pointer"
+                                >
+                                    Keep Clean (Don't Add Duplicate)
+                                </button>
+                                <button
+                                    type="button"
+                                    onClick={handleProceedDuplicate}
+                                    className="w-full h-10 rounded-2xl text-neutral-500 hover:text-neutral-800 dark:hover:text-neutral-200 font-semibold text-xs transition-colors cursor-pointer"
+                                >
+                                    Add Anyway
+                                </button>
+                            </div>
+                        </motion.div>
+                    </div>
+                )}
+            </AnimatePresence>
+
             {/* Standalone Full-Screen Scanning Overlay — lives outside the drawer so it's visible regardless */}
             <AnimatePresence>
                 {isScanning && (
@@ -201,7 +394,17 @@ export function GlobalActionSheet({ open, onOpenChange }: GlobalActionSheetProps
             <input
                 ref={galleryRef}
                 type="file"
-                accept=".jpg,.jpeg,.png,.webp,.pdf"
+                accept="image/*,.pdf,application/pdf"
+                className="hidden"
+                onChange={(e) => {
+                    const f = e.target.files?.[0];
+                    if (f) handleProcessDocument(f);
+                }}
+            />
+            <input
+                ref={statementPdfRef}
+                type="file"
+                accept=".pdf,application/pdf"
                 className="hidden"
                 onChange={(e) => {
                     const f = e.target.files?.[0];
@@ -212,121 +415,184 @@ export function GlobalActionSheet({ open, onOpenChange }: GlobalActionSheetProps
             <Drawer.Root open={open} onOpenChange={handleOpenChange}>
                 <Drawer.Portal>
                     <Drawer.Overlay className="fixed inset-0 bg-black/40 z-50 backdrop-blur-sm transition-opacity" />
-                    <Drawer.Content className="fixed bottom-0 left-0 right-0 z-50 bg-white dark:bg-[#1C1C1E] rounded-t-[28px] flex flex-col outline-none pb-8 overflow-y-auto max-h-[85vh]">
+                    <Drawer.Content className="fixed bottom-0 left-0 right-0 z-50 bg-[#F9F9FB] dark:bg-[#161618] rounded-t-[32px] flex flex-col outline-none pb-8 overflow-y-auto max-h-[88vh] border-t border-black/5 dark:border-white/10 shadow-2xl">
                         <Drawer.Title className="sr-only">Add Transaction Action Sheet</Drawer.Title>
 
-                        <div className="flex justify-center pt-3 pb-2 relative z-10 bg-white dark:bg-[#1C1C1E]">
-                            <div className="w-10 h-1 rounded-full bg-[#E5E5EA] dark:bg-[#3A3A3C]" />
+                        {/* Drag Handle */}
+                        <div className="flex justify-center pt-3 pb-2 relative z-10">
+                            <div className="w-12 h-1.5 rounded-full bg-[#D1D1D6] dark:bg-[#3A3A3C]" />
                         </div>
 
-                        <div className="px-5 pt-2 pb-6 flex flex-col gap-2">
+                        {/* Header */}
+                        <div className="px-6 pb-3 pt-1 flex items-center justify-between">
+                            <div>
+                                <h3 className="text-xl font-bold tracking-tight text-neutral-900 dark:text-white">Add Transaction</h3>
+                                <p className="text-xs text-neutral-500 dark:text-neutral-400 font-medium">Record spending, earnings, or scan receipts</p>
+                            </div>
+                            <button
+                                onClick={() => handleOpenChange(false)}
+                                className="w-8 h-8 rounded-full bg-neutral-200/70 dark:bg-neutral-800 flex items-center justify-center text-neutral-500 hover:text-neutral-900 dark:hover:text-white transition-colors"
+                            >
+                                <ChevronLeft className="rotate-[-90deg]" size={18} />
+                            </button>
+                        </div>
 
+                        <div className="px-5 pt-1 pb-6 flex flex-col gap-4">
                             {scanError && (
-                                <div className="p-3 mb-2 bg-amber-500/10 border border-amber-500/20 rounded-xl flex items-start gap-2">
-                                    <AlertTriangle size={16} className="text-amber-500 mt-0.5 flex-shrink-0" />
-                                    <p className="text-[13px] text-amber-600 dark:text-amber-400 leading-snug">{scanError}</p>
+                                <div className="p-3.5 bg-amber-500/10 border border-amber-500/20 rounded-2xl flex items-start gap-2.5">
+                                    <AlertTriangle size={18} className="text-amber-500 mt-0.5 flex-shrink-0" />
+                                    <p className="text-[13px] text-amber-700 dark:text-amber-400 font-medium leading-snug">{scanError}</p>
                                 </div>
                             )}
 
-                            {/* Ask AI */}
-                            <motion.button
-                                whileTap={{ scale: 0.96 }}
-                                onClick={handleOpenChat}
-                                className="w-full flex items-center justify-between p-4 rounded-xl ios-card active:bg-black/5 dark:active:bg-white/5 transition-colors border border-transparent"
-                            >
-                                <div className="flex items-center gap-4">
-                                    <div className="w-10 h-10 rounded-full bg-purple-500/10 flex items-center justify-center">
-                                        <Sparkles size={20} className="text-purple-500" />
+                            {/* Primary Hero Split Cards */}
+                            <div className="grid grid-cols-2 gap-3">
+                                {/* Add Expense */}
+                                <motion.button
+                                    whileTap={{ scale: 0.96 }}
+                                    onClick={handleOpenExpense}
+                                    className="p-4 rounded-2xl bg-white dark:bg-[#1F1F23] border border-neutral-200/80 dark:border-neutral-800 flex flex-col justify-between h-28 text-left shadow-sm hover:border-red-400/50 dark:hover:border-red-500/50 transition-all group relative overflow-hidden"
+                                >
+                                    <div className="absolute -top-10 -right-10 w-24 h-24 bg-red-500/10 rounded-full blur-xl pointer-events-none group-hover:bg-red-500/20 transition-all" />
+                                    <div className="w-10 h-10 rounded-xl bg-red-500/10 dark:bg-red-500/20 flex items-center justify-center text-red-500 dark:text-red-400">
+                                        <TrendingDown size={22} strokeWidth={2.5} />
                                     </div>
-                                    <span className="text-[17px] font-semibold ios-text-primary">Ask Agent Floww</span>
-                                </div>
-                            </motion.button>
+                                    <div>
+                                        <span className="text-[16px] font-bold text-neutral-900 dark:text-white block leading-tight">Expense</span>
+                                        <span className="text-[11px] font-medium text-neutral-500 dark:text-neutral-400">Record expenditure</span>
+                                    </div>
+                                </motion.button>
 
-                            {/* Add Expense */}
-                            <motion.button
-                                whileTap={{ scale: 0.96 }}
-                                onClick={handleOpenExpense}
-                                className="w-full flex items-center justify-between p-4 rounded-xl ios-card active:bg-black/5 dark:active:bg-white/5 transition-colors border border-transparent"
-                            >
-                                <div className="flex items-center gap-4">
-                                    <div className="w-10 h-10 rounded-full bg-ios-red/10 flex items-center justify-center">
-                                        <TrendingDown size={20} className="text-ios-red" />
+                                {/* Add Income */}
+                                <motion.button
+                                    whileTap={{ scale: 0.96 }}
+                                    onClick={handleOpenIncome}
+                                    className="p-4 rounded-2xl bg-white dark:bg-[#1F1F23] border border-neutral-200/80 dark:border-neutral-800 flex flex-col justify-between h-28 text-left shadow-sm hover:border-emerald-400/50 dark:hover:border-emerald-500/50 transition-all group relative overflow-hidden"
+                                >
+                                    <div className="absolute -top-10 -right-10 w-24 h-24 bg-emerald-500/10 rounded-full blur-xl pointer-events-none group-hover:bg-emerald-500/20 transition-all" />
+                                    <div className="w-10 h-10 rounded-xl bg-emerald-500/10 dark:bg-emerald-500/20 flex items-center justify-center text-emerald-500 dark:text-emerald-400">
+                                        <ArrowUpRight size={22} strokeWidth={2.5} />
                                     </div>
-                                    <span className="text-[17px] font-semibold ios-text-primary">Add Expense</span>
-                                </div>
-                            </motion.button>
+                                    <div>
+                                        <span className="text-[16px] font-bold text-neutral-900 dark:text-white block leading-tight">Income</span>
+                                        <span className="text-[11px] font-medium text-neutral-500 dark:text-neutral-400">Log earnings &amp; deposits</span>
+                                    </div>
+                                </motion.button>
+                            </div>
 
-                            {/* Add Income */}
-                            <motion.button
-                                whileTap={{ scale: 0.96 }}
-                                onClick={handleOpenIncome}
-                                className="w-full flex items-center justify-between p-4 rounded-xl ios-card active:bg-black/5 dark:active:bg-white/5 transition-colors border border-transparent"
-                            >
-                                <div className="flex items-center gap-4">
-                                    <div className="w-10 h-10 rounded-full bg-[#34C759]/10 border border-[#34C759]/20 flex items-center justify-center">
-                                        <ArrowUpRight size={20} className="text-[#34C759]" />
-                                    </div>
-                                    <span className="text-[17px] font-semibold ios-text-primary">Add Income</span>
-                                </div>
-                            </motion.button>
+                            {/* Intelligent Actions List */}
+                            <div className="space-y-2">
+                                <p className="text-[11px] font-bold tracking-wider uppercase text-neutral-400 dark:text-neutral-500 px-1">
+                                    Intelligent Processing
+                                </p>
 
-                            {/* New Budget */}
-                            <motion.button
-                                whileTap={{ scale: 0.96 }}
-                                onClick={handleOpenBudget}
-                                className="w-full flex items-center justify-between p-4 rounded-xl ios-card active:bg-black/5 dark:active:bg-white/5 transition-colors border border-transparent"
-                            >
-                                <div className="flex items-center gap-4">
-                                    <div className="w-10 h-10 rounded-full bg-indigo-500/10 border border-indigo-500/20 flex items-center justify-center">
-                                        <Loader2 size={20} className="text-indigo-500" />
+                                {/* Import Statement */}
+                                <motion.button
+                                    whileTap={{ scale: 0.98 }}
+                                    onClick={triggerPdf}
+                                    className="w-full flex items-center justify-between p-3.5 rounded-2xl bg-white dark:bg-[#1F1F23] border border-neutral-200/80 dark:border-neutral-800 shadow-sm hover:border-emerald-400/50 dark:hover:border-emerald-500/50 transition-all relative overflow-hidden group"
+                                >
+                                    <div className="flex items-center gap-3.5 relative z-10">
+                                        <div className="w-11 h-11 rounded-xl bg-gradient-to-br from-emerald-500 to-teal-600 flex items-center justify-center shadow-md shadow-emerald-500/20 text-white">
+                                            <FileText size={20} />
+                                        </div>
+                                        <div className="text-left">
+                                            <span className="text-[15px] font-bold text-neutral-900 dark:text-white block">Import Statement</span>
+                                            <p className="text-[12px] text-neutral-500 dark:text-neutral-400 mt-0.5">Parse bank statements for automated batch classification</p>
+                                        </div>
                                     </div>
-                                    <span className="text-[17px] font-semibold ios-text-primary">New Budget</span>
-                                </div>
-                            </motion.button>
+                                    <div className="w-7 h-7 rounded-full bg-neutral-100 dark:bg-neutral-800 flex items-center justify-center text-neutral-400">
+                                        <ChevronLeft className="rotate-180" size={14} />
+                                    </div>
+                                </motion.button>
 
-                            {/* Scan Document */}
-                            <motion.button
-                                whileTap={{ scale: 0.96 }}
-                                onClick={triggerCamera}
-                                className="w-full flex items-center justify-between p-4 rounded-xl ios-card active:bg-black/5 dark:active:bg-white/5 transition-colors border border-transparent mt-2 relative overflow-hidden group"
-                            >
-                                <div className="absolute inset-0 bg-gradient-to-r from-ios-blue/5 via-purple-500/5 to-ios-blue/5 group-hover:from-ios-blue/10 group-hover:via-purple-500/10 group-hover:to-ios-blue/10 transition-colors duration-500" />
-                                <div className="flex items-center gap-4 relative z-10">
-                                    <div className="w-10 h-10 rounded-full bg-gradient-to-br from-ios-blue to-purple-500 flex items-center justify-center shadow-sm shadow-ios-blue/20">
-                                        <Camera size={20} className="text-white" />
+                                {/* Scan Receipt */}
+                                <motion.button
+                                    whileTap={{ scale: 0.98 }}
+                                    onClick={triggerCamera}
+                                    className="w-full flex items-center justify-between p-3.5 rounded-2xl bg-white dark:bg-[#1F1F23] border border-neutral-200/80 dark:border-neutral-800 shadow-sm hover:border-blue-400/50 dark:hover:border-blue-500/50 transition-all relative overflow-hidden group"
+                                >
+                                    <div className="flex items-center gap-3.5 relative z-10">
+                                        <div className="w-11 h-11 rounded-xl bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center shadow-md shadow-blue-500/20 text-white">
+                                            <Camera size={20} />
+                                        </div>
+                                        <div className="text-left">
+                                            <span className="text-[15px] font-bold text-neutral-900 dark:text-white block">Scan Receipt</span>
+                                            <p className="text-[12px] text-neutral-500 dark:text-neutral-400 mt-0.5">Capture receipts, bills, or payment slips via camera</p>
+                                        </div>
                                     </div>
-                                    <div className="flex flex-col items-start pr-2">
-                                        <span className="text-[17px] font-bold bg-clip-text text-transparent bg-gradient-to-r from-ios-blue to-purple-500">
-                                            Scan Document
-                                        </span>
-                                        <span className="text-[12px] font-medium text-ios-blue/70 dark:text-ios-blue/50 line-clamp-1">
-                                            Automatically extract receipt details
-                                        </span>
+                                    <div className="w-7 h-7 rounded-full bg-neutral-100 dark:bg-neutral-800 flex items-center justify-center text-neutral-400">
+                                        <ChevronLeft className="rotate-180" size={14} />
                                     </div>
-                                </div>
-                            </motion.button>
+                                </motion.button>
 
-                            {/* Upload Document */}
-                            <motion.button
-                                whileTap={{ scale: 0.96 }}
-                                onClick={triggerGallery}
-                                className="w-full flex items-center justify-between p-4 rounded-xl ios-card active:bg-black/5 dark:active:bg-white/5 transition-colors border border-transparent mt-2 relative overflow-hidden group"
-                            >
-                                <div className="absolute inset-0 bg-gradient-to-r from-[#34C759]/5 via-[#5856D6]/5 to-[#34C759]/5 group-hover:from-[#34C759]/10 group-hover:via-[#5856D6]/10 group-hover:to-[#34C759]/10 transition-colors duration-500" />
-                                <div className="flex items-center gap-4 relative z-10">
-                                    <div className="w-10 h-10 rounded-full bg-gradient-to-br from-[#34C759] to-[#5856D6] flex items-center justify-center shadow-sm shadow-[#34C759]/20">
-                                        <Paperclip size={20} className="text-white" />
+                                {/* Upload File */}
+                                <motion.button
+                                    whileTap={{ scale: 0.98 }}
+                                    onClick={triggerGallery}
+                                    className="w-full flex items-center justify-between p-3.5 rounded-2xl bg-white dark:bg-[#1F1F23] border border-neutral-200/80 dark:border-neutral-800 shadow-sm hover:border-purple-400/50 dark:hover:border-purple-500/50 transition-all group"
+                                >
+                                    <div className="flex items-center gap-3.5">
+                                        <div className="w-11 h-11 rounded-xl bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center shadow-md shadow-purple-500/20 text-white">
+                                            <Paperclip size={20} />
+                                        </div>
+                                        <div className="text-left">
+                                            <span className="text-[15px] font-bold text-neutral-900 dark:text-white block">Upload File</span>
+                                            <p className="text-[12px] text-neutral-500 dark:text-neutral-400 mt-0.5">Select PDF invoices, bank statements, or receipt images</p>
+                                        </div>
                                     </div>
-                                    <div className="flex flex-col items-start pr-2">
-                                        <span className="text-[17px] font-bold bg-clip-text text-transparent bg-gradient-to-r from-[#34C759] to-[#5856D6]">
-                                            Upload Document
-                                        </span>
-                                        <span className="text-[12px] font-medium text-[#34C759]/70 dark:text-[#34C759]/50 line-clamp-1">
-                                            Process digital receipts, invoices &amp; bank statements
-                                        </span>
+                                    <div className="w-7 h-7 rounded-full bg-neutral-100 dark:bg-neutral-800 flex items-center justify-center text-neutral-400">
+                                        <ChevronLeft className="rotate-180" size={14} />
                                     </div>
-                                </div>
-                            </motion.button>
+                                </motion.button>
+
+                                {/* Agent Floww */}
+                                <motion.button
+                                    whileTap={{ scale: 0.98 }}
+                                    onClick={handleOpenChat}
+                                    className="w-full flex items-center justify-between p-3.5 rounded-2xl bg-white dark:bg-[#1F1F23] border border-neutral-200/80 dark:border-neutral-800 shadow-sm hover:border-amber-400/50 dark:hover:border-amber-500/50 transition-all group"
+                                >
+                                    <div className="flex items-center gap-3.5">
+                                        <div className="w-11 h-11 rounded-xl bg-gradient-to-br from-amber-400 to-orange-500 flex items-center justify-center shadow-md shadow-amber-500/20 text-white">
+                                            <Sparkles size={20} />
+                                        </div>
+                                        <div className="text-left">
+                                            <span className="text-[15px] font-bold text-neutral-900 dark:text-white block">Agent Floww</span>
+                                            <p className="text-[12px] text-neutral-500 dark:text-neutral-400 mt-0.5">Natural language financial queries and logging</p>
+                                        </div>
+                                    </div>
+                                    <div className="w-7 h-7 rounded-full bg-neutral-100 dark:bg-neutral-800 flex items-center justify-center text-neutral-400">
+                                        <ChevronLeft className="rotate-180" size={14} />
+                                    </div>
+                                </motion.button>
+                            </div>
+
+                            {/* Planning */}
+                            <div className="space-y-2">
+                                <p className="text-[11px] font-bold tracking-wider uppercase text-neutral-400 dark:text-neutral-500 px-1">
+                                    Planning &amp; Targets
+                                </p>
+
+                                {/* Set Budget */}
+                                <motion.button
+                                    whileTap={{ scale: 0.98 }}
+                                    onClick={handleOpenBudget}
+                                    className="w-full flex items-center justify-between p-3.5 rounded-2xl bg-white dark:bg-[#1F1F23] border border-neutral-200/80 dark:border-neutral-800 shadow-sm hover:border-teal-400/50 dark:hover:border-teal-500/50 transition-all group"
+                                >
+                                    <div className="flex items-center gap-3.5">
+                                        <div className="w-11 h-11 rounded-xl bg-gradient-to-br from-teal-500 to-emerald-600 flex items-center justify-center shadow-md shadow-teal-500/20 text-white">
+                                            <Target size={20} />
+                                        </div>
+                                        <div className="text-left">
+                                            <span className="text-[15px] font-bold text-neutral-900 dark:text-white block">Set Budget</span>
+                                            <p className="text-[12px] text-neutral-500 dark:text-neutral-400 mt-0.5">Configure monthly targets and spending thresholds</p>
+                                        </div>
+                                    </div>
+                                    <div className="w-7 h-7 rounded-full bg-neutral-100 dark:bg-neutral-800 flex items-center justify-center text-neutral-400">
+                                        <ChevronLeft className="rotate-180" size={14} />
+                                    </div>
+                                </motion.button>
+                            </div>
                         </div>
                     </Drawer.Content>
                 </Drawer.Portal>
@@ -349,7 +615,7 @@ export function GlobalActionSheet({ open, onOpenChange }: GlobalActionSheetProps
                 open={addBudgetOpen}
                 onOpenChange={setAddBudgetOpen}
             />
-            <AgentOasisChatSheet
+            <AgentFlowwChatSheet
                 open={chatOpen}
                 onOpenChange={setChatOpen}
             />

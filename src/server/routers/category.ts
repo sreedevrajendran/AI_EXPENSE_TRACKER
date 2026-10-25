@@ -1,6 +1,26 @@
 import { z } from "zod";
 import { protectedProcedure, router } from "../trpc";
 
+export const DEFAULT_CATEGORY_METAS: Record<string, { icon: string; color: string }> = {
+    "Food & Dining": { icon: "utensils", color: "#FF9F0A" },
+    "Transport": { icon: "car", color: "#007AFF" },
+    "Shopping": { icon: "shopping-bag", color: "#FF2D55" },
+    "Entertainment": { icon: "film", color: "#5856D6" },
+    "Health": { icon: "heart-pulse", color: "#34C759" },
+    "Bills & Utilities": { icon: "zap", color: "#FF6B00" },
+    "Travel": { icon: "plane", color: "#5AC8FA" },
+    "Groceries": { icon: "shopping-cart", color: "#30D158" },
+    "Education": { icon: "book-open", color: "#BF5AF2" },
+    "Salary": { icon: "briefcase", color: "#30D158" },
+    "UPI Transfer": { icon: "arrow-left-right", color: "#5E5CE6" },
+    "Transfers": { icon: "repeat", color: "#0A84FF" },
+    "Cashback & Rewards": { icon: "gift", color: "#FFD60A" },
+    "Interest & Dividends": { icon: "trending-up", color: "#34C759" },
+    "Refunds": { icon: "rotate-ccw", color: "#64D2FF" },
+    "Investments": { icon: "bar-chart-2", color: "#AF52DE" },
+    "Other": { icon: "circle", color: "#8E8E93" },
+};
+
 export const categoryRouter = router({
     list: protectedProcedure.query(async ({ ctx }) => {
         const snapshot = await ctx.db.collection("categories")
@@ -105,18 +125,11 @@ export const categoryRouter = router({
 
     seedDefaults: protectedProcedure.mutation(async ({ ctx }) => {
         const userId = ctx.session.user.id!;
-        const defaults = [
-            { name: "Food & Dining", icon: "utensils", color: "#FF9F0A" },
-            { name: "Transport", icon: "car", color: "#007AFF" },
-            { name: "Shopping", icon: "shopping-bag", color: "#FF2D55" },
-            { name: "Entertainment", icon: "film", color: "#5856D6" },
-            { name: "Health", icon: "heart-pulse", color: "#34C759" },
-            { name: "Bills & Utilities", icon: "zap", color: "#FF6B00" },
-            { name: "Travel", icon: "plane", color: "#5AC8FA" },
-            { name: "Groceries", icon: "shopping-cart", color: "#30D158" },
-            { name: "Education", icon: "book-open", color: "#BF5AF2" },
-            { name: "Other", icon: "circle", color: "#8E8E93" },
-        ];
+        const defaults = Object.entries(DEFAULT_CATEGORY_METAS).map(([name, meta]) => ({
+            name,
+            icon: meta.icon,
+            color: meta.color,
+        }));
 
         const batch = ctx.db.batch();
         let seededCount = 0;

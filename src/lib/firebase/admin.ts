@@ -1,17 +1,20 @@
 import * as admin from 'firebase-admin';
+import { getMockFirestore } from './mockDb';
 
-if (!admin.apps.length) {
+const projectId = process.env.FIREBASE_PROJECT_ID?.trim();
+const clientEmail = process.env.FIREBASE_CLIENT_EMAIL?.trim();
+const rawPrivateKey = process.env.FIREBASE_PRIVATE_KEY?.trim();
+const privateKey = rawPrivateKey ? rawPrivateKey.replace(/\\n/g, '\n') : undefined;
+
+export const isFirebaseConfigured = Boolean(projectId && clientEmail && privateKey);
+
+if (isFirebaseConfigured && !admin.apps.length) {
     try {
-        // Parse the private key from string, replacing \n with actual newlines
-        const privateKey = process.env.FIREBASE_PRIVATE_KEY
-            ? process.env.FIREBASE_PRIVATE_KEY.replace(/\\n/g, '\n')
-            : undefined;
-
         admin.initializeApp({
             credential: admin.credential.cert({
-                projectId: process.env.FIREBASE_PROJECT_ID,
-                clientEmail: process.env.FIREBASE_CLIENT_EMAIL,
-                privateKey: privateKey,
+                projectId: projectId!,
+                clientEmail: clientEmail!,
+                privateKey: privateKey!,
             }),
         });
         admin.firestore().settings({ ignoreUndefinedProperties: true });
@@ -19,8 +22,18 @@ if (!admin.apps.length) {
     } catch (error) {
         console.error('Firebase Admin SDK initialization error', error);
     }
+} else if (!isFirebaseConfigured) {
+    console.warn('Firebase Admin credentials not set. Using local in-memory storage.');
 }
 
-export const db = admin.apps.length > 0 ? admin.firestore() : (null as unknown as admin.firestore.Firestore);
-export const auth = admin.apps.length > 0 ? admin.auth() : (null as unknown as admin.auth.Auth);
-export const storage = admin.apps.length > 0 ? admin.storage() : (null as unknown as admin.storage.Storage);
+export const db = isFirebaseConfigured && admin.apps.length > 0
+    ? admin.firestore()
+    : (getMockFirestore() as unknown as admin.firestore.Firestore);
+
+export const auth = isFirebaseConfigured && admin.apps.length > 0
+    ? admin.auth()
+    : (null as unknown as admin.auth.Auth);
+
+export const storage = isFirebaseConfigured && admin.apps.length > 0
+    ? admin.storage()
+    : (null as unknown as admin.storage.Storage);

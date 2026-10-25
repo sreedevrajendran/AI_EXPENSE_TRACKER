@@ -14,10 +14,21 @@ import {
     CartesianGrid,
     ReferenceLine,
 } from "recharts";
-import { useMemo } from "react";
+import { useMemo, useEffect } from "react";
+import { useCurrency } from "@/context/CurrencyContext";
 
 export function DailyExpenseChart() {
-    const { data, isLoading } = trpc.expense.getDailyExpenses.useQuery();
+    const { currency } = useCurrency();
+    const { data, isLoading, refetch } = trpc.expense.getDailyExpenses.useQuery();
+    const { data: activePeriod } = trpc.expense.getActivePeriod.useQuery();
+
+    useEffect(() => {
+        const handleUpdate = () => {
+            refetch();
+        };
+        window.addEventListener("app:transactions-updated", handleUpdate);
+        return () => window.removeEventListener("app:transactions-updated", handleUpdate);
+    }, [refetch]);
 
     const avg = useMemo(() => {
         if (!data || data.length === 0) return 0;
@@ -39,13 +50,13 @@ export function DailyExpenseChart() {
 
     if (!data || data.length === 0) return null;
 
-    const peakDay = data.find((d) => d.amount === max);
+    const peakDay = max > 0 ? data.find((d) => d.amount === max) : null;
 
     return (
         <motion.div
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
-            className="ios-card p-4 space-y-3"
+            className="w-full rounded-[28px] bg-white dark:bg-[#1C1C1E] border border-neutral-200/80 dark:border-neutral-800 p-5 shadow-[0_4px_24px_-4px_rgba(0,0,0,0.04)] space-y-4"
         >
             {/* Header */}
             <div className="flex items-center justify-between">
@@ -54,7 +65,7 @@ export function DailyExpenseChart() {
                         Daily Spending
                     </h2>
                     <p className="text-xs ios-text-secondary mt-0.5 opacity-70">
-                        This month · day by day
+                        {activePeriod?.label || "This month"} · day by day
                     </p>
                 </div>
                 <div className="text-right">
@@ -73,8 +84,12 @@ export function DailyExpenseChart() {
 
             {/* Chart */}
             <div className="h-44 w-full">
-                <ResponsiveContainer width="100%" height="100%">
-                    <AreaChart data={data} margin={{ top: 8, right: 4, left: -28, bottom: 0 }}>
+                <ResponsiveContainer width="100%" height="100%" minWidth={0} minHeight={0}>
+                    <AreaChart
+                        key={`daily-chart-${currency}-${data.length}-${max}-${avg}`}
+                        data={data}
+                        margin={{ top: 8, right: 4, left: -28, bottom: 0 }}
+                    >
                         <defs>
                             <linearGradient id="dailyGradient" x1="0" y1="0" x2="0" y2="1">
                                 <stop offset="5%" stopColor="#FF3B30" stopOpacity={0.25} />
@@ -100,7 +115,7 @@ export function DailyExpenseChart() {
                             axisLine={false}
                             tickLine={false}
                             tick={{ fontSize: 10, fill: "#8E8E93" }}
-                            tickFormatter={(v) => `₹${v >= 1000 ? `${(v / 1000).toFixed(0)}k` : v}`}
+                            tickFormatter={(v) => formatCurrency(v, true)}
                         />
 
                         {/* Dashed average line */}

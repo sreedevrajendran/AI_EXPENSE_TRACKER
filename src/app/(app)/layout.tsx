@@ -1,6 +1,7 @@
 import { Header } from "@/components/layout/Header";
 import { BottomTabBar } from "@/components/layout/BottomTabBar";
 import { DesktopSidebar } from "@/components/layout/DesktopSidebar";
+import { TermsAcceptanceModal } from "@/components/auth/TermsAcceptanceModal";
 
 export default function AppLayout({ children }: { children: React.ReactNode }) {
     return (
@@ -12,6 +13,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
                     {children}
                 </main>
                 <BottomTabBar />
+                <TermsAcceptanceModal />
             </div>
         </div>
     );

@@ -7,6 +7,8 @@ import { trpc } from "@/trpc/client";
 import { X, Loader2, Paperclip, Camera, AlertTriangle, Sparkles, Briefcase, Laptop, TrendingUp, Building, Gift, RefreshCw } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useEffect } from "react";
+import { showMatchingAlert } from "@/components/ui/AlertCard";
+import { useCurrency } from "@/context/CurrencyContext";
 
 const PRESET_SOURCES = [
     { name: "Salary", icon: Briefcase, color: "#007AFF" },
@@ -36,6 +38,7 @@ interface AddIncomeSheetProps {
 }
 
 export function AddIncomeSheet({ open, onOpenChange, onSuccess, editData, editId, prefillData, initialFile }: AddIncomeSheetProps) {
+    const { currencySymbol, convertToBase, convertFromBase } = useCurrency();
     const [amount, setAmount] = useState("");
     const [source, setSource] = useState("");
     const [note, setNote] = useState("");
@@ -58,13 +61,13 @@ export function AddIncomeSheet({ open, onOpenChange, onSuccess, editData, editId
         if (open && editId && allIncomes) {
             const income = allIncomes.find((i: any) => i.id === editId);
             if (income) {
-                setAmount(income.amount.toString());
+                setAmount(Number(convertFromBase(income.amount).toFixed(2)).toString());
                 setSource(income.source);
                 setNote(income.note || "");
                 setExistingReceiptUrl(income.receiptUrl || null);
             }
         } else if (open && editData) {
-            setAmount(editData.amount.toString());
+            setAmount(Number(convertFromBase(editData.amount).toFixed(2)).toString());
             setSource(editData.source);
             setNote(editData.note || "");
             setExistingReceiptUrl(editData.receiptUrl || null);
@@ -91,45 +94,82 @@ export function AddIncomeSheet({ open, onOpenChange, onSuccess, editData, editId
     }, [open, prefillData, initialFile]);
 
     const invalidateAll = () => {
-        utils.income.list.invalidate();
-        utils.income.getMonthTotal.invalidate();
-        utils.income.getRecentIncomes.invalidate();
-        utils.expense.getYearlyIncomeExpenseChart.invalidate();
-        utils.ai.getInsights.invalidate();
+        utils.invalidate();
+        if (typeof window !== "undefined") {
+            window.dispatchEvent(new CustomEvent("app:transactions-updated"));
+        }
     };
 
     const createIncome = trpc.income.create.useMutation({
         onSuccess: () => {
+            showMatchingAlert({
+                type: "income",
+                status: "success",
+                title: "Income Added Successfully",
+                message: `${source || "Income"} recorded in your transactions`,
+                amount: parseFloat(amount) || undefined,
+            });
             invalidateAll();
             resetForm();
             onOpenChange(false);
             onSuccess?.();
         },
         onError: (err) => {
+            showMatchingAlert({
+                type: "income",
+                status: "error",
+                title: "Failed to Add Income",
+                message: "Could not record income. Please try again.",
+            });
             setError("Failed to add income. Please try again.");
         }
     });
 
     const updateIncome = trpc.income.update.useMutation({
         onSuccess: () => {
+            showMatchingAlert({
+                type: "income",
+                status: "success",
+                title: "Income Updated Successfully",
+                message: `${source || "Income"} changes saved`,
+                amount: parseFloat(amount) || undefined,
+            });
             invalidateAll();
             resetForm();
             onOpenChange(false);
             onSuccess?.();
         },
         onError: (err) => {
+            showMatchingAlert({
+                type: "income",
+                status: "error",
+                title: "Failed to Update Income",
+                message: "Changes could not be saved. Please try again.",
+            });
             setError("Failed to update income. Please try again.");
         }
     });
 
     const deleteIncome = trpc.income.delete.useMutation({
         onSuccess: () => {
+            showMatchingAlert({
+                type: "income",
+                status: "success",
+                title: "Income Deleted",
+                message: "The income transaction has been removed",
+            });
             invalidateAll();
             resetForm();
             onOpenChange(false);
             onSuccess?.();
         },
         onError: (err) => {
+            showMatchingAlert({
+                type: "income",
+                status: "error",
+                title: "Failed to Delete Income",
+                message: "Could not delete income. Please try again.",
+            });
             setError("Failed to delete income. Please try again.");
         }
     });
@@ -184,7 +224,7 @@ export function AddIncomeSheet({ open, onOpenChange, onSuccess, editData, editId
         if (editData) {
             updateIncome.mutate({
                 id: editData.id,
-                amount: parsedAmt,
+                amount: convertToBase(parsedAmt),
                 source: source.trim(),
                 note: note.trim() || undefined,
                 date: new Date(),
@@ -193,7 +233,7 @@ export function AddIncomeSheet({ open, onOpenChange, onSuccess, editData, editId
             });
         } else {
             createIncome.mutate({
-                amount: parsedAmt,
+                amount: convertToBase(parsedAmt),
                 source: source.trim(),
                 note: note.trim() || undefined,
                 date: new Date(),
@@ -248,7 +288,7 @@ export function AddIncomeSheet({ open, onOpenChange, onSuccess, editData, editId
                         {/* Amount input */}
                         <div className="relative z-10 px-6 pt-6 pb-10 text-center">
                             <div className="flex items-center justify-center gap-2">
-                                <span className={cn("text-5xl font-medium transition-colors duration-300", amount ? "text-emerald-500 dark:text-emerald-400" : "ios-text-secondary opacity-40")}>₹</span>
+                                <span className={cn("text-5xl font-medium transition-colors duration-300", amount ? "text-emerald-500 dark:text-emerald-400" : "ios-text-secondary opacity-40")}>{currencySymbol}</span>
                                 <input
                                     type="number"
                                     inputMode="decimal"
@@ -262,6 +302,27 @@ export function AddIncomeSheet({ open, onOpenChange, onSuccess, editData, editId
                                     )}
                                 />
                             </div>
+
+                            {prefillData && (
+                                <motion.div
+                                    initial={{ opacity: 0, y: 8 }}
+                                    animate={{ opacity: 1, y: 0 }}
+                                    className="mx-auto max-w-sm mt-5 p-3.5 bg-gradient-to-r from-emerald-500/10 via-teal-500/10 to-blue-500/10 border border-emerald-500/20 rounded-2xl flex items-center justify-between text-left"
+                                >
+                                    <div className="flex items-center gap-2.5">
+                                        <div className="w-8 h-8 rounded-xl bg-emerald-500/20 text-emerald-500 flex items-center justify-center font-bold shrink-0">
+                                            <Sparkles size={16} />
+                                        </div>
+                                        <div>
+                                            <p className="text-[13px] font-bold ios-text-primary">Income Scanned & Extracted</p>
+                                            <p className="text-[11px] text-ios-secondary">Auto-filled. Tap confirm below to add immediately.</p>
+                                        </div>
+                                    </div>
+                                    <span className="text-[10px] font-black tracking-wider uppercase px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-500 shrink-0">
+                                        AI OCR
+                                    </span>
+                                </motion.div>
+                            )}
                         </div>
                     </div>
 
@@ -343,6 +404,32 @@ export function AddIncomeSheet({ open, onOpenChange, onSuccess, editData, editId
                                     );
                                 })}
                             </div>
+                        </div>
+
+                        {/* Primary Action Button */}
+                        <div className="pt-2">
+                            <motion.button
+                                type="button"
+                                whileTap={{ scale: 0.98 }}
+                                onClick={handleSubmit}
+                                disabled={!amount || !source || createIncome.isPending || updateIncome.isPending || uploading}
+                                className={cn(
+                                    "w-full py-4 rounded-2xl font-bold text-[17px] flex items-center justify-center gap-2 shadow-lg transition-all",
+                                    !amount || !source
+                                        ? "bg-[#E5E5EA] dark:bg-[#2C2C2E] text-ios-text-primary/30 cursor-not-allowed shadow-none"
+                                        : "bg-emerald-500 hover:bg-emerald-600 text-white shadow-emerald-500/30"
+                                )}
+                            >
+                                {createIncome.isPending || updateIncome.isPending || uploading ? (
+                                    <Loader2 size={20} className="animate-spin" />
+                                ) : editData ? (
+                                    "Save Changes"
+                                ) : prefillData ? (
+                                    "✓ Confirm & Add Income"
+                                ) : (
+                                    "Add Income"
+                                )}
+                            </motion.button>
                         </div>
 
                         {/* Delete Button (Editing only) */}

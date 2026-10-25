@@ -6,7 +6,9 @@ import { Loader2, MoreHorizontal } from "lucide-react";
 import { Drawer } from "vaul";
 import { trpc } from "@/trpc/client";
 import { getLucideIcon } from "@/lib/icons";
-import { cn } from "@/lib/utils";
+import { cn, formatCurrency } from "@/lib/utils";
+import { showMatchingAlert } from "@/components/ui/AlertCard";
+import { useCurrency } from "@/context/CurrencyContext";
 
 type BudgetCategory = { id: string; name: string; icon: string; color: string } | null;
 export type BudgetWithSpent = { id: string; amount: number; spent: number; period: string; userId: string; categoryId: string | null; createdAt: Date; updatedAt: Date; category: BudgetCategory };
@@ -18,7 +20,8 @@ interface BudgetSheetProps {
 }
 
 export function BudgetSheet({ open, onOpenChange, existingBudget }: BudgetSheetProps) {
-    const [amount, setAmount] = useState(existingBudget ? existingBudget.amount.toString() : "");
+    const { currencySymbol, convertToBase, convertFromBase } = useCurrency();
+    const [amount, setAmount] = useState(existingBudget ? Number(convertFromBase(existingBudget.amount).toFixed(2)).toString() : "");
     const [categoryId, setCategoryId] = useState<string | undefined>(existingBudget?.categoryId || undefined);
     const [isCustom, setIsCustom] = useState(false);
     const [customCategoryName, setCustomCategoryName] = useState("");
@@ -27,27 +30,92 @@ export function BudgetSheet({ open, onOpenChange, existingBudget }: BudgetSheetP
     // Automatically keep state in sync when editing a different budget
     useEffect(() => {
         if (open) {
-            setAmount(existingBudget ? existingBudget.amount.toString() : "");
+            setAmount(existingBudget ? Number(convertFromBase(existingBudget.amount).toFixed(2)).toString() : "");
             setCategoryId(existingBudget?.categoryId || undefined);
             setIsCustom(false);
             setCustomCategoryName("");
             setShowDeleteConfirm(false);
         }
-    }, [open, existingBudget]);
+    }, [open, existingBudget, convertFromBase]);
 
     const utils = trpc.useUtils();
     const { data: categories } = trpc.category.listAll.useQuery(undefined, { enabled: open });
 
-    const handleSuccess = () => {
-        utils.budget.list.invalidate();
+    const handleSuccess = async () => {
+        await Promise.all([
+            utils.budget.invalidate(),
+            utils.expense.invalidate(),
+            utils.income.invalidate(),
+            utils.ai.invalidate(),
+        ]);
         setAmount("");
         setCategoryId(undefined);
         onOpenChange(false);
     };
 
-    const create = trpc.budget.create.useMutation({ onSuccess: handleSuccess });
-    const update = trpc.budget.update.useMutation({ onSuccess: handleSuccess });
-    const deleteBudget = trpc.budget.delete.useMutation({ onSuccess: handleSuccess });
+    const create = trpc.budget.create.useMutation({
+        onSuccess: () => {
+            const catName = categories?.find(c => c.id === categoryId)?.name || (isCustom ? customCategoryName : "Overall");
+            showMatchingAlert({
+                type: "budget",
+                status: "success",
+                title: "Budget Set Successfully",
+                message: `Monthly budget configured for ${catName}`,
+                amount: parseFloat(amount) || undefined,
+            });
+            handleSuccess();
+        },
+        onError: () => {
+            showMatchingAlert({
+                type: "budget",
+                status: "error",
+                title: "Failed to Set Budget",
+                message: "Could not create budget. Please try again.",
+            });
+        }
+    });
+
+    const update = trpc.budget.update.useMutation({
+        onSuccess: () => {
+            const catName = existingBudget?.category?.name || "Overall";
+            showMatchingAlert({
+                type: "budget",
+                status: "success",
+                title: "Budget Updated",
+                message: `Monthly budget updated for ${catName}`,
+                amount: parseFloat(amount) || undefined,
+            });
+            handleSuccess();
+        },
+        onError: () => {
+            showMatchingAlert({
+                type: "budget",
+                status: "error",
+                title: "Failed to Update Budget",
+                message: "Could not update budget. Please try again.",
+            });
+        }
+    });
+
+    const deleteBudget = trpc.budget.delete.useMutation({
+        onSuccess: () => {
+            showMatchingAlert({
+                type: "budget",
+                status: "success",
+                title: "Budget Deleted",
+                message: "The budget limit has been removed",
+            });
+            handleSuccess();
+        },
+        onError: () => {
+            showMatchingAlert({
+                type: "budget",
+                status: "error",
+                title: "Failed to Delete Budget",
+                message: "Could not delete budget. Please try again.",
+            });
+        }
+    });
     const createCategory = trpc.category.create.useMutation();
     const isPending = create.isPending || update.isPending || createCategory.isPending || deleteBudget.isPending;
 
@@ -70,10 +138,12 @@ export function BudgetSheet({ open, onOpenChange, existingBudget }: BudgetSheetP
             }
         }
 
+        const baseAmount = convertToBase(parsedAmount);
+
         if (existingBudget) {
-            update.mutate({ id: existingBudget.id, amount: parsedAmount, categoryId: finalCategoryId, period: "MONTHLY" });
+            update.mutate({ id: existingBudget.id, amount: baseAmount, categoryId: finalCategoryId, period: "MONTHLY" });
         } else {
-            create.mutate({ amount: parsedAmount, categoryId: finalCategoryId, period: "MONTHLY" });
+            create.mutate({ amount: baseAmount, categoryId: finalCategoryId, period: "MONTHLY" });
         }
     };
 
@@ -121,7 +191,7 @@ export function BudgetSheet({ open, onOpenChange, existingBudget }: BudgetSheetP
                         {/* Amount input */}
                         <div className="relative z-10 px-6 pt-6 pb-10 text-center">
                             <div className="flex items-center justify-center gap-2">
-                                <span className={cn("text-5xl font-medium transition-colors duration-300", amount ? "text-indigo-500 dark:text-indigo-400" : "ios-text-secondary opacity-40")}>₹</span>
+                                <span className={cn("text-5xl font-medium transition-colors duration-300", amount ? "text-indigo-500 dark:text-indigo-400" : "ios-text-secondary opacity-40")}>{currencySymbol}</span>
                                 <input
                                     type="number"
                                     inputMode="decimal"

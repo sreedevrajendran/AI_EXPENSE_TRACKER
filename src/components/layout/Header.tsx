@@ -1,10 +1,8 @@
 "use client";
 
-import { useState } from "react";
 import { motion } from "framer-motion";
-import { Eye, EyeOff, Settings, Sparkles } from "lucide-react";
+import { Eye, EyeOff, Settings } from "lucide-react";
 import { usePrivacy } from "@/context/PrivacyContext";
-import { AgentOasisChatSheet } from "@/components/ai/AgentOasisChatSheet";
 import Link from "next/link";
 
 interface HeaderProps {
@@ -13,55 +11,49 @@ interface HeaderProps {
 
 export function Header({ title = "Floww" }: HeaderProps) {
     const { isPrivate, togglePrivacy } = usePrivacy();
-    const [chatOpen, setChatOpen] = useState(false);
 
     return (
-        <>
-            <header className="sticky top-0 z-40 ios-glass border-b ios-separator">
-                <div className="flex items-center justify-between px-4 h-14 pt-[env(safe-area-inset-top,0px)] md:px-8">
+        <header className="sticky top-0 z-40 w-full bg-white/85 dark:bg-[#121214]/85 backdrop-blur-xl border-b border-neutral-200/80 dark:border-neutral-800/80 transition-all">
+            {/* Status Bar Spacer: Safe area clearance below wifi, battery, camera hole */}
+            <div className="h-[max(env(safe-area-inset-top),28px)] md:h-0" />
 
-                    {/* Assistant Trigger — Mobile only */}
-                    <div className="flex flex-1 items-center justify-start md:hidden">
-                        <motion.button
-                            whileTap={{ scale: 0.9 }}
-                            onClick={() => setChatOpen(true)}
-                            className="relative w-9 h-9 flex items-center justify-center rounded-full border-2 border-ios-blue bg-ios-blue/10 dark:bg-ios-blue-dark/20 text-ios-blue dark:text-ios-blue-dark"
-                            aria-label="Open Agent Oasis"
-                        >
-                            <Sparkles size={16} strokeWidth={2.5} />
-                            <span className="absolute -top-0.5 -right-0.5 w-2.5 h-2.5 bg-ios-blue dark:bg-ios-blue-dark rounded-full border-2 border-white dark:border-black" />
-                        </motion.button>
-                    </div>
-
-                    {/* Desktop left spacer */}
-                    <div className="hidden md:flex flex-1" />
-
-                    {/* Title & Logo */}
-                    <div className="flex-[2] flex justify-center items-center gap-2">
-                        <img src="/logo.png?v=3" alt="Floww Logo" className="w-7 h-7 rounded-lg" />
-                        <h1 className="text-[17px] font-semibold ios-text-primary tracking-tight truncate">
-                            {title === "Floww" ? "Floww" : title}
-                        </h1>
-                    </div>
-
-                    {/* Actions (Privacy & Settings) */}
-                    <div className="flex flex-1 items-center justify-end gap-2 md:gap-3">
-                        <motion.button
-                            whileTap={{ scale: 0.9 }}
-                            onClick={togglePrivacy}
-                            className="w-9 h-9 flex items-center justify-center rounded-full bg-[#F2F2F7] dark:bg-[#2C2C2E] ios-text-secondary"
-                            aria-label={isPrivate ? "Show balances" : "Hide balances"}
-                        >
-                            {isPrivate ? <EyeOff size={17} /> : <Eye size={17} />}
-                        </motion.button>
-                        <Link href="/settings" className="w-9 h-9 flex items-center justify-center rounded-full bg-[#F2F2F7] dark:bg-[#2C2C2E] ios-text-secondary active:scale-95 transition-transform md:hidden">
-                            <Settings size={17} />
-                        </Link>
-                    </div>
+            {/* Standard Google Material 56px App Bar Row */}
+            <div className="flex items-center justify-between h-14 px-5 sm:px-6 md:px-8">
+                {/* Brand Name */}
+                <div className="flex items-center">
+                    <Link
+                        href="/"
+                        className="flex items-center transition-transform hover:opacity-90 active:scale-95"
+                        aria-label="floww"
+                    >
+                        <span className="text-[22px] font-black tracking-tight text-neutral-900 dark:text-white">
+                            floww
+                        </span>
+                    </Link>
                 </div>
-            </header>
 
-            <AgentOasisChatSheet open={chatOpen} onOpenChange={setChatOpen} />
-        </>
+                {/* Right Action Icons: Privacy Mode & Settings */}
+                <div className="flex items-center gap-1 justify-end">
+                    <motion.button
+                        whileTap={{ scale: 0.92 }}
+                        onClick={togglePrivacy}
+                        className="w-10 h-10 flex items-center justify-center rounded-full text-neutral-700 dark:text-neutral-300 hover:bg-neutral-100 dark:hover:bg-neutral-800 active:bg-neutral-200 dark:active:bg-neutral-700 transition-colors"
+                        aria-label={isPrivate ? "Show balances" : "Hide balances"}
+                        title={isPrivate ? "Show balances" : "Hide balances"}
+                    >
+                        {isPrivate ? <EyeOff size={20} strokeWidth={2} /> : <Eye size={20} strokeWidth={2} />}
+                    </motion.button>
+
+                    <Link
+                        href="/settings"
+                        className="w-10 h-10 flex items-center justify-center rounded-full text-neutral-700 dark:text-neutral-300 hover:bg-neutral-100 dark:hover:bg-neutral-800 active:bg-neutral-200 dark:active:bg-neutral-700 transition-colors"
+                        aria-label="Settings"
+                        title="Settings"
+                    >
+                        <Settings size={20} strokeWidth={2} />
+                    </Link>
+                </div>
+            </div>
+        </header>
     );
 }

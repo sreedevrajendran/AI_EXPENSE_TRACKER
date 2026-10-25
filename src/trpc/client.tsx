@@ -12,7 +12,11 @@ export const trpc = createTRPCReact<AppRouter>();
 export function TRPCProvider({ children }: { children: React.ReactNode }) {
     const [queryClient] = useState(() => new QueryClient({
         defaultOptions: {
-            queries: { staleTime: 60 * 1000 },
+            queries: {
+                staleTime: 0,
+                refetchOnWindowFocus: true,
+                refetchOnMount: true,
+            },
         },
     }));
 

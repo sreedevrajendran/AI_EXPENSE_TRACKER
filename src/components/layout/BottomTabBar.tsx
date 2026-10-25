@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { usePathname } from "next/navigation";
 import Link from "next/link";
 import { Home, List, PiggyBank, Settings, Plus, Wallet, Receipt } from "lucide-react";
@@ -22,9 +22,25 @@ export function BottomTabBar() {
     const utils = trpc.useUtils();
     const [actionSheetOpen, setActionSheetOpen] = useState(false);
 
+    useEffect(() => {
+        const handleOpen = () => setActionSheetOpen(true);
+        const handleBack = (e: Event) => {
+            if (actionSheetOpen) {
+                e.preventDefault();
+                setActionSheetOpen(false);
+            }
+        };
+        window.addEventListener("app:open-action-sheet", handleOpen);
+        window.addEventListener("app:back-press", handleBack);
+        return () => {
+            window.removeEventListener("app:open-action-sheet", handleOpen);
+            window.removeEventListener("app:back-press", handleBack);
+        };
+    }, [actionSheetOpen]);
+
     return (
         <>
-            <nav className="fixed bottom-6 left-4 right-4 z-40 bg-white/70 dark:bg-black/70 backdrop-blur-2xl border border-white/20 dark:border-white/10 rounded-[32px] shadow-2xl md:hidden">
+            <nav className="fixed bottom-6 left-4 right-4 z-40 bg-white/75 dark:bg-[#1C1C1E]/75 backdrop-blur-xl transform-gpu will-change-transform border border-black/[0.06] dark:border-white/[0.08] rounded-[32px] shadow-[0_8px_32px_rgba(0,0,0,0.12)] md:hidden">
                 <div className="flex items-center justify-around px-2 h-[72px]">
                     {navItems.map((item, index) => {
                         if (item.isFab) {
@@ -82,12 +98,6 @@ export function BottomTabBar() {
                                                 : "text-[#8E8E93] dark:text-[#636366]"
                                         )}
                                     />
-                                    {isActive && (
-                                        <motion.div
-                                            layoutId="nav-indicator"
-                                            className="absolute -top-3 left-1/2 -translate-x-1/2 w-1 h-1 rounded-full bg-ios-blue dark:bg-ios-blue-dark"
-                                        />
-                                    )}
                                 </motion.div>
                                 <span
                                     className={cn(

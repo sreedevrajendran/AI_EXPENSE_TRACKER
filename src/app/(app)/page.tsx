@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Plus, ArrowUpRight, TrendingDown, Paperclip, Mail } from "lucide-react";
 import Link from "next/link";
@@ -42,10 +42,12 @@ export default function HomePage() {
     const utils = trpc.useUtils();
 
 
-    const { data: monthTotal } = trpc.expense.getMonthTotal.useQuery();
-    const { data: monthIncomeTotal } = trpc.income.getMonthTotal.useQuery();
-    const { data: recentExpenses } = trpc.expense.getRecentExpenses.useQuery({ limit: 50 }); // Fetch more for modal
-    const { data: recentIncomes } = trpc.income.getRecentIncomes.useQuery({ limit: 50 }); // Fetch more for modal
+    const [periodView, setPeriodView] = useState<"all" | "active">("all");
+    const { data: monthTotal } = trpc.expense.getMonthTotal.useQuery(periodView === "all" ? { allTime: true } : undefined);
+    const { data: monthIncomeTotal } = trpc.income.getMonthTotal.useQuery(periodView === "all" ? { allTime: true } : undefined);
+    const { data: activePeriod } = trpc.expense.getActivePeriod.useQuery();
+    const { data: recentExpenses } = trpc.expense.getRecentExpenses.useQuery({ limit: 100 }); // Fetch more for modal
+    const { data: recentIncomes } = trpc.income.getRecentIncomes.useQuery({ limit: 100 }); // Fetch more for modal
     const { data: budgets } = trpc.budget.list.useQuery();
 
     const allTransactions: ModalTransaction[] = [...(recentExpenses ?? []), ...(recentIncomes ?? [])]
@@ -63,15 +65,16 @@ export default function HomePage() {
 
     const recentTransactions = allTransactions.slice(0, 5);
 
+    useEffect(() => {
+        const handleUpdate = () => {
+            utils.invalidate();
+        };
+        window.addEventListener("app:transactions-updated", handleUpdate);
+        return () => window.removeEventListener("app:transactions-updated", handleUpdate);
+    }, [utils]);
+
     const handleRefresh = async () => {
-        await Promise.all([
-            utils.expense.getMonthTotal.invalidate(),
-            utils.income.getMonthTotal.invalidate(),
-            utils.expense.getRecentExpenses.invalidate(),
-            utils.income.getRecentIncomes.invalidate(),
-            utils.budget.list.invalidate(),
-            utils.ai.getInsights.invalidate()
-        ]);
+        await utils.invalidate();
     };
 
     const totalBudget = budgets?.reduce((s, b) => s + b.amount, 0) ?? 0;
@@ -90,25 +93,58 @@ export default function HomePage() {
                     <div className="md:grid md:grid-cols-12 md:gap-6 md:space-y-0 space-y-4">
                         {/* Left Column (Stats & Chart) */}
                         <div className="md:col-span-7 space-y-4">
-                            {/* Combined Stats Card */}
+                            {/* Combined Hero Stats Card */}
                             <motion.div
                                 initial={{ opacity: 0, y: 20 }}
                                 animate={{ opacity: 1, y: 0 }}
-                                className="rounded-[28px] overflow-hidden mb-4"
-                                style={{ background: "linear-gradient(135deg, #007AFF 0%, #5856D6 100%)" }}
+                                className="rounded-[32px] overflow-hidden mb-4 relative shadow-[0_12px_36px_-6px_rgba(10,132,255,0.3)] border border-white/20 dark:border-white/10"
+                                style={{ background: "linear-gradient(135deg, #0A84FF 0%, #5E5CE6 50%, #7B61FF 100%)" }}
                             >
-                                <div className="p-6 text-white space-y-6">
+                                <div className="absolute top-0 right-0 -mr-12 -mt-12 w-48 h-48 rounded-full bg-white/20 blur-3xl pointer-events-none" />
+                                <div className="absolute bottom-0 left-0 -ml-12 -mb-12 w-40 h-40 rounded-full bg-black/20 blur-2xl pointer-events-none" />
+
+                                <div className="p-6 text-white space-y-5 relative z-10">
                                     <div
-                                        className="cursor-pointer active:scale-[0.98] transition-transform"
+                                        className="cursor-pointer active:scale-[0.99] transition-transform"
                                         onClick={() => {
                                             setModalTitle("All Transactions");
                                             setModalTransactions(allTransactions);
                                             setModalOpen(true);
                                         }}
                                     >
-                                        <p className="text-[14px] text-white/70 font-medium uppercase tracking-wider mb-1">Balance This Month</p>
+                                        <div className="flex items-center justify-between mb-1">
+                                            <p className="text-[13px] text-white/80 font-bold uppercase tracking-wider">Net Balance</p>
+                                            <div className="flex items-center bg-black/25 backdrop-blur-md p-0.5 rounded-full border border-white/15">
+                                                <button
+                                                    type="button"
+                                                    onClick={(e) => {
+                                                        e.stopPropagation();
+                                                        setPeriodView("all");
+                                                    }}
+                                                    className={cn(
+                                                        "text-[10px] font-bold px-2.5 py-0.5 rounded-full transition-all",
+                                                        periodView === "all" ? "bg-white text-blue-600 shadow-xs" : "text-white/80 hover:text-white"
+                                                    )}
+                                                >
+                                                    All Time
+                                                </button>
+                                                <button
+                                                    type="button"
+                                                    onClick={(e) => {
+                                                        e.stopPropagation();
+                                                        setPeriodView("active");
+                                                    }}
+                                                    className={cn(
+                                                        "text-[10px] font-bold px-2.5 py-0.5 rounded-full transition-all",
+                                                        periodView === "active" ? "bg-white text-blue-600 shadow-xs" : "text-white/80 hover:text-white"
+                                                    )}
+                                                >
+                                                    {activePeriod?.label ?? "Active Month"}
+                                                </button>
+                                            </div>
+                                        </div>
                                         <PrivacyWrapper>
-                                            <p className="text-5xl font-bold tracking-tight">
+                                            <p className="text-4xl md:text-5xl font-black tracking-tight drop-shadow-xs">
                                                 {formatCurrency((monthIncomeTotal ?? 0) - (monthTotal ?? 0))}
                                             </p>
                                         </PrivacyWrapper>
@@ -116,43 +152,45 @@ export default function HomePage() {
 
                                     <div className="h-[1px] w-full bg-white/20 rounded-full" />
 
-                                    <div className="pt-2 flex items-center gap-4">
+                                    <div className="grid grid-cols-2 gap-4">
                                         <div
-                                            className="flex-1 flex flex-col justify-center cursor-pointer active:scale-[0.98] transition-transform"
+                                            className="cursor-pointer active:scale-[0.98] transition-transform bg-white/10 hover:bg-white/15 p-3 rounded-2xl backdrop-blur-md transition-colors"
                                             onClick={() => {
                                                 setModalTitle("Total Income");
                                                 setModalTransactions(allTransactions.filter(t => t.type === 'income'));
                                                 setModalOpen(true);
                                             }}
                                         >
-                                            <p className="text-[12px] text-white/70 font-medium uppercase tracking-wider mb-0.5">Total Income</p>
+                                            <div className="flex items-center gap-1.5 mb-1">
+                                                <div className="w-5 h-5 rounded-full bg-emerald-400/30 flex items-center justify-center">
+                                                    <ArrowUpRight size={12} className="text-emerald-300" />
+                                                </div>
+                                                <span className="text-[11px] text-white/80 font-bold uppercase tracking-wider">Income</span>
+                                            </div>
                                             <PrivacyWrapper>
-                                                <p className="text-xl font-bold tracking-tight text-white flex items-center gap-1.5 mt-0.5">
-                                                    <span className="w-5 h-5 rounded-full bg-white/10 flex items-center justify-center inline-flex">
-                                                        <ArrowUpRight size={12} className="text-white" />
-                                                    </span>
-                                                    {formatCurrency(monthIncomeTotal ?? 0)}
+                                                <p className="text-lg md:text-xl font-bold tracking-tight text-white">
+                                                    +{formatCurrency(monthIncomeTotal ?? 0)}
                                                 </p>
                                             </PrivacyWrapper>
                                         </div>
 
-                                        <div className="w-[1px] h-10 bg-white/20 rounded-full" />
-
                                         <div
-                                            className="flex-1 flex flex-col justify-center cursor-pointer active:scale-[0.98] transition-transform"
+                                            className="cursor-pointer active:scale-[0.98] transition-transform bg-white/10 hover:bg-white/15 p-3 rounded-2xl backdrop-blur-md transition-colors"
                                             onClick={() => {
                                                 setModalTitle("Total Spent");
                                                 setModalTransactions(allTransactions.filter(t => t.type === 'expense'));
                                                 setModalOpen(true);
                                             }}
                                         >
-                                            <p className="text-[12px] text-white/70 font-medium uppercase tracking-wider mb-0.5 pl-2">Total Spent</p>
+                                            <div className="flex items-center gap-1.5 mb-1">
+                                                <div className="w-5 h-5 rounded-full bg-rose-400/30 flex items-center justify-center">
+                                                    <TrendingDown size={12} className="text-rose-300" />
+                                                </div>
+                                                <span className="text-[11px] text-white/80 font-bold uppercase tracking-wider">Spent</span>
+                                            </div>
                                             <PrivacyWrapper>
-                                                <p className="text-xl font-bold tracking-tight text-white flex items-center gap-1.5 mt-0.5 pl-2">
-                                                    <span className="w-5 h-5 rounded-full bg-white/10 flex items-center justify-center inline-flex">
-                                                        <TrendingDown size={12} className="text-white" />
-                                                    </span>
-                                                    {formatCurrency(monthTotal ?? 0)}
+                                                <p className="text-lg md:text-xl font-bold tracking-tight text-white">
+                                                    -{formatCurrency(monthTotal ?? 0)}
                                                 </p>
                                             </PrivacyWrapper>
                                         </div>
