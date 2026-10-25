@@ -12,7 +12,6 @@ import {
     ArrowRight,
     Check,
     Lock,
-    Zap,
     Mail,
     Eye,
     EyeOff,
@@ -171,52 +170,24 @@ export default function LoginPage() {
                 />
             </div>
 
-            {/* ─── Top Brand Header ────────────────────────────────── */}
-            <header className="relative z-10 w-full px-6 pt-6 flex items-center justify-between max-w-5xl mx-auto">
-                <div className="flex items-center gap-2.5">
-                    <div className="w-8 h-8 rounded-xl bg-gradient-to-tr from-blue-600 to-indigo-600 flex items-center justify-center shadow-lg shadow-blue-500/20">
-                        <Zap size={16} className="text-white fill-current" />
-                    </div>
-                    <span className="text-lg font-black tracking-tight text-white">Floww</span>
-                </div>
-                <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-white/[0.06] border border-white/10 text-[11px] font-semibold text-neutral-300">
-                    <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
-                    <span>v2.0.1 Stable</span>
-                </div>
-            </header>
-
             {/* ─── Main Center Container ──────────────────────────── */}
-            <main className="relative z-10 w-full max-w-[430px] mx-auto px-5 py-6 flex flex-col gap-6">
+            <main className="relative z-10 w-full max-w-[430px] mx-auto px-5 pt-[max(env(safe-area-inset-top,20px),2.5rem)] pb-6 flex flex-col gap-6">
 
                 {/* Brand Hero */}
                 <motion.div
                     initial={{ opacity: 0, y: -16 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ duration: 0.6 }}
-                    className="flex flex-col items-center text-center gap-3 pt-1"
+                    className="flex flex-col items-center text-center gap-2 pt-2"
                 >
-                    {/* Glowing Logo Icon */}
-                    <div className="relative">
-                        <div className="absolute inset-0 rounded-3xl bg-blue-500/30 blur-2xl" />
-                        <motion.div
-                            whileHover={{ scale: 1.05 }}
-                            transition={{ type: "spring", stiffness: 400, damping: 20 }}
-                            className="relative w-16 h-16 rounded-2xl overflow-hidden ring-1 ring-white/20 shadow-2xl bg-[#0D132D] p-1 flex items-center justify-center"
-                        >
-                            <img src="/logo.png?v=3" alt="Floww" className="w-full h-full object-contain" />
-                        </motion.div>
-                    </div>
-
-                    <div>
-                        <h1 className="text-2xl sm:text-3xl font-black text-white tracking-tight">
-                            Welcome to Floww
-                        </h1>
-                        <div className="h-6 flex items-center justify-center mt-1">
-                            <p className="text-xs sm:text-sm font-medium text-neutral-400">
-                                {displayed}
-                                <span className="inline-block w-[2px] h-3.5 bg-blue-400 ml-1 align-middle animate-pulse" />
-                            </p>
-                        </div>
+                    <h1 className="text-3xl sm:text-4xl font-black text-white tracking-tight">
+                        Welcome to Floww
+                    </h1>
+                    <div className="h-6 flex items-center justify-center mt-1">
+                        <p className="text-xs sm:text-sm font-medium text-neutral-400">
+                            {displayed}
+                            <span className="inline-block w-[2px] h-3.5 bg-blue-400 ml-1 align-middle animate-pulse" />
+                        </p>
                     </div>
                 </motion.div>
 
