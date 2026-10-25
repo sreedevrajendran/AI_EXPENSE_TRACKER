@@ -8,7 +8,7 @@ Built for both **Modern Web (v2.0.1)** and **Native Android** via Capacitor.
 
 ### 📱 Android APK Download
 Download and install the native Android build directly:
-- 📦 **[Download Floww v2.0.1 APK (Official Release)](https://github.com/sreedevrajendran/AI_EXPENSE_TRACKER/releases/download/v2.0.1/Floww-v2.0.1.apk)** (~7.4 MB)
+- 📦 **[Download Floww v2.0.1 APK (Official Release)](https://github.com/sreedevrajendran/Floww/releases/download/v2.0.1/Floww-v2.0.1.apk)** (~7.4 MB)
 - 📁 Repository file mirror: [`release/Floww-v2.0.1.apk`](release/Floww-v2.0.1.apk)
 
 ---
@@ -70,8 +70,8 @@ Download and install the native Android build directly:
 
 ### 2. Clone Repository
 ```bash
-git clone https://github.com/sreedevrajendran/AI_EXPENSE_TRACKER.git
-cd AI_EXPENSE_TRACKER
+git clone https://github.com/sreedevrajendran/Floww.git
+cd Floww
 ```
 
 ### 3. Install Dependencies
@@ -136,7 +136,7 @@ From Android Studio, connect an Android device or emulator and click **Run**.
 ## 📁 Project Architecture
 
 ```
-AI_EXPENSE_TRACKER/
+Floww/
 ├── android/                   # Capacitor native Android wrapper
 ├── public/                    # Static assets & icons
 │   └── uploads/               # Local staging (git-ignored)
@@ -175,7 +175,7 @@ AI_EXPENSE_TRACKER/
 ## 🤝 Contributing
 
 Contributions, issues, and feature requests are welcome!
-Feel free to check the [issues page](https://github.com/sreedevrajendran/AI_EXPENSE_TRACKER/issues).
+Feel free to check the [issues page](https://github.com/sreedevrajendran/Floww/issues).
 
 1. Fork the Project
 2. Create your Feature Branch (`git checkout -b feature/AmazingFeature`)
