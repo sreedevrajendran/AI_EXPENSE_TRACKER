@@ -72,52 +72,53 @@ export default function LoginPage() {
         try {
             // Check if running inside native Android / iOS Capacitor app
             const capacitor = typeof window !== "undefined" ? (window as any).Capacitor : null;
-            const isNative = capacitor && typeof capacitor.isNativePlatform === "function" && capacitor.isNativePlatform();
+            const isNative = Boolean(capacitor && typeof capacitor.isNativePlatform === "function" && capacitor.isNativePlatform());
             const nativeGoogleAuth = capacitor?.Plugins?.NativeGoogleAuth;
 
-            if (isNative && nativeGoogleAuth) {
+            if (isNative) {
+                if (!nativeGoogleAuth) {
+                    setErrorMessage("Google Sign-In module is initializing. Please tap again in a moment.");
+                    setIsLoading(false);
+                    return;
+                }
+
                 // 1-Tap native Android Google Play Services account picker
-                const googleAccount = await nativeGoogleAuth.signIn({
-                    serverClientId: "902896742960-sfp6ifpgq0jdp7522rc5ja6qhkrnqn3u.apps.googleusercontent.com",
-                });
+                const googleAccount = await nativeGoogleAuth.signIn();
 
                 if (googleAccount?.email) {
                     const res = await signIn("google-native", {
                         redirect: false,
                         email: googleAccount.email,
-                        name: googleAccount.name,
-                        image: googleAccount.imageUrl,
-                        idToken: googleAccount.idToken,
+                        name: googleAccount.name || googleAccount.email.split("@")[0],
+                        image: googleAccount.imageUrl || `https://api.dicebear.com/7.x/initials/svg?seed=${encodeURIComponent(googleAccount.email)}`,
                         callbackUrl: "/",
                     });
 
                     if (res?.ok) {
                         window.location.href = "/";
                         return;
-                    } else if (res?.error) {
-                        setErrorMessage(res.error);
+                    } else {
+                        setErrorMessage(res?.error || "Account authorization failed.");
                         setIsLoading(false);
                         return;
                     }
+                } else {
+                    setIsLoading(false);
+                    return;
                 }
             }
 
-            // Web browser fallback
+            // Web browser only (desktop/laptop/tablet in Chrome/Safari)
             await signIn("google", { callbackUrl: "/" });
         } catch (err: any) {
             console.error("Sign in error:", err);
-            // If user closed account picker dialog, simply reset loading
-            if (err?.message?.includes("cancelled") || err?.message?.includes("12501")) {
-                setIsLoading(false);
+            setIsLoading(false);
+            const msg = String(err?.message || err);
+            // If user closed or dismissed the account picker dialog
+            if (msg.includes("cancelled") || msg.includes("Cancelled") || msg.includes("12501") || msg.includes("16")) {
                 return;
             }
-            // If native plugin not ready, fallback to web OAuth
-            try {
-                await signIn("google", { callbackUrl: "/" });
-            } catch (fallbackErr) {
-                setErrorMessage("Unable to complete sign-in. Please try again.");
-                setIsLoading(false);
-            }
+            setErrorMessage("Sign-in was interrupted. Please try again.");
         }
     };
 
