@@ -9,9 +9,16 @@ const config: CapacitorConfig = {
     url: 'https://floww.vercel.app',
     cleartext: false,
     errorPath: 'index.html',
+    allowNavigation: [
+      'accounts.google.com',
+      '*.google.com',
+      '*.googleusercontent.com',
+      'floww.vercel.app',
+    ],
   },
   android: {
     allowMixedContent: true,
+    overrideUserAgent: 'Mozilla/5.0 (Linux; Android 14; Mobile) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/128.0.0.0 Mobile Safari/537.36',
   },
   plugins: {
     LocalNotifications: {
