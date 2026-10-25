@@ -9,7 +9,10 @@ export const maxDuration = 60; // Allow sufficient processing time
 export async function POST(req: NextRequest) {
     try {
         const session = await getServerSession(authOptions);
-        const userId = session?.user?.id || "guest-user";
+        if (!session?.user?.id) {
+            return NextResponse.json({ error: "Unauthorized. Please sign in to upload files." }, { status: 401 });
+        }
+        const userId = session.user.id;
 
         const formData = await req.formData();
         const file = formData.get("file") as File | null;

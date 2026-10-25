@@ -1,4 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
+import { getServerSession } from "next-auth";
+import { authOptions } from "@/auth";
 import { db } from "@/lib/firebase/admin";
 
 export async function GET(
@@ -6,6 +8,12 @@ export async function GET(
     context: { params: Promise<{ id: string }> | { id: string } }
 ) {
     try {
+        const session = await getServerSession(authOptions);
+        if (!session?.user?.id) {
+            return new Response("Unauthorized", { status: 401 });
+        }
+        const currentUserId = session.user.id;
+
         const resolvedParams = await context.params;
         const id = resolvedParams.id;
         if (!id) {
@@ -22,6 +30,11 @@ export async function GET(
             return new Response("Corrupted receipt data", { status: 500 });
         }
 
+        // Enforce strict ownership: user can only view their own receipts
+        if (receipt.userId && receipt.userId !== currentUserId) {
+            return new Response("Forbidden: You do not have permission to view this file", { status: 403 });
+        }
+
         const buffer = Buffer.from(receipt.data, "base64");
 
         return new Response(buffer, {
@@ -29,7 +42,7 @@ export async function GET(
             headers: {
                 "Content-Type": receipt.mimeType || "image/webp",
                 "Content-Length": buffer.length.toString(),
-                "Cache-Control": "public, max-age=31536000, immutable",
+                "Cache-Control": "private, no-cache, no-store, must-revalidate",
             },
         });
     } catch (error: any) {
