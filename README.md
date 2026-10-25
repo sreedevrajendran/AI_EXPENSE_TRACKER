@@ -8,7 +8,8 @@ Built for both **Modern Web (v2.0.1)** and **Native Android** via Capacitor.
 
 ### 📱 Android APK Download
 Download and install the native Android build directly:
-- 📦 **[Download Floww v2.0.1 APK (release/Floww-v2.0.1.apk)](release/Floww-v2.0.1.apk)**
+- 📦 **[Download Floww v2.0.1 APK (Official Release)](https://github.com/sreedevrajendran/AI_EXPENSE_TRACKER/releases/download/v2.0.1/Floww-v2.0.1.apk)** (~7.4 MB)
+- 📁 Repository file mirror: [`release/Floww-v2.0.1.apk`](release/Floww-v2.0.1.apk)
 
 ---
 
