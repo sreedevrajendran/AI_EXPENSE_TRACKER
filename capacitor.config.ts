@@ -5,9 +5,10 @@ const config: CapacitorConfig = {
   appName: 'Floww',
   webDir: 'out',
   server: {
-    // Connects physical Android phones over local Wi-Fi to your machine's Next.js server
-    url: 'http://192.168.1.40:3000',
-    cleartext: true,
+    // Cloud production URL - works standalone on mobile data or any Wi-Fi without PC
+    url: 'https://floww.vercel.app',
+    cleartext: false,
+    errorPath: 'index.html',
   },
   android: {
     allowMixedContent: true,

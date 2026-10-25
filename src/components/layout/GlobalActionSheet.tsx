@@ -13,6 +13,8 @@ import { BillReviewSheet } from "@/components/transactions/BillReviewSheet";
 import { trpc } from "@/trpc/client";
 import { compressImage, formatCurrency } from "@/lib/utils";
 import { showMatchingAlert } from "@/components/ui/AlertCard";
+import { Camera as CapCamera, CameraResultType, CameraSource } from "@capacitor/camera";
+import { Capacitor } from "@capacitor/core";
 
 interface GlobalActionSheetProps {
     open: boolean;
@@ -122,9 +124,37 @@ export function GlobalActionSheet({ open, onOpenChange }: GlobalActionSheetProps
         setTimeout(() => setAddBudgetOpen(true), 150);
     };
 
-    const triggerCamera = () => {
-        cameraRef.current?.click();
+    const triggerCamera = async () => {
         handleOpenChange(false);
+
+        if (Capacitor.isNativePlatform() || (typeof window !== "undefined" && (window as any).Capacitor?.isNativePlatform?.())) {
+            try {
+                const photo = await CapCamera.getPhoto({
+                    quality: 90,
+                    allowEditing: false,
+                    resultType: CameraResultType.Uri,
+                    source: CameraSource.Camera,
+                });
+
+                if (photo.webPath) {
+                    const response = await fetch(photo.webPath);
+                    const blob = await response.blob();
+                    const file = new File([blob], `receipt_${Date.now()}.${photo.format || "jpg"}`, {
+                        type: blob.type || `image/${photo.format || "jpeg"}`,
+                    });
+                    handleProcessDocument(file);
+                    return;
+                }
+            } catch (err: any) {
+                const msg = (err?.message || "").toLowerCase();
+                if (msg.includes("cancel") || msg.includes("cancelled")) {
+                    return;
+                }
+                console.warn("Native camera failed, falling back to input:", err);
+            }
+        }
+
+        cameraRef.current?.click();
     };
 
     const triggerGallery = () => {
