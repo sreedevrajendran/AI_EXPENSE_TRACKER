@@ -127,7 +127,10 @@ export function BillReviewSheet({ open, onOpenChange, billData, initialFile }: B
             if (billData.tax) noteParts.push(`Tax/GST: ${formatCurrency(billData.tax)}`);
             if (billData.discount) noteParts.push(`Discount: -${formatCurrency(billData.discount)}`);
             if (billData.dueDate) noteParts.push(`Due Date: ${billData.dueDate}`);
-            if (billData.billStatus) noteParts.push(`Status: ${billData.billStatus}`);
+            // Record bill date in note if it differs from today
+            if (billData.date) {
+                noteParts.push(`Bill Date: ${billData.date}`);
+            }
 
             const compiledNote = noteParts.length > 0 ? noteParts.join(" • ") : (billData.note || undefined);
 
@@ -155,7 +158,7 @@ export function BillReviewSheet({ open, onOpenChange, billData, initialFile }: B
 
             await createWithItems.mutateAsync({
                 merchant: billData.merchant || "Unknown Store",
-                date: billData.date ? new Date(billData.date) : new Date(),
+                date: new Date(), // Always log with Today's date when scanned today
                 paymentMethod,
                 categoryName: billData.category || undefined,
                 note: compiledNote,

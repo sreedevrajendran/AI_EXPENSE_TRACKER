@@ -202,10 +202,8 @@ export function AddExpenseSheet({ open, onOpenChange, onSuccess, editData, editI
             if (prefillData.amount) setAmount(String(prefillData.amount));
             if (prefillData.merchant) setMerchant(prefillData.merchant);
             if (prefillData.note) setNote(prefillData.note);
-            if (prefillData.date) {
-                const d = new Date(prefillData.date);
-                if (!isNaN(d.getTime())) setExpenseDate(d);
-            }
+            // Default transaction date to Today so it immediately logs into current ledger
+            setExpenseDate(new Date());
             if (prefillData.paymentMethod) {
                 const pm = String(prefillData.paymentMethod).toUpperCase().replace(/\s+/g, "_");
                 if (pm === "CARD" || pm === "CREDIT_CARD") setPaymentMethod("CREDIT_CARD");
