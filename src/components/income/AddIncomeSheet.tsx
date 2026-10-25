@@ -203,13 +203,14 @@ export function AddIncomeSheet({ open, onOpenChange, onSuccess, editData, editId
                 const res = await fetch("/api/upload", {
                     method: "POST",
                     body: formData,
+                    credentials: "include",
                 });
 
                 const data = await res.json();
                 if (!res.ok) throw new Error(data.error || "Upload failed");
                 receiptUrl = data.url;
             } catch (err: any) {
-                setError("Failed to upload file. Please try again.");
+                setError(err?.message || "Failed to upload file. Please try again.");
                 setUploading(false);
                 return;
             }

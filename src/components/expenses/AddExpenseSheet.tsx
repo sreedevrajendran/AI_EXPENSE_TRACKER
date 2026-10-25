@@ -306,13 +306,14 @@ export function AddExpenseSheet({ open, onOpenChange, onSuccess, editData, editI
                 const res = await fetch("/api/upload", {
                     method: "POST",
                     body: formData,
+                    credentials: "include",
                 });
 
                 const data = await res.json();
                 if (!res.ok) throw new Error(data.error || "Upload failed");
                 receiptUrl = data.url;
             } catch (err: any) {
-                setError("Failed to upload file. Please try again.");
+                setError(err?.message || "Failed to upload file. Please try again.");
                 setUploading(false);
                 return;
             }
@@ -428,71 +429,7 @@ export function AddExpenseSheet({ open, onOpenChange, onSuccess, editData, editI
                                 </motion.div>
                             )}
 
-                            {prefillData && (
-                                <motion.div
-                                    initial={{ opacity: 0, y: 8 }}
-                                    animate={{ opacity: 1, y: 0 }}
-                                    className="mx-auto max-w-sm mt-5 p-4 bg-gradient-to-r from-rose-500/10 via-purple-500/10 to-blue-500/10 border border-rose-500/20 rounded-2xl text-left space-y-2.5"
-                                >
-                                    <div className="flex items-center justify-between">
-                                        <div className="flex items-center gap-2">
-                                            <div className="w-7 h-7 rounded-lg bg-rose-500/20 text-rose-500 flex items-center justify-center font-bold shrink-0">
-                                                <Sparkles size={14} />
-                                            </div>
-                                            <div>
-                                                <p className="text-[13px] font-bold ios-text-primary">Payment &amp; Bill Extracted</p>
-                                                <p className="text-[11px] text-ios-secondary">Verified by AI Vision &amp; OCR</p>
-                                            </div>
-                                        </div>
-                                        <span className={`text-[10px] font-black tracking-wider uppercase px-2 py-0.5 rounded-full shrink-0 ${
-                                            (paymentMeta?.billStatus === "DUE" || prefillData.status === "DUE")
-                                                ? "bg-amber-500/20 text-amber-600 dark:text-amber-400"
-                                                : "bg-emerald-500/20 text-emerald-600 dark:text-emerald-400"
-                                        }`}>
-                                            {(paymentMeta?.billStatus === "DUE" || prefillData.status === "DUE") ? "Payment Due" : "Verified Paid"}
-                                        </span>
-                                    </div>
 
-                                    {/* Payment reference chips */}
-                                    <div className="flex flex-wrap gap-1.5 pt-1">
-                                        {paymentMeta?.paymentMethod && (
-                                            <span className="text-[10px] font-bold px-2 py-0.5 rounded-md bg-black/5 dark:bg-white/10 text-neutral-700 dark:text-neutral-300">
-                                                {paymentMeta.paymentMethod}
-                                            </span>
-                                        )}
-                                        {paymentMeta?.invoiceNumber && (
-                                            <span className="text-[10px] font-bold px-2 py-0.5 rounded-md bg-blue-500/15 text-blue-600 dark:text-blue-400">
-                                                #{paymentMeta.invoiceNumber}
-                                            </span>
-                                        )}
-                                        {paymentMeta?.referenceId && (
-                                            <span className="text-[10px] font-bold px-2 py-0.5 rounded-md bg-purple-500/15 text-purple-600 dark:text-purple-400">
-                                                Ref: {paymentMeta.referenceId}
-                                            </span>
-                                        )}
-                                        {paymentMeta?.cardLast4 && (
-                                            <span className="text-[10px] font-bold px-2 py-0.5 rounded-md bg-black/5 dark:bg-white/10 text-neutral-600 dark:text-neutral-400">
-                                                •••• {paymentMeta.cardLast4}
-                                            </span>
-                                        )}
-                                        {paymentMeta?.upiId && (
-                                            <span className="text-[10px] font-bold px-2 py-0.5 rounded-md bg-teal-500/15 text-teal-600 dark:text-teal-400">
-                                                {paymentMeta.upiId}
-                                            </span>
-                                        )}
-                                        {paymentMeta?.dueDate && (
-                                            <span className="text-[10px] font-bold px-2 py-0.5 rounded-md bg-amber-500/15 text-amber-600 dark:text-amber-400">
-                                                Due: {paymentMeta.dueDate}
-                                            </span>
-                                        )}
-                                        {paymentMeta?.tax && paymentMeta.tax > 0 && (
-                                            <span className="text-[10px] font-bold px-2 py-0.5 rounded-md bg-neutral-200/60 dark:bg-neutral-800 text-neutral-600 dark:text-neutral-300">
-                                                GST/Tax: {formatCurrency(paymentMeta.tax)}
-                                            </span>
-                                        )}
-                                    </div>
-                                </motion.div>
-                            )}
                         </div>
                     </div>
 
