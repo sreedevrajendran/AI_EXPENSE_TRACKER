@@ -16,26 +16,26 @@ export const incomeRouter = router({
         )
         .query(async ({ ctx, input }) => {
             const userId = ctx.session.user.id!;
-
-            let query = ctx.db.collection("incomes").where("userId", "==", userId);
+            const snapshot = await ctx.db.collection("incomes").where("userId", "==", userId).get();
+            let incomes = snapshot.docs.map(d => ({ id: d.id, ...d.data() })) as any[];
 
             if (input?.startDate) {
-                query = query.where("date", ">=", input.startDate.toISOString());
+                const startMs = input.startDate.getTime();
+                incomes = incomes.filter(i => new Date(i.date).getTime() >= startMs);
             }
             if (input?.endDate) {
-                query = query.where("date", "<=", input.endDate.toISOString());
+                const endMs = input.endDate.getTime();
+                incomes = incomes.filter(i => new Date(i.date).getTime() <= endMs);
             }
 
-            query = query.orderBy("date", "desc").limit(input?.limit ?? 1000);
+            incomes.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+            if (input?.limit) {
+                incomes = incomes.slice(0, input.limit);
+            }
 
-            const snapshot = await query.get();
-            const incomes = snapshot.docs.map(d => ({ id: d.id, ...d.data() })) as any[];
-
-            // Fetch categories to populate relation
             const catSnapshot = await ctx.db.collection("categories").where("userId", "==", userId).get();
             const categories = catSnapshot.docs.map(d => ({ id: d.id, ...d.data() }));
 
-            // Parse dates back to Date objects for the UI
             return incomes.map(inc => ({
                 ...inc,
                 date: new Date(inc.date),
@@ -47,32 +47,26 @@ export const incomeRouter = router({
         .input(z.object({ allTime: z.boolean().optional() }).nullish())
         .query(async ({ ctx, input }) => {
             const userId = ctx.session.user.id!;
+            const snapshot = await ctx.db.collection("incomes").where("userId", "==", userId).get();
+            const incomes = snapshot.docs.map(d => d.data());
+
             if (input?.allTime) {
-                const snapshot = await ctx.db.collection("incomes")
-                    .where("userId", "==", userId)
-                    .get();
-                return snapshot.docs.reduce((sum, doc) => sum + (doc.data().amount || 0), 0);
+                return incomes.reduce((sum, doc) => sum + (doc.amount || 0), 0);
             }
 
             const period = await getActivePeriodRange(ctx.db, userId);
-            let query = ctx.db.collection("incomes")
-                .where("userId", "==", userId)
-                .where("date", ">=", period.startDate);
+            const startMs = new Date(period.startDate).getTime();
+            const endMs = period.endDate ? new Date(period.endDate).getTime() : Infinity;
 
-            if (period.endDate) {
-                query = query.where("date", "<=", period.endDate);
-            }
+            const filtered = incomes.filter(inc => {
+                const t = new Date(inc.date).getTime();
+                return t >= startMs && t <= endMs;
+            });
 
-            const snapshot = await query.get();
-            const total = snapshot.docs.reduce((sum, doc) => sum + (doc.data().amount || 0), 0);
-
+            const total = filtered.reduce((sum, doc) => sum + (doc.amount || 0), 0);
             if (total === 0) {
-                const allInc = await ctx.db.collection("incomes")
-                    .where("userId", "==", userId)
-                    .get();
-                return allInc.docs.reduce((sum, doc) => sum + (doc.data().amount || 0), 0);
+                return incomes.reduce((sum, doc) => sum + (doc.amount || 0), 0);
             }
-
             return total;
         }),
 
@@ -80,15 +74,12 @@ export const incomeRouter = router({
         .input(z.object({ limit: z.number().default(5) }))
         .query(async ({ ctx, input }) => {
             const userId = ctx.session.user.id!;
-            const snapshot = await ctx.db.collection("incomes")
-                .where("userId", "==", userId)
-                .orderBy("date", "desc")
-                .limit(input.limit)
-                .get();
+            const snapshot = await ctx.db.collection("incomes").where("userId", "==", userId).get();
 
-            const incomes = snapshot.docs.map(d => ({ id: d.id, ...d.data() })) as any[];
+            let incomes = snapshot.docs.map(d => ({ id: d.id, ...d.data() })) as any[];
+            incomes.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+            incomes = incomes.slice(0, input.limit);
 
-            // Fetch categories
             const catSnapshot = await ctx.db.collection("categories").where("userId", "==", userId).get();
             const categories = catSnapshot.docs.map(d => ({ id: d.id, ...d.data() }));
 

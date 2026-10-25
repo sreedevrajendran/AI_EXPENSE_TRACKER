@@ -23,21 +23,15 @@ export const DEFAULT_CATEGORY_METAS: Record<string, { icon: string; color: strin
 
 export const categoryRouter = router({
     list: protectedProcedure.query(async ({ ctx }) => {
-        const snapshot = await ctx.db.collection("categories")
-            .where("userId", "==", ctx.session.user.id!)
-            .where("parentId", "==", null)
-            .orderBy("name", "asc")
-            .get();
-
-        const docs = snapshot.docs.map(d => ({ id: d.id, ...d.data() }));
-        // Note: In NoSQL, fetching nested relationships (like children) requires either multiple queries 
-        // or a flat list that the client constructs. We will fetch all and construct.
         const allSnapshot = await ctx.db.collection("categories")
             .where("userId", "==", ctx.session.user.id!)
             .get();
         const allDocs = allSnapshot.docs.map(d => ({ id: d.id, ...d.data() })) as any[];
+        allDocs.sort((a, b) => (a.name || "").localeCompare(b.name || ""));
 
-        return docs.map((parent: any) => ({
+        const parents = allDocs.filter(c => !c.parentId);
+
+        return parents.map((parent: any) => ({
             ...parent,
             children: allDocs.filter(child => child.parentId === parent.id),
         }));
@@ -46,10 +40,11 @@ export const categoryRouter = router({
     listAll: protectedProcedure.query(async ({ ctx }) => {
         const snapshot = await ctx.db.collection("categories")
             .where("userId", "==", ctx.session.user.id!)
-            .orderBy("name", "asc")
             .get();
 
         const allDocs = snapshot.docs.map(d => ({ id: d.id, ...d.data() })) as any[];
+        allDocs.sort((a, b) => (a.name || "").localeCompare(b.name || ""));
+
         return allDocs.map(doc => ({
             ...doc,
             children: allDocs.filter(child => child.parentId === doc.id),

@@ -16,22 +16,20 @@ const PaymentMethod = {
 
 export async function getActivePeriodRange(db: any, userId: string) {
     const now = new Date();
-    const currentStart = new Date(now.getFullYear(), now.getMonth(), 1).toISOString();
+    const currentStart = new Date(now.getFullYear(), now.getMonth(), 1);
+    const currentStartIso = currentStart.toISOString();
 
-    // Check if there are transactions in current calendar month
-    const expThisMonth = await db.collection("expenses")
-        .where("userId", "==", userId)
-        .where("date", ">=", currentStart)
-        .limit(1)
-        .get();
+    // Query user expenses & incomes using default single-field index (userId)
+    const expSnap = await db.collection("expenses").where("userId", "==", userId).get();
+    const incSnap = await db.collection("incomes").where("userId", "==", userId).get();
 
-    const incThisMonth = await db.collection("incomes")
-        .where("userId", "==", userId)
-        .where("date", ">=", currentStart)
-        .limit(1)
-        .get();
+    const expDates = expSnap.docs.map((d: any) => d.data().date ? new Date(d.data().date) : null).filter(Boolean) as Date[];
+    const incDates = incSnap.docs.map((d: any) => d.data().date ? new Date(d.data().date) : null).filter(Boolean) as Date[];
+    const allDates = [...expDates, ...incDates];
 
-    if (expThisMonth.docs.length > 0 || incThisMonth.docs.length > 0) {
+    const hasThisMonth = allDates.some(d => d >= currentStart);
+
+    if (hasThisMonth || allDates.length === 0) {
         const daysInMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0).getDate();
         const currentEnd = new Date(now.getFullYear(), now.getMonth() + 1, 0, 23, 59, 59, 999).toISOString();
         return {
@@ -39,7 +37,7 @@ export async function getActivePeriodRange(db: any, userId: string) {
             label: "This Month",
             year: now.getFullYear(),
             month: now.getMonth(),
-            startDate: currentStart,
+            startDate: currentStartIso,
             endDate: currentEnd,
             daysInMonth,
             activeDayLimit: Math.min(now.getDate(), daysInMonth),
@@ -47,57 +45,23 @@ export async function getActivePeriodRange(db: any, userId: string) {
     }
 
     // Find latest transaction date across expenses & incomes
-    const latestExp = await db.collection("expenses")
-        .where("userId", "==", userId)
-        .orderBy("date", "desc")
-        .limit(1)
-        .get();
+    const latest = new Date(Math.max(...allDates.map(d => d.getTime())));
+    const year = latest.getFullYear();
+    const month = latest.getMonth();
+    const start = new Date(year, month, 1).toISOString();
+    const end = new Date(year, month + 1, 0, 23, 59, 59, 999).toISOString();
+    const monthNames = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+    const daysInMonth = new Date(year, month + 1, 0).getDate();
 
-    const latestInc = await db.collection("incomes")
-        .where("userId", "==", userId)
-        .orderBy("date", "desc")
-        .limit(1)
-        .get();
-
-    const dates: Date[] = [];
-    if (latestExp.docs.length > 0 && latestExp.docs[0].data().date) {
-        dates.push(new Date(latestExp.docs[0].data().date));
-    }
-    if (latestInc.docs.length > 0 && latestInc.docs[0].data().date) {
-        dates.push(new Date(latestInc.docs[0].data().date));
-    }
-
-    if (dates.length > 0) {
-        const latest = new Date(Math.max(...dates.map(d => d.getTime())));
-        const year = latest.getFullYear();
-        const month = latest.getMonth();
-        const start = new Date(year, month, 1).toISOString();
-        const end = new Date(year, month + 1, 0, 23, 59, 59, 999).toISOString();
-        const monthNames = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
-        const daysInMonth = new Date(year, month + 1, 0).getDate();
-
-        return {
-            isCurrentMonth: false,
-            label: `${monthNames[month]} ${year}`,
-            year,
-            month,
-            startDate: start,
-            endDate: end,
-            daysInMonth,
-            activeDayLimit: daysInMonth,
-        };
-    }
-
-    const daysInMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0).getDate();
     return {
-        isCurrentMonth: true,
-        label: "This Month",
-        year: now.getFullYear(),
-        month: now.getMonth(),
-        startDate: currentStart,
-        endDate: null as string | null,
+        isCurrentMonth: false,
+        label: `${monthNames[month]} ${year}`,
+        year,
+        month,
+        startDate: start,
+        endDate: end,
         daysInMonth,
-        activeDayLimit: now.getDate(),
+        activeDayLimit: daysInMonth,
     };
 }
 
@@ -115,27 +79,29 @@ export const expenseRouter = router({
         )
         .query(async ({ ctx, input }) => {
             const userId = ctx.session.user.id!;
-            let query = ctx.db.collection("expenses").where("userId", "==", userId);
+            const snapshot = await ctx.db.collection("expenses").where("userId", "==", userId).get();
+            let expenses = snapshot.docs.map(d => ({ id: d.id, ...d.data() })) as any[];
 
             if (input?.categoryId) {
-                query = query.where("categoryId", "==", input.categoryId);
+                expenses = expenses.filter(e => e.categoryId === input.categoryId);
             }
             if (input?.paymentMethod) {
-                query = query.where("paymentMethod", "==", input.paymentMethod);
+                expenses = expenses.filter(e => e.paymentMethod === input.paymentMethod);
             }
             if (input?.startDate) {
-                query = query.where("date", ">=", input.startDate.toISOString());
+                const startMs = input.startDate.getTime();
+                expenses = expenses.filter(e => new Date(e.date).getTime() >= startMs);
             }
             if (input?.endDate) {
-                query = query.where("date", "<=", input.endDate.toISOString());
+                const endMs = input.endDate.getTime();
+                expenses = expenses.filter(e => new Date(e.date).getTime() <= endMs);
             }
 
-            query = query.orderBy("date", "desc").limit(input?.limit ?? 1000);
+            expenses.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+            if (input?.limit) {
+                expenses = expenses.slice(0, input.limit);
+            }
 
-            const snapshot = await query.get();
-            const expenses = snapshot.docs.map(d => ({ id: d.id, ...d.data() })) as any[];
-
-            // Fetch categories to populate relation
             const catSnapshot = await ctx.db.collection("categories").where("userId", "==", userId).get();
             const categories = catSnapshot.docs.map(d => ({ id: d.id, ...d.data() }));
 
@@ -155,32 +121,26 @@ export const expenseRouter = router({
         .input(z.object({ allTime: z.boolean().optional() }).nullish())
         .query(async ({ ctx, input }) => {
             const userId = ctx.session.user.id!;
+            const snapshot = await ctx.db.collection("expenses").where("userId", "==", userId).get();
+            const expenses = snapshot.docs.map(d => d.data());
+
             if (input?.allTime) {
-                const snapshot = await ctx.db.collection("expenses")
-                    .where("userId", "==", userId)
-                    .get();
-                return snapshot.docs.reduce((sum, doc) => sum + (doc.data().amount || 0), 0);
+                return expenses.reduce((sum, e) => sum + (e.amount || 0), 0);
             }
 
             const period = await getActivePeriodRange(ctx.db, userId);
-            let query = ctx.db.collection("expenses")
-                .where("userId", "==", userId)
-                .where("date", ">=", period.startDate);
+            const startMs = new Date(period.startDate).getTime();
+            const endMs = period.endDate ? new Date(period.endDate).getTime() : Infinity;
 
-            if (period.endDate) {
-                query = query.where("date", "<=", period.endDate);
-            }
+            const filtered = expenses.filter(e => {
+                const t = new Date(e.date).getTime();
+                return t >= startMs && t <= endMs;
+            });
 
-            const snapshot = await query.get();
-            const total = snapshot.docs.reduce((sum, doc) => sum + (doc.data().amount || 0), 0);
-
+            const total = filtered.reduce((sum, e) => sum + (e.amount || 0), 0);
             if (total === 0) {
-                const allExp = await ctx.db.collection("expenses")
-                    .where("userId", "==", userId)
-                    .get();
-                return allExp.docs.reduce((sum, doc) => sum + (doc.data().amount || 0), 0);
+                return expenses.reduce((sum, e) => sum + (e.amount || 0), 0);
             }
-
             return total;
         }),
 
@@ -188,13 +148,12 @@ export const expenseRouter = router({
         .input(z.object({ limit: z.number().default(5) }))
         .query(async ({ ctx, input }) => {
             const userId = ctx.session.user.id!;
-            const snapshot = await ctx.db.collection("expenses")
-                .where("userId", "==", userId)
-                .orderBy("date", "desc")
-                .limit(input.limit)
-                .get();
+            const snapshot = await ctx.db.collection("expenses").where("userId", "==", userId).get();
 
-            const expenses = snapshot.docs.map(d => ({ id: d.id, ...d.data() })) as any[];
+            let expenses = snapshot.docs.map(d => ({ id: d.id, ...d.data() })) as any[];
+            expenses.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+            expenses = expenses.slice(0, input.limit);
+
             const catSnapshot = await ctx.db.collection("categories").where("userId", "==", userId).get();
             const categories = catSnapshot.docs.map(d => ({ id: d.id, ...d.data() }));
 
@@ -209,16 +168,14 @@ export const expenseRouter = router({
         const userId = ctx.session.user.id!;
         const period = await getActivePeriodRange(ctx.db, userId);
 
-        let query = ctx.db.collection("expenses")
-            .where("userId", "==", userId)
-            .where("date", ">=", period.startDate);
+        const snapshot = await ctx.db.collection("expenses").where("userId", "==", userId).get();
+        const startMs = new Date(period.startDate).getTime();
+        const endMs = period.endDate ? new Date(period.endDate).getTime() : Infinity;
 
-        if (period.endDate) {
-            query = query.where("date", "<=", period.endDate);
-        }
+        const expenses = snapshot.docs
+            .map(d => ({ amount: d.data().amount || 0, date: new Date(d.data().date) }))
+            .filter(e => e.date.getTime() >= startMs && e.date.getTime() <= endMs);
 
-        const snapshot = await query.get();
-        const expenses = snapshot.docs.map(d => ({ amount: d.data().amount || 0, date: new Date(d.data().date) }));
         const dailyTotals = Array.from({ length: period.activeDayLimit }, (_, i) => ({
             day: i + 1,
             amount: 0,
@@ -238,20 +195,17 @@ export const expenseRouter = router({
         const userId = ctx.session.user.id!;
         const period = await getActivePeriodRange(ctx.db, userId);
 
-        let query = ctx.db.collection("expenses")
-            .where("userId", "==", userId)
-            .where("date", ">=", period.startDate);
+        const snapshot = await ctx.db.collection("expenses").where("userId", "==", userId).get();
+        const startMs = new Date(period.startDate).getTime();
+        const endMs = period.endDate ? new Date(period.endDate).getTime() : Infinity;
 
-        if (period.endDate) {
-            query = query.where("date", "<=", period.endDate);
-        }
+        let filteredDocs = snapshot.docs.filter(d => {
+            const t = new Date(d.data().date).getTime();
+            return t >= startMs && t <= endMs;
+        });
 
-        let snapshot = await query.get();
-        // If active period has no expenses, fall back to all-time so categories are populated
-        if (snapshot.docs.length === 0) {
-            snapshot = await ctx.db.collection("expenses")
-                .where("userId", "==", userId)
-                .get();
+        if (filteredDocs.length === 0) {
+            filteredDocs = snapshot.docs;
         }
 
         const catSnapshot = await ctx.db.collection("categories").where("userId", "==", userId).get();
@@ -656,20 +610,19 @@ export const expenseRouter = router({
         const userId = ctx.session.user.id!;
         const period = await getActivePeriodRange(ctx.db, userId);
 
-        let query = ctx.db.collection("expenses")
-            .where("userId", "==", userId)
-            .where("date", ">=", period.startDate);
+        const snapshot = await ctx.db.collection("expenses").where("userId", "==", userId).get();
+        const startMs = new Date(period.startDate).getTime();
+        const endMs = period.endDate ? new Date(period.endDate).getTime() : Infinity;
 
-        if (period.endDate) {
-            query = query.where("date", "<=", period.endDate);
-        }
-
-        const snapshot = await query.get();
         const dayMap: Record<number, number> = {};
         snapshot.docs.forEach((doc) => {
             const data = doc.data();
-            const day = new Date(data.date).getDate();
-            dayMap[day] = (dayMap[day] ?? 0) + (data.amount || 0);
+            const d = new Date(data.date);
+            const t = d.getTime();
+            if (t >= startMs && t <= endMs) {
+                const day = d.getDate();
+                dayMap[day] = (dayMap[day] ?? 0) + (data.amount || 0);
+            }
         });
 
         // Ensure we display all days up to activeDayLimit or the highest day with recorded expenses
@@ -691,25 +644,18 @@ export const expenseRouter = router({
         const userId = ctx.session.user.id!;
         const now = new Date();
 
-        const latestExp = await ctx.db.collection("expenses")
-            .where("userId", "==", userId)
-            .orderBy("date", "desc")
-            .limit(1)
-            .get();
-        const latestInc = await ctx.db.collection("incomes")
-            .where("userId", "==", userId)
-            .orderBy("date", "desc")
-            .limit(1)
-            .get();
+        const expSnapshot = await ctx.db.collection("expenses").where("userId", "==", userId).get();
+        const incSnapshot = await ctx.db.collection("incomes").where("userId", "==", userId).get();
+
+        const candidateDates: number[] = [];
+        expSnapshot.docs.forEach((d) => {
+            if (d.data().date) candidateDates.push(new Date(d.data().date).getTime());
+        });
+        incSnapshot.docs.forEach((d) => {
+            if (d.data().date) candidateDates.push(new Date(d.data().date).getTime());
+        });
 
         let refDate = now;
-        const candidateDates: number[] = [];
-        if (latestExp.docs.length > 0 && latestExp.docs[0].data().date) {
-            candidateDates.push(new Date(latestExp.docs[0].data().date).getTime());
-        }
-        if (latestInc.docs.length > 0 && latestInc.docs[0].data().date) {
-            candidateDates.push(new Date(latestInc.docs[0].data().date).getTime());
-        }
         if (candidateDates.length > 0) {
             refDate = new Date(Math.max(...candidateDates));
         }
@@ -730,21 +676,6 @@ export const expenseRouter = router({
                 monthIndex: d.getMonth(),
             });
         }
-
-        const windowStart = new Date(monthlyData[0].year, monthlyData[0].monthIndex, 1).toISOString();
-        const windowEnd = new Date(monthlyData[11].year, monthlyData[11].monthIndex + 1, 0, 23, 59, 59, 999).toISOString();
-
-        const expSnapshot = await ctx.db.collection("expenses")
-            .where("userId", "==", userId)
-            .where("date", ">=", windowStart)
-            .where("date", "<=", windowEnd)
-            .get();
-
-        const incSnapshot = await ctx.db.collection("incomes")
-            .where("userId", "==", userId)
-            .where("date", ">=", windowStart)
-            .where("date", "<=", windowEnd)
-            .get();
 
         expSnapshot.docs.forEach((doc) => {
             const data = doc.data();
@@ -769,20 +700,24 @@ export const expenseRouter = router({
         // 1. Check for latest import batch record
         const batchesSnap = await ctx.db.collection("import_batches")
             .where("userId", "==", userId)
-            .orderBy("createdAt", "desc")
-            .limit(1)
             .get();
 
+        let batchDoc: any = null;
         if (!batchesSnap.empty) {
-            const batch = batchesSnap.docs[0].data();
+            const sortedBatches = batchesSnap.docs.map(d => ({ id: d.id, ...d.data() })) as any[];
+            sortedBatches.sort((a, b) => new Date(b.createdAt || 0).getTime() - new Date(a.createdAt || 0).getTime());
+            batchDoc = sortedBatches[0];
+        }
+
+        if (batchDoc) {
             return {
                 hasBatch: true,
-                batchId: batchesSnap.docs[0].id,
-                createdAt: batch.createdAt,
-                expenseCount: batch.expenseCount || 0,
-                incomeCount: batch.incomeCount || 0,
-                totalCount: (batch.expenseCount || 0) + (batch.incomeCount || 0),
-                filename: batch.filename || "Bank Statement PDF",
+                batchId: batchDoc.id,
+                createdAt: batchDoc.createdAt,
+                expenseCount: batchDoc.expenseCount || 0,
+                incomeCount: batchDoc.incomeCount || 0,
+                totalCount: (batchDoc.expenseCount || 0) + (batchDoc.incomeCount || 0),
+                filename: batchDoc.filename || "Bank Statement PDF",
             };
         }
 
@@ -814,11 +749,11 @@ export const expenseRouter = router({
             if (!targetBatchId) {
                 const batchSnap = await ctx.db.collection("import_batches")
                     .where("userId", "==", userId)
-                    .orderBy("createdAt", "desc")
-                    .limit(1)
                     .get();
                 if (!batchSnap.empty) {
-                    targetBatchId = batchSnap.docs[0].id;
+                    const sortedBatches = batchSnap.docs.map((d: any) => ({ id: d.id, ...d.data() }));
+                    sortedBatches.sort((a: any, b: any) => new Date(b.createdAt || 0).getTime() - new Date(a.createdAt || 0).getTime());
+                    targetBatchId = sortedBatches[0].id;
                 }
             }
 

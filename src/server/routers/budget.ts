@@ -26,24 +26,23 @@ export const budgetRouter = router({
             .get();
         const categories = categoriesSnapshot.docs.map(d => ({ id: d.id, ...d.data() }));
 
-        // Fetch all expenses for the active period (fallback to all-time)
+        // Fetch all expenses for user safely without composite index
         const period = await getActivePeriodRange(ctx.db, userId);
-        let expQuery = ctx.db.collection("expenses")
+        const allExpSnapshot = await ctx.db.collection("expenses")
             .where("userId", "==", userId)
-            .where("date", ">=", period.startDate);
+            .get();
+        const allExpenses = allExpSnapshot.docs.map(d => ({ id: d.id, ...d.data() })) as any[];
 
-        if (period.endDate) {
-            expQuery = expQuery.where("date", "<=", period.endDate);
-        }
+        const startMs = new Date(period.startDate).getTime();
+        const endMs = period.endDate ? new Date(period.endDate).getTime() : Infinity;
 
-        const expensesSnapshot = await expQuery.get();
-        let expenses = expensesSnapshot.docs.map(d => ({ id: d.id, ...d.data() })) as any[];
+        let expenses = allExpenses.filter(e => {
+            const t = new Date(e.date).getTime();
+            return t >= startMs && t <= endMs;
+        });
 
         if (expenses.length === 0) {
-            const allExpSnapshot = await ctx.db.collection("expenses")
-                .where("userId", "==", userId)
-                .get();
-            expenses = allExpSnapshot.docs.map(d => ({ id: d.id, ...d.data() })) as any[];
+            expenses = allExpenses;
         }
 
         // Calculate spent amount for each budget's category in memory
