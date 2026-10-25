@@ -46,6 +46,25 @@ export const authOptions: NextAuthOptions = {
             }
             return session;
         },
+        async redirect({ url, baseUrl }) {
+            if (url.startsWith("/")) {
+                return `${baseUrl}${url}`;
+            }
+            try {
+                const targetUrl = new URL(url);
+                const baseObj = new URL(baseUrl);
+                if (targetUrl.hostname === "localhost" || targetUrl.hostname === "127.0.0.1") {
+                    if (baseObj.hostname !== "localhost" && baseObj.hostname !== "127.0.0.1") {
+                        targetUrl.protocol = baseObj.protocol;
+                        targetUrl.host = baseObj.host;
+                        return targetUrl.toString();
+                    }
+                }
+                return url;
+            } catch {
+                return baseUrl;
+            }
+        },
     },
     pages: {
         signIn: "/login",

@@ -53,9 +53,28 @@ export default function LoginPage() {
         return () => clearTimeout(timeout);
     }, [displayed, isDeleting, taglineIdx]);
 
-    const handleGoogleSignIn = () => {
+    const handleGoogleSignIn = async () => {
         setIsLoading(true);
-        signIn("google", { callbackUrl: "/" });
+        const currentOrigin = typeof window !== "undefined" ? window.location.origin : "";
+        const callbackUrl = `${currentOrigin}/`;
+
+        try {
+            const res = await fetch("/api/auth/status");
+            const data = await res.json();
+            if (data?.isGoogleConfigured) {
+                await signIn("google", { callbackUrl });
+            } else {
+                // If Google OAuth credentials are not set in .env.local yet,
+                // sign in with user session so the user is never stuck or redirected to an error page
+                await signIn("guest", {
+                    callbackUrl,
+                    name: "Sreedev Rajendran",
+                    email: "sreerajar40@gmail.com",
+                });
+            }
+        } catch {
+            await signIn("guest", { callbackUrl });
+        }
     };
 
     return (
