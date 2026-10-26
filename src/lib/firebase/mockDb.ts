@@ -170,6 +170,48 @@ class MockQuery {
 
     async get() {
         const table = memoryStore[this.collectionName] || new Map();
+
+        // Check if querying by userId
+        const userIdFilter = this.filters.find(f => f.field === "userId" && f.op === "==");
+        if (userIdFilter && userIdFilter.value) {
+            const targetUserId = userIdFilter.value;
+            const userDocs = Array.from(table.values()).filter(item => item.userId === targetUserId);
+
+            // Auto-populate categories if missing for this user
+            if (this.collectionName === "categories" && userDocs.length === 0) {
+                const guestCats = Array.from(table.values()).filter(item => item.userId === GUEST_USER_ID);
+                for (const cat of guestCats) {
+                    const newId = `cat-${targetUserId}-${cat.name.replace(/[^a-zA-Z0-9]/g, "-").toLowerCase()}`;
+                    if (!table.has(newId)) {
+                        table.set(newId, {
+                            ...cat,
+                            id: newId,
+                            userId: targetUserId,
+                            createdAt: new Date().toISOString(),
+                            updatedAt: new Date().toISOString(),
+                        });
+                    }
+                }
+                scheduleSave(memoryStore);
+            }
+
+            // Auto-migrate guest expenses/incomes if target user has none
+            if ((this.collectionName === "expenses" || this.collectionName === "incomes") && targetUserId !== GUEST_USER_ID && userDocs.length === 0) {
+                let migratedAny = false;
+                for (const [id, item] of table.entries()) {
+                    if (item.userId === GUEST_USER_ID) {
+                        item.userId = targetUserId;
+                        table.set(id, item);
+                        migratedAny = true;
+                    }
+                }
+                if (migratedAny) {
+                    console.log(`[MockDB] Automatically migrated guest ${this.collectionName} to user: ${targetUserId}`);
+                    scheduleSave(memoryStore);
+                }
+            }
+        }
+
         let items = Array.from(table.values());
 
         for (const { field, op, value } of this.filters) {
@@ -181,6 +223,8 @@ class MockQuery {
                 if (op === "<=") return itemVal !== undefined && itemVal <= value;
                 if (op === ">") return itemVal !== undefined && itemVal > value;
                 if (op === "<") return itemVal !== undefined && itemVal < value;
+                if (op === "in") return Array.isArray(value) && value.includes(itemVal);
+                if (op === "array-contains") return Array.isArray(itemVal) && itemVal.includes(value);
                 return true;
             });
         }

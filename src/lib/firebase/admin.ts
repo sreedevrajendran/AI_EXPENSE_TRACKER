@@ -6,7 +6,8 @@ const clientEmail = process.env.FIREBASE_CLIENT_EMAIL?.trim();
 const rawPrivateKey = process.env.FIREBASE_PRIVATE_KEY?.trim();
 const privateKey = rawPrivateKey ? rawPrivateKey.replace(/\\n/g, '\n') : undefined;
 
-export const isFirebaseConfigured = Boolean(projectId && clientEmail && privateKey);
+const forceLocal = process.env.FORCE_LOCAL_STORAGE === "true" || process.env.STORAGE_MODE === "local";
+export const isFirebaseConfigured = !forceLocal && Boolean(projectId && clientEmail && privateKey);
 
 if (isFirebaseConfigured && !admin.apps.length) {
     try {
@@ -26,9 +27,10 @@ if (isFirebaseConfigured && !admin.apps.length) {
     console.warn('Firebase Admin credentials not set. Using local in-memory storage.');
 }
 
-export const db = isFirebaseConfigured && admin.apps.length > 0
-    ? admin.firestore()
-    : (getMockFirestore() as unknown as admin.firestore.Firestore);
+import { getResilientFirestore } from './resilientDb';
+
+export const rawFirestore = isFirebaseConfigured && admin.apps.length > 0 ? admin.firestore() : null;
+export const db = getResilientFirestore() as unknown as admin.firestore.Firestore;
 
 export const auth = isFirebaseConfigured && admin.apps.length > 0
     ? admin.auth()

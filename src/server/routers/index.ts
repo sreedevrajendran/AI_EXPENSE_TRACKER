@@ -4,6 +4,7 @@ import { categoryRouter } from "./category";
 import { budgetRouter } from "./budget";
 import { aiRouter } from "./ai";
 import { incomeRouter } from "./income";
+import { systemRouter } from "./system";
 
 export const appRouter = router({
     expense: expenseRouter,
@@ -11,6 +12,7 @@ export const appRouter = router({
     category: categoryRouter,
     budget: budgetRouter,
     ai: aiRouter,
+    system: systemRouter,
 });
 
 export type AppRouter = typeof appRouter;

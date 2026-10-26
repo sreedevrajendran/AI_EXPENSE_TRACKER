@@ -16,7 +16,13 @@ export function TRPCProvider({ children }: { children: React.ReactNode }) {
                 staleTime: 1000 * 30,
                 gcTime: 1000 * 60 * 5,
                 refetchOnWindowFocus: false,
-                retry: 1,
+                retry: (failureCount, error: any) => {
+                    const msg = String(error?.message || "");
+                    if (msg.includes("Quota exceeded") || msg.includes("RESOURCE_EXHAUSTED") || msg.includes("UNAUTHORIZED")) {
+                        return false;
+                    }
+                    return failureCount < 1;
+                },
             },
         },
     }));

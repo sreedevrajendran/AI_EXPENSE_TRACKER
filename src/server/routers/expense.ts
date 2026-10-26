@@ -14,7 +14,19 @@ const PaymentMethod = {
     OTHER: "OTHER"
 } as const;
 
+const activePeriodCache = new Map<string, { data: any; timestamp: number }>();
+
+export function invalidateActivePeriodCache(userId?: string) {
+    if (userId) activePeriodCache.delete(userId);
+    else activePeriodCache.clear();
+}
+
 export async function getActivePeriodRange(db: any, userId: string) {
+    const cached = activePeriodCache.get(userId);
+    if (cached && Date.now() - cached.timestamp < 30000) {
+        return cached.data;
+    }
+
     const now = new Date();
     const currentStart = new Date(now.getFullYear(), now.getMonth(), 1);
     const currentStartIso = currentStart.toISOString();
@@ -32,7 +44,7 @@ export async function getActivePeriodRange(db: any, userId: string) {
     if (hasThisMonth || allDates.length === 0) {
         const daysInMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0).getDate();
         const currentEnd = new Date(now.getFullYear(), now.getMonth() + 1, 0, 23, 59, 59, 999).toISOString();
-        return {
+        const result = {
             isCurrentMonth: true,
             label: "This Month",
             year: now.getFullYear(),
@@ -42,6 +54,8 @@ export async function getActivePeriodRange(db: any, userId: string) {
             daysInMonth,
             activeDayLimit: Math.min(now.getDate(), daysInMonth),
         };
+        activePeriodCache.set(userId, { data: result, timestamp: Date.now() });
+        return result;
     }
 
     // Find latest transaction date across expenses & incomes
@@ -53,7 +67,7 @@ export async function getActivePeriodRange(db: any, userId: string) {
     const monthNames = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
     const daysInMonth = new Date(year, month + 1, 0).getDate();
 
-    return {
+    const result = {
         isCurrentMonth: false,
         label: `${monthNames[month]} ${year}`,
         year,
@@ -63,6 +77,8 @@ export async function getActivePeriodRange(db: any, userId: string) {
         daysInMonth,
         activeDayLimit: daysInMonth,
     };
+    activePeriodCache.set(userId, { data: result, timestamp: Date.now() });
+    return result;
 }
 
 export const expenseRouter = router({
