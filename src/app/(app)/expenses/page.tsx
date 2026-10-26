@@ -211,7 +211,7 @@ export default function ExpensesPage() {
                     id: editExpense.id,
                     amount: editExpense.amount,
                     merchant: editExpense.merchant,
-                    categoryId: editExpense.category?.name ? undefined : undefined, // Quick hack for typing, real category mapping works in sheets
+                    categoryId: (editExpense as any).categoryId || (editExpense.category as any)?.id || undefined,
                     paymentMethod: editExpense.paymentMethod as any,
                     date: editExpense.date,
                     receiptUrl: editExpense.receiptUrl

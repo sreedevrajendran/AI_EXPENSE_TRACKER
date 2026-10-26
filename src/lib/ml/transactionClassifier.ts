@@ -8,6 +8,7 @@
 import fs from "fs";
 import path from "path";
 import { trainedModel } from "./trainedModel";
+import { normalizeCategoryName } from "../categories";
 
 export interface ClassificationResult {
     category: string;
@@ -119,6 +120,18 @@ export function classifyTransaction(description: string, amount?: number): Class
             type: item.type,
             confidence: 0.99,
             probabilities: { [item.category]: 0.99 },
+        };
+    }
+
+    // 2. High-precision semantic and keyword domain intelligence (Groceries, Transport, Bills, Food, etc.)
+    const semanticCat = normalizeCategoryName(description);
+    if (semanticCat && semanticCat !== "Other") {
+        const isIncomeCat = ["Salary", "Investments", "Interest & Dividends", "Cashback & Rewards", "Refunds"].includes(semanticCat);
+        return {
+            category: semanticCat,
+            type: isIncomeCat ? "INCOME" : "EXPENSE",
+            confidence: 0.96,
+            probabilities: { [semanticCat]: 0.96, Other: 0.04 },
         };
     }
 

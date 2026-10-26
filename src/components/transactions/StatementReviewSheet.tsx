@@ -593,12 +593,39 @@ export function StatementReviewSheet({ open, onOpenChange, transactions }: State
                                                         {formatCurrency(t.amount)}
                                                     </span>
                                                 </div>
-
                                                 <div className="flex items-center gap-1.5 mt-1 flex-wrap">
-                                                    {/* Category pill */}
-                                                    <span className="text-[10.5px] font-bold px-2 py-0.5 rounded-md bg-neutral-100 dark:bg-[#2C2C2E] text-neutral-700 dark:text-neutral-300">
-                                                        {t.category || "Uncategorized"}
-                                                    </span>
+                                                    {/* Interactive Category Selector Pill */}
+                                                    <div className="relative inline-flex items-center" onClick={(e) => e.stopPropagation()}>
+                                                        <select
+                                                            value={t.category || "Other"}
+                                                            onChange={(e) => {
+                                                                const newCat = e.target.value;
+                                                                setLocalTransactions((prev) =>
+                                                                    prev.map((item, i) => (i === t.originalIndex ? { ...item, category: newCat } : item))
+                                                                );
+                                                            }}
+                                                            className="text-[11px] font-bold px-2 py-0.5 rounded-md bg-neutral-100 dark:bg-[#2C2C2E] text-neutral-800 dark:text-neutral-200 border-none outline-none cursor-pointer appearance-none pr-5 hover:bg-neutral-200 dark:hover:bg-[#3A3A3C] transition-colors"
+                                                            style={{
+                                                                backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='10' viewBox='0 0 24 24' fill='none' stroke='%23888888' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E")`,
+                                                                backgroundRepeat: "no-repeat",
+                                                                backgroundPosition: "right 4px center",
+                                                            }}
+                                                        >
+                                                            <option value="Groceries">🛒 Groceries</option>
+                                                            <option value="Transport">🚗 Transport</option>
+                                                            <option value="Food & Dining">🍽️ Food & Dining</option>
+                                                            <option value="Shopping">🛍️ Shopping</option>
+                                                            <option value="Bills & Utilities">⚡ Bills & Utilities</option>
+                                                            <option value="Entertainment">🎬 Entertainment</option>
+                                                            <option value="Health">💊 Health</option>
+                                                            <option value="Travel">✈️ Travel</option>
+                                                            <option value="Salary">💼 Salary</option>
+                                                            <option value="UPI Transfer">🔄 UPI Transfer</option>
+                                                            <option value="Investments">📈 Investments</option>
+                                                            <option value="Education">📚 Education</option>
+                                                            <option value="Other">⚪ Other</option>
+                                                        </select>
+                                                    </div>
 
                                                     {/* Duplicate Ledger Badge */}
                                                     {duplicateIndices.has(t.originalIndex) && (

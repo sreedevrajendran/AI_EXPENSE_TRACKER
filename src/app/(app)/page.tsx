@@ -243,10 +243,12 @@ export default function HomePage() {
                                                 className="w-full block bg-white/60 dark:bg-[#1C1C1E]/60 backdrop-blur-2xl border border-white/50 dark:border-white/5 shadow-[0_4px_24px_-4px_rgba(0,0,0,0.05)] rounded-[24px] p-5 active:scale-[0.98] transition-all text-left"
                                                 onClick={() => {
                                                     setModalTitle(title);
-                                                    // Filter transactions by expense and the correct category id 
                                                     const filtered = allTransactions.filter(t =>
                                                         t.type === 'expense' &&
-                                                        (isOverall ? true : t.category?.id === budget.categoryId)
+                                                        (isOverall ? true : (
+                                                            t.category?.id === budget.categoryId ||
+                                                            (t.category?.name && budget.category?.name && t.category.name.toLowerCase() === budget.category.name.toLowerCase())
+                                                        ))
                                                     );
                                                     setModalTransactions(filtered);
                                                     setModalOpen(true);

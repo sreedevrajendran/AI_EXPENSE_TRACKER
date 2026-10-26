@@ -1,32 +1,79 @@
 import { z } from "zod";
 import { protectedProcedure, router } from "../trpc";
+import { DEFAULT_CATEGORY_METAS } from "@/lib/categories";
 
-export const DEFAULT_CATEGORY_METAS: Record<string, { icon: string; color: string }> = {
-    "Food & Dining": { icon: "utensils", color: "#FF9F0A" },
-    "Transport": { icon: "car", color: "#007AFF" },
-    "Shopping": { icon: "shopping-bag", color: "#FF2D55" },
-    "Entertainment": { icon: "film", color: "#5856D6" },
-    "Health": { icon: "heart-pulse", color: "#34C759" },
-    "Bills & Utilities": { icon: "zap", color: "#FF6B00" },
-    "Travel": { icon: "plane", color: "#5AC8FA" },
-    "Groceries": { icon: "shopping-cart", color: "#30D158" },
-    "Education": { icon: "book-open", color: "#BF5AF2" },
-    "Salary": { icon: "briefcase", color: "#30D158" },
-    "UPI Transfer": { icon: "arrow-left-right", color: "#5E5CE6" },
-    "Transfers": { icon: "repeat", color: "#0A84FF" },
-    "Cashback & Rewards": { icon: "gift", color: "#FFD60A" },
-    "Interest & Dividends": { icon: "trending-up", color: "#34C759" },
-    "Refunds": { icon: "rotate-ccw", color: "#64D2FF" },
-    "Investments": { icon: "bar-chart-2", color: "#AF52DE" },
-    "Other": { icon: "circle", color: "#8E8E93" },
-};
+export { DEFAULT_CATEGORY_METAS };
+
+async function ensureCategories(db: any, userId: string): Promise<any[]> {
+    try {
+        const snapshot = await db.collection("categories").where("userId", "==", userId).get();
+        if (!snapshot.empty) {
+            const docs = snapshot.docs.map((d: any) => ({ id: d.id, ...d.data() }));
+            const hasGroceries = docs.some((d: any) => d.name?.toLowerCase() === "groceries");
+            const hasTransport = docs.some((d: any) => d.name?.toLowerCase() === "transport");
+            
+            if (!hasGroceries || !hasTransport) {
+                const missingToSeed: any[] = [];
+                if (!hasGroceries) missingToSeed.push({ name: "Groceries", ...DEFAULT_CATEGORY_METAS["Groceries"] });
+                if (!hasTransport) missingToSeed.push({ name: "Transport", ...DEFAULT_CATEGORY_METAS["Transport"] });
+                try {
+                    const batch = db.batch();
+                    for (const m of missingToSeed) {
+                        const newRef = db.collection("categories").doc();
+                        const data = { ...m, userId, parentId: null, createdAt: new Date().toISOString(), updatedAt: new Date().toISOString() };
+                        batch.set(newRef, data);
+                        docs.push({ id: newRef.id, ...data });
+                    }
+                    await batch.commit();
+                } catch {
+                    // Fallback: append in-memory
+                    missingToSeed.forEach((m, idx) => {
+                        docs.push({ id: `temp-${m.name.toLowerCase()}-${idx}`, ...m, userId, parentId: null });
+                    });
+                }
+            }
+            return docs;
+        }
+
+        // Empty category collection -> auto-seed all defaults
+        const defaults = Object.entries(DEFAULT_CATEGORY_METAS).map(([name, meta]) => ({
+            name,
+            icon: meta.icon,
+            color: meta.color,
+            userId,
+            parentId: null,
+            createdAt: new Date().toISOString(),
+            updatedAt: new Date().toISOString(),
+        }));
+
+        try {
+            const batch = db.batch();
+            const seededDocs: any[] = [];
+            for (const d of defaults) {
+                const ref = db.collection("categories").doc();
+                batch.set(ref, d);
+                seededDocs.push({ id: ref.id, ...d });
+            }
+            await batch.commit();
+            return seededDocs;
+        } catch {
+            return defaults.map((d, i) => ({ id: `default-cat-${i}`, ...d }));
+        }
+    } catch {
+        return Object.entries(DEFAULT_CATEGORY_METAS).map(([name, meta], i) => ({
+            id: `default-cat-${i}`,
+            name,
+            icon: meta.icon,
+            color: meta.color,
+            userId,
+            parentId: null,
+        }));
+    }
+}
 
 export const categoryRouter = router({
     list: protectedProcedure.query(async ({ ctx }) => {
-        const allSnapshot = await ctx.db.collection("categories")
-            .where("userId", "==", ctx.session.user.id!)
-            .get();
-        const allDocs = allSnapshot.docs.map(d => ({ id: d.id, ...d.data() })) as any[];
+        const allDocs = await ensureCategories(ctx.db, ctx.session.user.id!);
         allDocs.sort((a, b) => (a.name || "").localeCompare(b.name || ""));
 
         const parents = allDocs.filter(c => !c.parentId);
@@ -38,17 +85,13 @@ export const categoryRouter = router({
     }),
 
     listAll: protectedProcedure.query(async ({ ctx }) => {
-        const snapshot = await ctx.db.collection("categories")
-            .where("userId", "==", ctx.session.user.id!)
-            .get();
-
-        const allDocs = snapshot.docs.map(d => ({ id: d.id, ...d.data() })) as any[];
+        const allDocs = await ensureCategories(ctx.db, ctx.session.user.id!);
         allDocs.sort((a, b) => (a.name || "").localeCompare(b.name || ""));
 
         return allDocs.map(doc => ({
             ...doc,
             children: allDocs.filter(child => child.parentId === doc.id),
-            parent: doc.parentId ? allDocs.find(p => p.id === doc.parentId) || null : null,
+            parent: doc.parentId ? allDocs.find((p: any) => p.id === doc.parentId) || null : null,
         }));
     }),
 

@@ -21,6 +21,7 @@ import { getLucideIcon } from "@/lib/icons";
 import { useEffect } from "react";
 import { showMatchingAlert } from "@/components/ui/AlertCard";
 import { useCurrency } from "@/context/CurrencyContext";
+import { findMatchingCategory } from "@/lib/categories";
 
 export interface ExpenseEditData {
     id: string;
@@ -218,10 +219,7 @@ export function AddExpenseSheet({ open, onOpenChange, onSuccess, editData, editI
                 else setPaymentMethod("OTHER");
             }
             if (prefillData.category && categories) {
-                const match = categories.find((c: { id: string; name: string }) =>
-                    c.name.toLowerCase().includes(prefillData.category.toLowerCase()) ||
-                    prefillData.category.toLowerCase().includes(c.name.toLowerCase())
-                );
+                const match = findMatchingCategory(prefillData.category, categories);
                 if (match) setSelectedCategory(match.id);
             }
             setPaymentMeta(prefillData);

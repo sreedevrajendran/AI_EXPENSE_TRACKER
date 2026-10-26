@@ -3,6 +3,7 @@ import { protectedProcedure, router } from "../trpc";
 import { GoogleGenAI } from "@google/genai";
 import { parseBankStatementPdf } from "@/lib/bankStatementParser";
 import { classifyTransaction } from "@/lib/ml/transactionClassifier";
+import { normalizeCategoryName } from "@/lib/categories";
 import { answerFinancialQuery, buildRichPromptContext, FinancialContext } from "@/lib/ai/financialAssistant";
 import { retrieveFinancialContext, RAGCitation } from "@/lib/ai/ragEngine";
 import { formatCurrency, getCurrencyConfig } from "@/lib/utils";
@@ -60,20 +61,8 @@ function parseTransactionIntent(text: string) {
         else if (lower.includes("lunch") || lower.includes("dinner") || lower.includes("food")) merchant = "Dining & Food";
         else if (lower.includes("uber") || lower.includes("cab") || lower.includes("taxi")) merchant = "Taxi Cab Ride";
         
-        let category = "Other";
-        if (lower.includes("food") || lower.includes("coffee") || lower.includes("lunch") || lower.includes("dinner") || lower.includes("restaurant") || lower.includes("cafe")) {
-            category = "Food & Dining";
-        } else if (lower.includes("grocery") || lower.includes("supermarket") || lower.includes("groceries") || lower.includes("vegetables") || lower.includes("fruits")) {
-            category = "Groceries";
-        } else if (lower.includes("uber") || lower.includes("cab") || lower.includes("fuel") || lower.includes("petrol") || lower.includes("flight") || lower.includes("train") || lower.includes("bus")) {
-            category = "Transport";
-        } else if (lower.includes("shopping") || lower.includes("amazon") || lower.includes("clothes") || lower.includes("shoes") || lower.includes("mall")) {
-            category = "Shopping";
-        } else if (lower.includes("bill") || lower.includes("electricity") || lower.includes("wifi") || lower.includes("internet") || lower.includes("water") || lower.includes("rent")) {
-            category = "Bills & Utilities";
-        } else if (lower.includes("movie") || lower.includes("netflix") || lower.includes("cinema") || lower.includes("game")) {
-            category = "Entertainment";
-        } else {
+        let category = normalizeCategoryName(text);
+        if (category === "Other") {
             try {
                 const ml = classifyTransaction(text, amount);
                 if (ml && ml.confidence >= 0.25 && ml.category && ml.category !== "Other") {
@@ -132,15 +121,7 @@ const VALID_CATEGORIES = [
 ] as const;
 
 function sanitizeCategory(val?: any): string {
-    if (!val || typeof val !== "string") return "Other";
-    const found = VALID_CATEGORIES.find(c => c.toLowerCase() === val.trim().toLowerCase());
-    if (found) return found;
-    for (const c of VALID_CATEGORIES) {
-        if (val.toLowerCase().includes(c.toLowerCase()) || c.toLowerCase().includes(val.toLowerCase())) {
-            return c;
-        }
-    }
-    return "Other";
+    return normalizeCategoryName(val);
 }
 
 function formatPaymentNote(fields: {

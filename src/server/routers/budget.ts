@@ -1,6 +1,6 @@
 import { z } from "zod";
 import { protectedProcedure, router } from "../trpc";
-
+import { findMatchingCategory } from "@/lib/categories";
 import { getActivePeriodRange } from "./expense";
 
 // Ensure BudgetPeriod enum matches since we ripped out Prisma
@@ -24,7 +24,7 @@ export const budgetRouter = router({
         const categoriesSnapshot = await ctx.db.collection("categories")
             .where("userId", "==", userId)
             .get();
-        const categories = categoriesSnapshot.docs.map(d => ({ id: d.id, ...d.data() }));
+        const categories = categoriesSnapshot.docs.map(d => ({ id: d.id, ...d.data() })) as any[];
 
         // Fetch all expenses for user safely without composite index
         const period = await getActivePeriodRange(ctx.db, userId);
@@ -45,15 +45,24 @@ export const budgetRouter = router({
             expenses = allExpenses;
         }
 
-        // Calculate spent amount for each budget's category in memory
+        // Calculate spent amount for each budget's category with robust normalization
         const budgetsWithSpent = budgets.map((budget) => {
-            const budgetExpenses = expenses.filter(e => budget.categoryId ? e.categoryId === budget.categoryId : true);
+            const budgetCat = budget.categoryId ? categories.find(c => c.id === budget.categoryId) : null;
+            const budgetExpenses = expenses.filter(e => {
+                if (!budget.categoryId) return true; // Overall budget
+                if (e.categoryId === budget.categoryId) return true;
+                if (budgetCat?.name) {
+                    const matched = findMatchingCategory(e.categoryName || e.merchant, categories);
+                    return matched?.id === budget.categoryId || matched?.name?.toLowerCase() === budgetCat.name.toLowerCase();
+                }
+                return false;
+            });
             const spent = budgetExpenses.reduce((sum, e) => sum + (e.amount || 0), 0);
 
             return {
                 ...budget,
                 spent,
-                category: budget.categoryId ? categories.find(c => c.id === budget.categoryId) : null
+                category: budgetCat || null
             };
         });
 

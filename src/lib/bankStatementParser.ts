@@ -49,11 +49,13 @@ const CATEGORY_RULES: { category: string; keywords: string[] }[] = [
     {
         category: "Groceries",
         keywords: [
-            "NEARBYMART", "SUPER MARKET", "SUPERMARKET", "N R C SUPER", "AMAZONGROCERY",
+            "NEARBYMART", "SUPER MARKET", "SUPERMARKET", "HYPERMARKET", "N R C SUPER", "AMAZONGROCERY",
             "AL NAZ FRUITS", "BADA BAZAAR", "MEERA STORES", "SHAJI STORE", "A V M STORE",
-            "AMBADIYIL NATURAL", "RELIANCE RETAIL", "RELIANCE FRESH", "DMART", "BLINKIT",
-            "ZEPTO", "INSTAMART", "BIGBASKET", "GROCERY", "PROVISION", "VEGETABLE",
-            "FRUITS", "NATURES BASKET", "SPENCER", "MEAT", "DAIRY", "MILK", "BAZAAR"
+            "AMBADIYIL NATURAL", "RELIANCE RETAIL", "RELIANCE FRESH", "DMART", "D-MART", "BLINKIT",
+            "ZEPTO", "INSTAMART", "BIGBASKET", "GROCERY", "GROCERIES", "PROVISION", "PROVISIONS",
+            "VEGETABLE", "VEGETABLES", "VEGGIE", "VEGGIES", "FRUITS", "FRUIT", "NATURES BASKET", "NATURE'S BASKET",
+            "SPENCER", "MEAT", "DAIRY", "MILK", "BAZAAR", "KIRANA", "RATION", "MART", "FOODMART",
+            "CONVENIENCE STORE", "COUNTRY DELIGHT", "OTPY", "LULU HYPERMARKET", "SPAR", "LICIOUS", "FRESHTOHOME"
         ],
     },
     {
@@ -61,9 +63,11 @@ const CATEGORY_RULES: { category: string; keywords: string[] }[] = [
         keywords: [
             "PEEVEES HP", "SHARA FUELS", "KRISHNA FUELS", "MANAMEL FUELS", "KEERTHY PETROLE",
             "AMMA FUELS", "J AND J AUTO FU", "INDIAN OIL PETR", "CHEMPUMTHARA FU", "ANU FUELS",
-            "KERALA STATE RO", "KSRTC", "PETROL", "FUEL", "DIESEL", "SHELL", "HPCL",
-            "BPCL", "IOCL", "INDIAN OIL", "UBER", "OLA", "RAPIDO", "TAXI", "CAB",
-            "METRO", "RAILWAY", "IRCTC", "TOLL", "FASTAG", "PARKING", "AUTO", "BUS"
+            "KERALA STATE RO", "KSRTC", "PETROL", "FUEL", "FUELS", "DIESEL", "CNG", "SHELL", "HPCL",
+            "BPCL", "IOCL", "INDIAN OIL", "UBER", "OLA", "RAPIDO", "TAXI", "CAB", "CABS",
+            "METRO", "DMRC", "BMRC", "RAILWAY", "IRCTC", "TRAIN", "TOLL", "FASTAG", "PARKING", "AUTO", "BUS",
+            "TRANSPORT", "TRANSPORTATION", "COMMUTE", "TRANSIT", "FLIGHT", "AIRLINE", "INDIGO", "AIR INDIA",
+            "SPICEJET", "VISTARA", "AKASA", "REDBUS", "ABHIBUS", "CHALO", "ZOOMCAR", "DRIVER", "TRAVELS", "RICKSHAW"
         ],
     },
     {
@@ -356,21 +360,7 @@ function categorizeNarration(narration: string, type: "EXPENSE" | "INCOME"): str
         }
     }
 
-    // 7. UPI P2P Transfers (Person-to-Person incoming or outgoing transfers)
-    if (
-        upper.includes("UPI/") ||
-        upper.includes("SENT USING PAYT") ||
-        upper.includes("PAYMENT FROM PH") ||
-        upper.includes("PAID VIA NAVI") ||
-        upper.includes("PAID VIA SUPERM") ||
-        upper.includes("PAY TO") ||
-        upper.includes("@") ||
-        upper.includes("UPI")
-    ) {
-        return "UPI Transfer";
-    }
-
-    // 8. Trained Machine Learning Inference
+    // 7. Intelligent Semantic & ML Classification (runs BEFORE defaulting to generic UPI Transfer)
     try {
         const ml = classifyTransaction(narration);
         if (ml && ml.confidence >= 0.25 && ml.category && ml.category !== "Other") {
@@ -384,6 +374,20 @@ function categorizeNarration(narration: string, type: "EXPENSE" | "INCOME"): str
         }
     } catch {
         // ignore
+    }
+
+    // 8. UPI P2P Transfers (Only for remaining unclassified Person-to-Person incoming or outgoing transfers)
+    if (
+        upper.includes("UPI/") ||
+        upper.includes("SENT USING PAYT") ||
+        upper.includes("PAYMENT FROM PH") ||
+        upper.includes("PAID VIA NAVI") ||
+        upper.includes("PAID VIA SUPERM") ||
+        upper.includes("PAY TO") ||
+        upper.includes("@") ||
+        upper.includes("UPI")
+    ) {
+        return "UPI Transfer";
     }
 
     // 9. Default fallback

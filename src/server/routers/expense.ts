@@ -1,6 +1,6 @@
 import { z } from "zod";
 import { protectedProcedure, router } from "../trpc";
-import { DEFAULT_CATEGORY_METAS } from "./category";
+import { DEFAULT_CATEGORY_METAS, normalizeCategoryName, findMatchingCategory } from "@/lib/categories";
 import { learnTransactions } from "@/lib/ml/transactionClassifier";
 // Define local PaymentMethod enum since Prisma is removed
 const PaymentMethod = {
@@ -124,14 +124,20 @@ export const expenseRouter = router({
             }
 
             const catSnapshot = await ctx.db.collection("categories").where("userId", "==", userId).get();
-            const categories = catSnapshot.docs.map(d => ({ id: d.id, ...d.data() }));
+            const categories = catSnapshot.docs.map(d => ({ id: d.id, ...d.data() })) as any[];
 
-            return expenses.map(exp => ({
-                ...exp,
-                date: new Date(exp.date),
-                createdAt: exp.createdAt ? new Date(exp.createdAt) : undefined,
-                category: exp.categoryId ? categories.find(c => c.id === exp.categoryId) : null
-            }));
+            return expenses.map(exp => {
+                let resolvedCat = exp.categoryId ? categories.find(c => c.id === exp.categoryId) : null;
+                if (!resolvedCat && (exp.categoryName || exp.merchant)) {
+                    resolvedCat = findMatchingCategory(exp.categoryName || exp.merchant, categories);
+                }
+                return {
+                    ...exp,
+                    date: new Date(exp.date),
+                    createdAt: exp.createdAt ? new Date(exp.createdAt) : undefined,
+                    category: resolvedCat || null
+                };
+            });
         }),
 
     getActivePeriod: protectedProcedure.query(async ({ ctx }) => {
@@ -252,15 +258,13 @@ export const expenseRouter = router({
             let matchedCat: any = null;
             if (data.categoryId && catById.has(data.categoryId)) {
                 matchedCat = catById.get(data.categoryId);
-            } else if (data.categoryName && catByName.has(data.categoryName.toLowerCase().trim())) {
-                matchedCat = catByName.get(data.categoryName.toLowerCase().trim());
-            } else if (data.category && typeof data.category === "string" && catByName.has(data.category.toLowerCase().trim())) {
-                matchedCat = catByName.get(data.category.toLowerCase().trim());
+            } else {
+                matchedCat = findMatchingCategory(data.categoryName || data.category || data.merchant, userCategories);
             }
 
-            const rawName = matchedCat?.name || data.categoryName || (typeof data.category === "string" ? data.category : "") || "Other";
-            const name = rawName.trim() || "Other";
-            const meta = DEFAULT_CATEGORY_METAS[name] || { icon: "circle", color: "#8E8E93" };
+            const canonical = normalizeCategoryName(matchedCat?.name || data.categoryName || (typeof data.category === "string" ? data.category : "") || data.merchant);
+            const name = matchedCat?.name || (canonical !== "Other" ? canonical : (data.categoryName || "Other"));
+            const meta = DEFAULT_CATEGORY_METAS[name] || DEFAULT_CATEGORY_METAS[canonical] || { icon: "circle", color: "#8E8E93" };
             const color = matchedCat?.color || meta.color || "#8E8E93";
             const icon = matchedCat?.icon || meta.icon || "circle";
             const catId = matchedCat?.id || data.categoryId || name;
@@ -309,26 +313,44 @@ export const expenseRouter = router({
             const { categoryName, ...expenseData } = input;
 
             let finalCategoryId = expenseData.categoryId;
-            let categoryParams = null;
+            let categoryParams: any = null;
 
-            if (!finalCategoryId && categoryName) {
+            let targetCategoryName = categoryName;
+            if (!finalCategoryId && !targetCategoryName && expenseData.merchant) {
+                const detected = normalizeCategoryName(expenseData.merchant + " " + (expenseData.note || ""));
+                if (detected && detected !== "Other") {
+                    targetCategoryName = detected;
+                }
+            }
+
+            if (!finalCategoryId && targetCategoryName) {
                 const catSnapshot = await ctx.db.collection("categories").where("userId", "==", userId).get();
-                const userCategories = catSnapshot.docs.map(d => ({ id: d.id, name: d.data().name }));
+                const userCategories = catSnapshot.docs.map(d => ({ id: d.id, ...d.data() })) as any[];
 
-                const categoryMap = new Map(
-                    userCategories.map(c => [c.name.toLowerCase().trim(), c.id])
-                );
-
-                const exactMatch = categoryMap.get(categoryName.toLowerCase().trim());
-                if (exactMatch) {
-                    finalCategoryId = exactMatch;
+                const matched = findMatchingCategory(targetCategoryName, userCategories);
+                if (matched) {
+                    finalCategoryId = matched.id;
+                    categoryParams = matched;
                 } else {
-                    const aiNameLower = categoryName.toLowerCase().trim();
-                    for (const [catName, catId] of categoryMap.entries()) {
-                        if (aiNameLower.includes(catName) || catName.includes(aiNameLower)) {
-                            finalCategoryId = catId;
-                            break;
-                        }
+                    const canonical = normalizeCategoryName(targetCategoryName);
+                    const finalName = canonical !== "Other" ? canonical : targetCategoryName;
+                    const meta = DEFAULT_CATEGORY_METAS[finalName] || { icon: "circle", color: "#007AFF" };
+                    const catRef = ctx.db.collection("categories").doc();
+                    const catData = {
+                        name: finalName,
+                        icon: meta.icon,
+                        color: meta.color,
+                        userId,
+                        parentId: null,
+                        createdAt: new Date().toISOString(),
+                        updatedAt: new Date().toISOString(),
+                    };
+                    try {
+                        await catRef.set(catData);
+                        finalCategoryId = catRef.id;
+                        categoryParams = { id: catRef.id, ...catData };
+                    } catch {
+                        // ignore if firestore set fails
                     }
                 }
             }
@@ -337,6 +359,7 @@ export const expenseRouter = router({
                 ...expenseData,
                 date: input.date.toISOString(),
                 categoryId: finalCategoryId || null,
+                categoryName: categoryParams?.name || targetCategoryName || undefined,
                 userId,
                 createdAt: new Date().toISOString(),
                 updatedAt: new Date().toISOString(),
@@ -345,7 +368,7 @@ export const expenseRouter = router({
             const cleanDoc = Object.fromEntries(Object.entries(newDoc).filter(([_, v]) => v !== undefined));
             const added = await ctx.db.collection("expenses").add(cleanDoc);
 
-            if (finalCategoryId) {
+            if (finalCategoryId && !categoryParams) {
                 const catDoc = await ctx.db.collection("categories").doc(finalCategoryId).get();
                 categoryParams = catDoc.exists ? catDoc.data() : null;
             }
@@ -430,25 +453,18 @@ export const expenseRouter = router({
                     const { categoryName, ...rest } = item;
                     let categoryId: string | null = null;
 
-                    if (categoryName) {
-                        const exactMatch = categoryMap.get(categoryName.toLowerCase().trim());
-                        if (exactMatch) {
-                            categoryId = exactMatch;
+                    if (categoryName || rest.merchant) {
+                        const targetName = categoryName || rest.merchant;
+                        const matched = findMatchingCategory(targetName, userCategories);
+                        if (matched) {
+                            categoryId = matched.id;
                         } else {
-                            const aiNameLower = categoryName.toLowerCase().trim();
-                            for (const [catName, catId] of categoryMap.entries()) {
-                                if (aiNameLower.includes(catName) || catName.includes(aiNameLower)) {
-                                    categoryId = catId;
-                                    break;
-                                }
-                            }
-                        }
-
-                        if (!categoryId) {
+                            const canonical = normalizeCategoryName(targetName);
+                            const finalName = canonical !== "Other" ? canonical : (categoryName || "Other");
+                            const meta = DEFAULT_CATEGORY_METAS[finalName] || { icon: "circle", color: "#8E8E93" };
                             const catRef = ctx.db.collection("categories").doc();
-                            const meta = DEFAULT_CATEGORY_METAS[categoryName] || { icon: "circle", color: "#8E8E93" };
                             const catData = {
-                                name: categoryName,
+                                name: finalName,
                                 icon: meta.icon,
                                 color: meta.color,
                                 userId,
@@ -456,9 +472,9 @@ export const expenseRouter = router({
                                 createdAt: new Date().toISOString(),
                                 updatedAt: new Date().toISOString(),
                             };
-                            await catRef.set(catData);
+                            batch.set(catRef, catData);
                             categoryId = catRef.id;
-                            categoryMap.set(categoryName.toLowerCase().trim(), categoryId);
+                            userCategories.push({ id: catRef.id, name: finalName });
                         }
                     }
 
