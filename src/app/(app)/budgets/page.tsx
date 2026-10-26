@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { useSession } from "next-auth/react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Plus, Loader2, PiggyBank, MoreHorizontal } from "lucide-react";
 import { Drawer } from "vaul";
@@ -80,9 +81,11 @@ function BudgetCard({ budget, onEdit }: { budget: BudgetWithSpent, onEdit: (b: B
 }
 
 export default function BudgetsPage() {
+    const { status } = useSession();
+    const isAuthReady = status !== "loading";
     const [sheetOpen, setSheetOpen] = useState(false);
     const [editingBudget, setEditingBudget] = useState<BudgetWithSpent | null>(null);
-    const { data: budgets, isLoading } = trpc.budget.list.useQuery();
+    const { data: budgets, isLoading } = trpc.budget.list.useQuery(undefined, { enabled: isAuthReady });
     const utils = trpc.useUtils();
 
     useEffect(() => {

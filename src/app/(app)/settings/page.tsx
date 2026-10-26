@@ -8,6 +8,7 @@ import { useCurrency } from "@/context/CurrencyContext";
 import { motion } from "framer-motion";
 import Image from "next/image";
 import { useEffect, useState, useRef } from "react";
+import { appStorage } from "@/lib/storage";
 import { trpc } from "@/trpc/client";
 import {
     Eye,
@@ -41,7 +42,8 @@ import { AnimatePresence } from "framer-motion";
 import { cn } from "@/lib/utils";
 
 export default function SettingsPage() {
-    const { data: session } = useSession();
+    const { data: session, status } = useSession();
+    const isAuthReady = status !== "loading";
     const { theme, setTheme } = useTheme();
     const { isPrivate, togglePrivacy } = usePrivacy();
     const { currency, setCurrency: setContextCurrency } = useCurrency();
@@ -51,9 +53,9 @@ export default function SettingsPage() {
     const [statementFilterOpen, setStatementFilterOpen] = useState(false);
 
     const utils = trpc.useUtils();
-    const { data: allExpenses } = trpc.expense.list.useQuery({ limit: 1000 });
-    const { data: allIncomes } = trpc.income.list.useQuery({ limit: 1000 });
-    const importInfoQuery = trpc.expense.getLastImportInfo.useQuery();
+    const { data: allExpenses } = trpc.expense.list.useQuery({ limit: 1000 }, { enabled: isAuthReady });
+    const { data: allIncomes } = trpc.income.list.useQuery({ limit: 1000 }, { enabled: isAuthReady });
+    const importInfoQuery = trpc.expense.getLastImportInfo.useQuery(undefined, { enabled: isAuthReady });
     const rollbackMutation = trpc.expense.rollbackLastImport.useMutation();
     const clearAllMutation = trpc.expense.clearAllTransactions.useMutation();
     const bulkCreateExpenses = trpc.expense.bulkCreateWithCategories.useMutation();
@@ -66,18 +68,15 @@ export default function SettingsPage() {
 
     useEffect(() => {
         setMounted(true);
-        if (typeof window !== "undefined") {
-            const stored = localStorage.getItem("floww_reminders_enabled");
+        appStorage.getItem("floww_reminders_enabled").then((stored) => {
             setNotificationsEnabled(stored !== "false");
-        }
+        });
     }, []);
 
     const toggleNotifications = async () => {
         const next = !notificationsEnabled;
         setNotificationsEnabled(next);
-        if (typeof window !== "undefined") {
-            localStorage.setItem("floww_reminders_enabled", String(next));
-        }
+        await appStorage.setItem("floww_reminders_enabled", String(next));
         if (next) {
             const granted = await requestNotificationPermission();
             if (granted) {

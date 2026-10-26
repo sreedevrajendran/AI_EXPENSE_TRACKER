@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { useSession } from "next-auth/react";
 import { motion } from "framer-motion";
 import { Plus, Receipt, Paperclip, TrendingDown, Hash, FileText } from "lucide-react";
 import { trpc } from "@/trpc/client";
@@ -25,12 +26,14 @@ const PM_LABELS: Record<string, string> = {
 };
 
 export default function ExpensesPage() {
+    const { status } = useSession();
+    const isAuthReady = status !== "loading";
     const [addOpen, setAddOpen] = useState(false);
     const [statementOpen, setStatementOpen] = useState(false);
     const [editExpense, setEditExpense] = useState<ExpenseItem | null>(null);
-    const { data: expenses, isLoading: isListLoading } = trpc.expense.list.useQuery({ limit: 2000 });
-    const { data: incomes } = trpc.income.list.useQuery({ limit: 2000 });
-    const { data: monthTotal, isLoading: isTotalLoading } = trpc.expense.getMonthTotal.useQuery();
+    const { data: expenses, isLoading: isListLoading } = trpc.expense.list.useQuery({ limit: 2000 }, { enabled: isAuthReady });
+    const { data: incomes } = trpc.income.list.useQuery({ limit: 2000 }, { enabled: isAuthReady });
+    const { data: monthTotal, isLoading: isTotalLoading } = trpc.expense.getMonthTotal.useQuery(undefined, { enabled: isAuthReady });
 
     const isLoading = isListLoading || isTotalLoading;
     const displayTotal = (expenses && expenses.length > 0)

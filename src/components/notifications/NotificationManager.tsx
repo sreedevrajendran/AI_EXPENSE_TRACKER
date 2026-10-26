@@ -6,24 +6,37 @@ import { trpc } from "@/trpc/client";
 import { evaluateNotificationTriggers, FlowwNotification, requestNotificationPermission } from "@/lib/notifications";
 import { showMatchingAlert } from "@/components/ui/AlertCard";
 
-export function NotificationManager() {
-    const { data: session } = useSession();
+import { appStorage } from "@/lib/storage";
 
-    const { data: expenses } = trpc.expense.list.useQuery({ limit: 100 }, { staleTime: 60000 });
-    const { data: incomes } = trpc.income.list.useQuery({ limit: 100 }, { staleTime: 60000 });
-    const { data: budgets } = trpc.budget.list.useQuery(undefined, { staleTime: 60000 });
+export function NotificationManager() {
+    const { data: session, status } = useSession();
+    const isAuthed = status === "authenticated";
+
+    const { data: expenses } = trpc.expense.list.useQuery(
+        { limit: 100 },
+        { staleTime: 60000, enabled: isAuthed }
+    );
+    const { data: incomes } = trpc.income.list.useQuery(
+        { limit: 100 },
+        { staleTime: 60000, enabled: isAuthed }
+    );
+    const { data: budgets } = trpc.budget.list.useQuery(
+        undefined,
+        { staleTime: 60000, enabled: isAuthed }
+    );
 
     // Request permissions on first visit if not yet requested
     useEffect(() => {
-        const hasPrompted = localStorage.getItem("floww_notification_prompted");
-        if (!hasPrompted) {
-            // Delay slightly after mount so user is immersed in app
-            const timer = setTimeout(() => {
-                requestNotificationPermission().catch(() => {});
-                localStorage.setItem("floww_notification_prompted", "true");
-            }, 3000);
-            return () => clearTimeout(timer);
-        }
+        appStorage.getItem("floww_notification_prompted").then((hasPrompted) => {
+            if (!hasPrompted) {
+                // Delay slightly after mount so user is immersed in app
+                const timer = setTimeout(() => {
+                    requestNotificationPermission().catch(() => {});
+                    appStorage.setItem("floww_notification_prompted", "true");
+                }, 3000);
+                return () => clearTimeout(timer);
+            }
+        });
     }, []);
 
     // Periodic evaluation of notification scenarios

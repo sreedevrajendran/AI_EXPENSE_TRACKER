@@ -2,6 +2,7 @@
 
 import { Capacitor } from "@capacitor/core";
 import { LocalNotifications } from "@capacitor/local-notifications";
+import { appStorage } from "@/lib/storage";
 
 export interface FlowwNotification {
     id: number;
@@ -85,13 +86,13 @@ export async function sendNotification(notification: {
 
         // Record in local notification history
         try {
-            const existing = JSON.parse(localStorage.getItem("floww_notification_history") || "[]");
+            const existing = JSON.parse(appStorage.getItemSync("floww_notification_history") || "[]");
             existing.unshift({ id, title, body, scenario, timestamp: Date.now() });
-            localStorage.setItem("floww_notification_history", JSON.stringify(existing.slice(0, 30)));
-            localStorage.setItem("floww_last_notification_time", String(Date.now()));
-            localStorage.setItem(`floww_last_${scenario}_time`, String(Date.now()));
+            appStorage.setItemSync("floww_notification_history", JSON.stringify(existing.slice(0, 30)));
+            appStorage.setItemSync("floww_last_notification_time", String(Date.now()));
+            appStorage.setItemSync(`floww_last_${scenario}_time`, String(Date.now()));
         } catch {
-            // Ignore localStorage parse errors
+            // Ignore storage parse errors
         }
     }
 
@@ -155,7 +156,7 @@ export async function evaluateNotificationTriggers({
     if (typeof window === "undefined") return;
 
     // Check if reminders are enabled in settings
-    const remindersEnabled = localStorage.getItem("floww_reminders_enabled") !== "false";
+    const remindersEnabled = appStorage.getItemSync("floww_reminders_enabled") !== "false";
     if (!remindersEnabled && !force) return;
 
     const now = new Date();
@@ -170,7 +171,7 @@ export async function evaluateNotificationTriggers({
     const hasTransactionsToday = expensesToday.length > 0 || incomesToday.length > 0;
 
     // Cooldown checks: don't notify more than once every 3.5 hours unless forced
-    const lastNotifTime = parseInt(localStorage.getItem("floww_last_notification_time") || "0", 10);
+    const lastNotifTime = parseInt(appStorage.getItemSync("floww_last_notification_time") || "0", 10);
     const hoursSinceLastNotif = (Date.now() - lastNotifTime) / (1000 * 60 * 60);
 
     if (!force && hoursSinceLastNotif < 3.5) {
@@ -179,7 +180,7 @@ export async function evaluateNotificationTriggers({
 
     // Scenario 1: Mid-day expense check-in (12:30 PM - 4:00 PM)
     if (currentHour >= 12 && currentHour < 16 && !hasTransactionsToday) {
-        const lastMidday = parseInt(localStorage.getItem("floww_last_midday_nudge_time") || "0", 10);
+        const lastMidday = parseInt(appStorage.getItemSync("floww_last_midday_nudge_time") || "0", 10);
         const hoursSinceMidday = (Date.now() - lastMidday) / (1000 * 60 * 60);
         if (hoursSinceMidday >= 18 || force) {
             await sendNotification({
@@ -193,7 +194,7 @@ export async function evaluateNotificationTriggers({
 
     // Scenario 2: Evening wrap-up & receipt reminder (7:30 PM - 10:30 PM)
     if (currentHour >= 19 && currentHour <= 22 && !hasTransactionsToday) {
-        const lastEvening = parseInt(localStorage.getItem("floww_last_evening_wrapup_time") || "0", 10);
+        const lastEvening = parseInt(appStorage.getItemSync("floww_last_evening_wrapup_time") || "0", 10);
         const hoursSinceEvening = (Date.now() - lastEvening) / (1000 * 60 * 60);
         if (hoursSinceEvening >= 18 || force) {
             await sendNotification({
@@ -212,11 +213,11 @@ export async function evaluateNotificationTriggers({
                 const pct = Math.round((b.spent / b.amount) * 100);
                 const categoryName = b.category?.name || "General";
                 const lastBudgetNotifKey = `floww_last_budget_alert_${b.id}`;
-                const lastBudgetNotif = parseInt(localStorage.getItem(lastBudgetNotifKey) || "0", 10);
+                const lastBudgetNotif = parseInt(appStorage.getItemSync(lastBudgetNotifKey) || "0", 10);
                 const daysSince = (Date.now() - lastBudgetNotif) / (1000 * 60 * 60 * 24);
 
                 if (daysSince >= 2 || force) {
-                    localStorage.setItem(lastBudgetNotifKey, String(Date.now()));
+                    appStorage.setItemSync(lastBudgetNotifKey, String(Date.now()));
                     await sendNotification({
                         title: `Budget Limit Warning (${categoryName}) ⚠️`,
                         body: `Heads up ${firstName}! Your ${categoryName} budget has reached ${pct}% of its limit. Stay on track for the month!`,
@@ -234,7 +235,7 @@ export async function evaluateNotificationTriggers({
     const hoursSinceTx = latestTxTime > 0 ? (Date.now() - latestTxTime) / (1000 * 60 * 60) : 0;
 
     if (hoursSinceTx >= 28 && currentHour >= 10 && currentHour <= 20) {
-        const lastInactivity = parseInt(localStorage.getItem("floww_last_inactivity_24h_time") || "0", 10);
+        const lastInactivity = parseInt(appStorage.getItemSync("floww_last_inactivity_24h_time") || "0", 10);
         const hoursSinceLastInactivity = (Date.now() - lastInactivity) / (1000 * 60 * 60);
         if (hoursSinceLastInactivity >= 24 || force) {
             await sendNotification({
@@ -248,7 +249,7 @@ export async function evaluateNotificationTriggers({
 
     // Scenario 5: Weekend Financial Snapshot (Saturday / Sunday 9 AM - 12 PM)
     if ((currentDay === 0 || currentDay === 6) && currentHour >= 9 && currentHour < 12) {
-        const lastWeekend = parseInt(localStorage.getItem("floww_last_weekend_review_time") || "0", 10);
+        const lastWeekend = parseInt(appStorage.getItemSync("floww_last_weekend_review_time") || "0", 10);
         const daysSinceWeekend = (Date.now() - lastWeekend) / (1000 * 60 * 60 * 24);
         if (daysSinceWeekend >= 4 || force) {
             await sendNotification({

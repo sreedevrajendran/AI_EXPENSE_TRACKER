@@ -2,6 +2,8 @@
 
 import React, { createContext, useContext, useEffect, useState } from "react";
 
+import { appStorage } from "@/lib/storage";
+
 interface PrivacyContextType {
     isPrivate: boolean;
     togglePrivacy: () => void;
@@ -16,14 +18,15 @@ export function PrivacyProvider({ children }: { children: React.ReactNode }) {
     const [isPrivate, setIsPrivate] = useState(false);
 
     useEffect(() => {
-        const stored = localStorage.getItem("privacy-mode");
-        if (stored === "true") setIsPrivate(true);
+        appStorage.getItem("privacy-mode").then((stored) => {
+            if (stored === "true") setIsPrivate(true);
+        });
     }, []);
 
     const togglePrivacy = () => {
         setIsPrivate((prev) => {
             const next = !prev;
-            localStorage.setItem("privacy-mode", String(next));
+            appStorage.setItem("privacy-mode", String(next));
             return next;
         });
     };

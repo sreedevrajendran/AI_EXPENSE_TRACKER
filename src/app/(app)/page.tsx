@@ -25,7 +25,8 @@ function getIcon(name: string) {
 }
 
 export default function HomePage() {
-    const { data: session } = useSession();
+    const { data: session, status } = useSession();
+    const isAuthReady = status !== "loading";
     const userName = session?.user?.name?.split(' ')[0] || "there";
 
     const [addExpenseOpen, setAddExpenseOpen] = useState(false);
@@ -43,12 +44,30 @@ export default function HomePage() {
 
 
     const [periodView, setPeriodView] = useState<"all" | "active">("all");
-    const { data: monthTotal } = trpc.expense.getMonthTotal.useQuery(periodView === "all" ? { allTime: true } : undefined);
-    const { data: monthIncomeTotal } = trpc.income.getMonthTotal.useQuery(periodView === "all" ? { allTime: true } : undefined);
-    const { data: activePeriod } = trpc.expense.getActivePeriod.useQuery();
-    const { data: recentExpenses } = trpc.expense.getRecentExpenses.useQuery({ limit: 100 }); // Fetch more for modal
-    const { data: recentIncomes } = trpc.income.getRecentIncomes.useQuery({ limit: 100 }); // Fetch more for modal
-    const { data: budgets } = trpc.budget.list.useQuery();
+    const { data: monthTotal } = trpc.expense.getMonthTotal.useQuery(
+        periodView === "all" ? { allTime: true } : undefined,
+        { enabled: isAuthReady }
+    );
+    const { data: monthIncomeTotal } = trpc.income.getMonthTotal.useQuery(
+        periodView === "all" ? { allTime: true } : undefined,
+        { enabled: isAuthReady }
+    );
+    const { data: activePeriod } = trpc.expense.getActivePeriod.useQuery(
+        undefined,
+        { enabled: isAuthReady }
+    );
+    const { data: recentExpenses } = trpc.expense.getRecentExpenses.useQuery(
+        { limit: 100 },
+        { enabled: isAuthReady }
+    );
+    const { data: recentIncomes } = trpc.income.getRecentIncomes.useQuery(
+        { limit: 100 },
+        { enabled: isAuthReady }
+    );
+    const { data: budgets } = trpc.budget.list.useQuery(
+        undefined,
+        { enabled: isAuthReady }
+    );
 
     const allTransactions: ModalTransaction[] = [...(recentExpenses ?? []), ...(recentIncomes ?? [])]
         .map(t => ({

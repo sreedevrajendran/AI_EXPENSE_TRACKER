@@ -32,14 +32,15 @@ const CurrencyContext = createContext<CurrencyContextType>({
     convertToBase: (amount: number) => amount,
 });
 
+import { appStorage } from "@/lib/storage";
+
 export function CurrencyProvider({ children }: { children: React.ReactNode }) {
     const [currency, setCurrencyState] = useState<string>("₹ INR");
 
     useEffect(() => {
-        const stored = localStorage.getItem("floww_currency");
-        if (stored) {
-            setCurrencyState(stored);
-        }
+        appStorage.getItem("floww_currency").then((stored) => {
+            if (stored) setCurrencyState(stored);
+        });
 
         const handleStorageChange = (e: StorageEvent) => {
             if (e.key === "floww_currency" && e.newValue) {
@@ -52,8 +53,9 @@ export function CurrencyProvider({ children }: { children: React.ReactNode }) {
             if (customEvent.detail) {
                 setCurrencyState(customEvent.detail);
             } else {
-                const latest = localStorage.getItem("floww_currency");
-                if (latest) setCurrencyState(latest);
+                appStorage.getItem("floww_currency").then((latest) => {
+                    if (latest) setCurrencyState(latest);
+                });
             }
         };
 
@@ -68,7 +70,7 @@ export function CurrencyProvider({ children }: { children: React.ReactNode }) {
 
     const setCurrency = useCallback((newCurrency: string) => {
         setCurrencyState(newCurrency);
-        localStorage.setItem("floww_currency", newCurrency);
+        appStorage.setItem("floww_currency", newCurrency);
         window.dispatchEvent(new CustomEvent("floww_currency_change", { detail: newCurrency }));
     }, []);
 

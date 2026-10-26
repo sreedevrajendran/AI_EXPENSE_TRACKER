@@ -24,15 +24,10 @@ export const SUPPORTED_CURRENCIES: Record<string, CurrencyConfig> = {
     AED: { code: "AED", symbol: "AED", locale: "en-AE", label: "AED", name: "UAE Dirham" },
 };
 
+import { appStorage } from "./storage";
+
 export function getStoredCurrency(): string {
-    if (typeof window !== "undefined") {
-        try {
-            return localStorage.getItem("floww_currency") || "₹ INR";
-        } catch {
-            return "₹ INR";
-        }
-    }
-    return "₹ INR";
+    return appStorage.getItemSync("floww_currency", "₹ INR") || "₹ INR";
 }
 
 export function getCurrencyConfig(currencyStr?: string | null): CurrencyConfig {

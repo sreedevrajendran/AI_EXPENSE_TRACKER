@@ -6,31 +6,28 @@ import { Shield, Check, ExternalLink, Sparkles, Lock, FileText } from "lucide-re
 import Link from "next/link";
 import { showMatchingAlert } from "@/components/ui/AlertCard";
 
+import { appStorage } from "@/lib/storage";
+
 export function TermsAcceptanceModal() {
     const [open, setOpen] = useState(false);
     const [agreed, setAgreed] = useState(false);
 
     useEffect(() => {
         // Check if user has already accepted the terms
-        try {
-            const accepted = localStorage.getItem("floww_terms_accepted_v1");
+        appStorage.getItem("floww_terms_accepted_v1").then((accepted) => {
             if (!accepted) {
                 // Show modal with a short natural delay
                 const timer = setTimeout(() => setOpen(true), 600);
                 return () => clearTimeout(timer);
             }
-        } catch {
-            // In case of restricted localStorage, do not block user
-        }
+        }).catch(() => {
+            // In case of restricted storage, do not block user
+        });
     }, []);
 
     const handleAccept = () => {
-        try {
-            localStorage.setItem("floww_terms_accepted_v1", "true");
-            localStorage.setItem("floww_terms_accepted_at", new Date().toISOString());
-        } catch {
-            // ignore
-        }
+        appStorage.setItem("floww_terms_accepted_v1", "true");
+        appStorage.setItem("floww_terms_accepted_at", new Date().toISOString());
         setOpen(false);
         showMatchingAlert({
             status: "success",

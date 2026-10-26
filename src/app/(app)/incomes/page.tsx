@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { useSession } from "next-auth/react";
 import { motion } from "framer-motion";
 import { Plus, Receipt, Paperclip, Wallet, TrendingUp, Hash } from "lucide-react";
 import { trpc } from "@/trpc/client";
@@ -24,10 +25,12 @@ type IncomeItem = {
 };
 
 export default function IncomesPage() {
+    const { status } = useSession();
+    const isAuthReady = status !== "loading";
     const [addOpen, setAddOpen] = useState(false);
     const [editIncome, setEditIncome] = useState<IncomeItem | null>(null);
-    const { data: incomes, isLoading: isListLoading } = trpc.income.list.useQuery({ limit: 2000 });
-    const { data: monthTotal, isLoading: isTotalLoading } = trpc.income.getMonthTotal.useQuery();
+    const { data: incomes, isLoading: isListLoading } = trpc.income.list.useQuery({ limit: 2000 }, { enabled: isAuthReady });
+    const { data: monthTotal, isLoading: isTotalLoading } = trpc.income.getMonthTotal.useQuery(undefined, { enabled: isAuthReady });
 
     const isLoading = isListLoading || isTotalLoading;
     const displayTotal = (incomes && incomes.length > 0)
