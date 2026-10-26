@@ -19,7 +19,9 @@ function verifyPassword(password: string, hash: string, salt: string) {
 }
 
 export const authOptions: NextAuthOptions = {
-    adapter: isFirebaseConfigured && db ? (FirestoreAdapter(db) as any) : undefined,
+    // Note: Do NOT use FirestoreAdapter here because when Firestore daily quota is exhausted,
+    // the adapter fails all OAuth callbacks with RESOURCE_EXHAUSTED and aborts sign in.
+    // Instead, we use stateless JWT sessions with resilient non-blocking user profile sync.
     providers: [
         GoogleProvider({
             clientId: process.env.GOOGLE_CLIENT_ID || "",
@@ -51,36 +53,41 @@ export const authOptions: NextAuthOptions = {
                 const email = rawEmail.trim().toLowerCase();
                 const name = credentials?.name?.trim() || email.split("@")[0];
                 const image = credentials?.image || `https://api.dicebear.com/7.x/initials/svg?seed=${encodeURIComponent(email)}`;
+                const defaultId = `user_${email.replace(/[^a-zA-Z0-9]/g, "_")}`;
 
                 if (isFirebaseConfigured && db) {
-                    const usersRef = db.collection("users");
-                    const snapshot = await usersRef.where("email", "==", email).limit(1).get();
+                    try {
+                        const usersRef = db.collection("users");
+                        const snapshot = await usersRef.where("email", "==", email).limit(1).get();
 
-                    if (snapshot.empty) {
-                        const docRef = usersRef.doc();
-                        const newUser = {
-                            id: docRef.id,
-                            email,
-                            name,
-                            image,
-                            createdAt: new Date(),
+                        if (snapshot.empty) {
+                            const docRef = usersRef.doc(defaultId);
+                            const newUser = {
+                                id: defaultId,
+                                email,
+                                name,
+                                image,
+                                createdAt: new Date(),
+                            };
+                            await docRef.set(newUser);
+                            return newUser;
+                        }
+
+                        const userDoc = snapshot.docs[0];
+                        const userData = userDoc.data();
+                        return {
+                            id: userDoc.id,
+                            name: userData.name || name,
+                            email: userData.email || email,
+                            image: userData.image || image,
                         };
-                        await docRef.set(newUser);
-                        return newUser;
+                    } catch (e) {
+                        console.warn("[google-native] Firestore user sync failed, using local profile:", e);
                     }
-
-                    const userDoc = snapshot.docs[0];
-                    const userData = userDoc.data();
-                    return {
-                        id: userDoc.id,
-                        name: userData.name || name,
-                        email: userData.email || email,
-                        image: userData.image || image,
-                    };
                 }
 
                 return {
-                    id: `user_${email.replace(/[^a-zA-Z0-9]/g, "_")}`,
+                    id: defaultId,
                     name,
                     email,
                     image,
@@ -114,59 +121,66 @@ export const authOptions: NextAuthOptions = {
                 }
 
                 if (isFirebaseConfigured && db) {
-                    const usersRef = db.collection("users");
-                    const snapshot = await usersRef.where("email", "==", email).limit(1).get();
+                    try {
+                        const usersRef = db.collection("users");
+                        const snapshot = await usersRef.where("email", "==", email).limit(1).get();
 
-                    if (snapshot.empty) {
-                        // User does not exist yet -> automatically create new account
-                        const docRef = usersRef.doc();
-                        const { hash, salt } = hashPassword(password);
-                        const newUser = {
-                            id: docRef.id,
-                            email,
-                            name,
-                            image: `https://api.dicebear.com/7.x/initials/svg?seed=${encodeURIComponent(email)}`,
-                            passwordHash: hash,
-                            salt,
-                            createdAt: new Date(),
-                        };
-                        await docRef.set(newUser);
-                        return {
-                            id: docRef.id,
-                            name: newUser.name,
-                            email: newUser.email,
-                            image: newUser.image,
-                        };
-                    }
-
-                    const userDoc = snapshot.docs[0];
-                    const userData = userDoc.data();
-
-                    if (action === "signup" && userData.passwordHash) {
-                        throw new Error("An account with this email already exists. Please sign in.");
-                    }
-
-                    if (userData.passwordHash && userData.salt) {
-                        const isValid = verifyPassword(password, userData.passwordHash, userData.salt);
-                        if (!isValid) {
-                            throw new Error("Incorrect password. Please verify and try again.");
+                        if (snapshot.empty) {
+                            // User does not exist yet -> automatically create new account
+                            const docRef = usersRef.doc();
+                            const { hash, salt } = hashPassword(password);
+                            const newUser = {
+                                id: docRef.id,
+                                email,
+                                name,
+                                image: `https://api.dicebear.com/7.x/initials/svg?seed=${encodeURIComponent(email)}`,
+                                passwordHash: hash,
+                                salt,
+                                createdAt: new Date(),
+                            };
+                            await docRef.set(newUser);
+                            return {
+                                id: docRef.id,
+                                name: newUser.name,
+                                email: newUser.email,
+                                image: newUser.image,
+                            };
                         }
-                    } else {
-                        // Existing account without password -> link password now
-                        const { hash, salt } = hashPassword(password);
-                        await userDoc.ref.update({
-                            passwordHash: hash,
-                            salt,
-                            name: userData.name || name,
-                        });
-                    }
 
-                    return {
-                        id: userDoc.id,
-                        name: userData.name || name,
-                        email: userData.email || email,
-                        image: userData.image || `https://api.dicebear.com/7.x/initials/svg?seed=${encodeURIComponent(email)}`,
-                    };
+                        const userDoc = snapshot.docs[0];
+                        const userData = userDoc.data();
+
+                        if (action === "signup" && userData.passwordHash) {
+                            throw new Error("An account with this email already exists. Please sign in.");
+                        }
+
+                        if (userData.passwordHash && userData.salt) {
+                            const isValid = verifyPassword(password, userData.passwordHash, userData.salt);
+                            if (!isValid) {
+                                throw new Error("Incorrect password. Please verify and try again.");
+                            }
+                        } else {
+                            // Existing account without password -> link password now
+                            const { hash, salt } = hashPassword(password);
+                            await userDoc.ref.update({
+                                passwordHash: hash,
+                                salt,
+                                name: userData.name || name,
+                            });
+                        }
+
+                        return {
+                            id: userDoc.id,
+                            name: userData.name || name,
+                            email: userData.email || email,
+                            image: userData.image || `https://api.dicebear.com/7.x/initials/svg?seed=${encodeURIComponent(email)}`,
+                        };
+                    } catch (e: any) {
+                        if (e?.message?.includes("Incorrect password") || e?.message?.includes("already exists")) {
+                            throw e;
+                        }
+                        console.warn("[credentials] Firestore auth error, falling back to local user:", e);
+                    }
                 }
 
                 // Offline fallback
@@ -199,6 +213,28 @@ export const authOptions: NextAuthOptions = {
     },
     secret: process.env.NEXTAUTH_SECRET || "floww-secret-jwt-key-2026-safe-production",
     callbacks: {
+        async signIn({ user }) {
+            if (isFirebaseConfigured && db && user?.email) {
+                try {
+                    const email = user.email.toLowerCase();
+                    const usersRef = db.collection("users");
+                    const snapshot = await usersRef.where("email", "==", email).limit(1).get();
+                    if (snapshot.empty) {
+                        const userId = user.id || `user_${email.replace(/[^a-zA-Z0-9]/g, "_")}`;
+                        await usersRef.doc(userId).set({
+                            id: userId,
+                            email,
+                            name: user.name || email.split("@")[0],
+                            image: user.image || `https://api.dicebear.com/7.x/initials/svg?seed=${encodeURIComponent(email)}`,
+                            createdAt: new Date(),
+                        });
+                    }
+                } catch (e) {
+                    console.warn("[NextAuth signIn] Background user profile sync skipped:", e);
+                }
+            }
+            return true;
+        },
         jwt({ token, user }) {
             if (user) {
                 token.id = user.id;
@@ -242,15 +278,21 @@ export const authOptions: NextAuthOptions = {
     },
     events: {
         async createUser({ user }) {
-            if (user.email && user.name) {
-                await sendWelcomeEmail(user.email, user.name);
+            try {
+                if (user.email && user.name) {
+                    await sendWelcomeEmail(user.email, user.name);
+                }
+            } catch {
+                // Ignore email failure
             }
         },
         async signIn({ user, isNewUser }) {
-            // We only send the login email if it's NOT a brand new user (since they will already get a welcome email).
-            // Note: The `isNewUser` flag is only available in the `signIn` event if using a database adapter.
-            if (!isNewUser && user.email && user.name) {
-                await sendLoginEmail(user.email, user.name);
+            try {
+                if (!isNewUser && user.email && user.name) {
+                    await sendLoginEmail(user.email, user.name);
+                }
+            } catch {
+                // Ignore email failure
             }
         }
     }

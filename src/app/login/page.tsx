@@ -1,7 +1,10 @@
 "use client";
 
-import { signIn } from "next-auth/react";
+import { signIn, useSession } from "next-auth/react";
+import { useRouter, useSearchParams } from "next/navigation";
 import { motion } from "framer-motion";
+import { Suspense, useState, useEffect } from "react";
+import Link from "next/link";
 import {
     Camera,
     Brain,
@@ -14,8 +17,6 @@ import {
     Lock,
     Loader2,
 } from "lucide-react";
-import { useState, useEffect } from "react";
-import Link from "next/link";
 
 const features = [
     { icon: Camera, label: "AI Receipt Scanner", color: "#007AFF" },
@@ -40,12 +41,37 @@ const highlights = [
     "100% private, encrypted ledger with zero ads",
 ];
 
-export default function LoginPage() {
+function LoginContent() {
+    const { data: session, status } = useSession();
+    const router = useRouter();
+    const searchParams = useSearchParams();
+    const errorParam = searchParams.get("error");
+
     const [isLoading, setIsLoading] = useState(false);
     const [errorMessage, setErrorMessage] = useState<string | null>(null);
     const [taglineIdx, setTaglineIdx] = useState(0);
     const [displayed, setDisplayed] = useState("");
     const [isDeleting, setIsDeleting] = useState(false);
+
+    // Auto-redirect if session is already active or resolves
+    useEffect(() => {
+        if (status === "authenticated" && session) {
+            window.location.replace("/");
+        }
+    }, [status, session]);
+
+    // Check for NextAuth callback errors
+    useEffect(() => {
+        if (errorParam) {
+            if (errorParam === "OAuthCallback" || errorParam === "Callback") {
+                setErrorMessage("Google authorization was interrupted. Please tap Continue with Google to try again.");
+            } else if (errorParam === "CredentialsSignin") {
+                setErrorMessage("Account sign-in failed. Please try again.");
+            } else {
+                setErrorMessage(`Notice: ${errorParam}`);
+            }
+        }
+    }, [errorParam]);
 
     // Typewriter effect
     useEffect(() => {
@@ -75,35 +101,38 @@ export default function LoginPage() {
             const isNative = Boolean(capacitor && typeof capacitor.isNativePlatform === "function" && capacitor.isNativePlatform());
             const nativeGoogleAuth = capacitor?.Plugins?.NativeGoogleAuth;
 
-            if (isNative) {
-                if (!nativeGoogleAuth) {
-                    setErrorMessage("Google Sign-In module is initializing. Please tap again in a moment.");
-                    setIsLoading(false);
-                    return;
-                }
+            if (isNative && nativeGoogleAuth) {
+                try {
+                    // 1-Tap native Android Google Play Services account picker
+                    const googleAccount = await nativeGoogleAuth.signIn();
 
-                // 1-Tap native Android Google Play Services account picker
-                const googleAccount = await nativeGoogleAuth.signIn();
+                    if (googleAccount?.email) {
+                        const res = await signIn("google-native", {
+                            redirect: false,
+                            email: googleAccount.email,
+                            name: googleAccount.name || googleAccount.email.split("@")[0],
+                            image: googleAccount.imageUrl || `https://api.dicebear.com/7.x/initials/svg?seed=${encodeURIComponent(googleAccount.email)}`,
+                            callbackUrl: "/",
+                        });
 
-                if (googleAccount?.email) {
-                    const res = await signIn("google-native", {
-                        redirect: false,
-                        email: googleAccount.email,
-                        name: googleAccount.name || googleAccount.email.split("@")[0],
-                        image: googleAccount.imageUrl || `https://api.dicebear.com/7.x/initials/svg?seed=${encodeURIComponent(googleAccount.email)}`,
-                        callbackUrl: "/",
-                    });
-
-                    if (res?.ok) {
-                        window.location.href = "/";
-                        return;
-                    } else {
-                        setErrorMessage(res?.error || "Account authorization failed.");
+                        if (res?.ok) {
+                            window.location.replace("/");
+                            return;
+                        } else {
+                            console.warn("[GoogleSignIn] Native credentials unsuccessful, falling back to web OAuth:", res?.error);
+                            await signIn("google", { callbackUrl: "/" });
+                            return;
+                        }
+                    }
+                } catch (nativeErr: any) {
+                    const msg = String(nativeErr?.message || nativeErr);
+                    // If user manually dismissed account picker, exit cleanly without error banner
+                    if (msg.toLowerCase().includes("cancel") || msg.includes("12501") || msg.includes("16")) {
                         setIsLoading(false);
                         return;
                     }
-                } else {
-                    setIsLoading(false);
+                    console.warn("[GoogleSignIn] Native auth exception, falling back to web flow:", nativeErr);
+                    await signIn("google", { callbackUrl: "/" });
                     return;
                 }
             }
@@ -114,7 +143,6 @@ export default function LoginPage() {
             console.error("Sign in error:", err);
             setIsLoading(false);
             const msg = String(err?.message || err);
-            // If user closed or dismissed the account picker dialog
             if (msg.toLowerCase().includes("cancel") || msg.includes("12501") || msg.includes("16")) {
                 return;
             }
@@ -284,5 +312,13 @@ export default function LoginPage() {
                 </p>
             </footer>
         </div>
+    );
+}
+
+export default function LoginPage() {
+    return (
+        <Suspense fallback={<div className="min-h-dvh bg-[#070913]" />}>
+            <LoginContent />
+        </Suspense>
     );
 }
