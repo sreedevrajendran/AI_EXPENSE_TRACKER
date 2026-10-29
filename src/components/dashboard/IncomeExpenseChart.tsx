@@ -23,8 +23,12 @@ export function IncomeExpenseChart() {
 
     if (isLoading) {
         return (
-            <div className="w-full h-72 rounded-[28px] bg-white dark:bg-[#1C1C1E] border border-black/5 dark:border-white/5 flex items-center justify-center shadow-sm">
-                <Loader2 className="animate-spin text-neutral-400" />
+            <div className="w-full h-72 rounded-[28px] bg-white/60 dark:bg-[#1C1C1E]/60 border border-neutral-200/50 dark:border-neutral-800/50 p-5 space-y-4 animate-pulse">
+                <div className="flex justify-between items-center">
+                    <div className="h-4 w-32 rounded-lg bg-neutral-200/80 dark:bg-neutral-800/80" />
+                    <div className="h-6 w-16 rounded-xl bg-neutral-200/60 dark:bg-neutral-800/60" />
+                </div>
+                <div className="h-48 w-full rounded-2xl bg-neutral-100/80 dark:bg-neutral-850/50" />
             </div>
         );
     }

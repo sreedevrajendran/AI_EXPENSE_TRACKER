@@ -42,8 +42,12 @@ export function DailyExpenseChart() {
 
     if (isLoading) {
         return (
-            <div className="ios-card w-full h-52 flex items-center justify-center">
-                <Loader2 className="animate-spin ios-text-secondary" />
+            <div className="ios-card w-full h-52 p-5 space-y-4 animate-pulse">
+                <div className="flex justify-between items-center">
+                    <div className="h-4 w-32 rounded-lg bg-neutral-200/80 dark:bg-neutral-800/80" />
+                    <div className="h-4 w-16 rounded-lg bg-neutral-200/60 dark:bg-neutral-800/60" />
+                </div>
+                <div className="h-32 w-full rounded-2xl bg-neutral-100/80 dark:bg-neutral-850/50" />
             </div>
         );
     }

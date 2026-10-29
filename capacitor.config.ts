@@ -18,6 +18,15 @@ const config: CapacitorConfig = {
     overrideUserAgent: 'Mozilla/5.0 (Linux; Android 14; Mobile) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/128.0.0.0 Mobile Safari/537.36',
   },
   plugins: {
+    SplashScreen: {
+      launchShowDuration: 300,
+      launchAutoHide: true,
+      backgroundColor: "#070913",
+      androidScaleType: "CENTER_CROP",
+      showSpinner: false,
+      splashFullScreen: true,
+      splashImmersive: true,
+    },
     LocalNotifications: {
       smallIcon: "ic_stat_floww",
       iconColor: "#007AFF",

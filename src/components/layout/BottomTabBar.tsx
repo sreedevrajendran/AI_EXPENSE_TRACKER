@@ -67,6 +67,7 @@ export function BottomTabBar() {
                             <Link
                                 key={item.href}
                                 href={item.href!}
+                                prefetch={true}
                                 onClick={() => {
                                     if (item.href === '/expenses') {
                                         utils.expense.list.prefetch({ limit: 100 });
@@ -81,7 +82,7 @@ export function BottomTabBar() {
                                         utils.income.getRecentIncomes.prefetch({ limit: 5 });
                                     }
                                 }}
-                                className="flex flex-col items-center justify-center flex-1 h-full gap-1 relative"
+                                className="flex flex-col items-center justify-center flex-1 h-full gap-1 relative active:scale-95 transition-transform"
                             >
                                 <motion.div
                                     animate={{ scale: isActive ? 1.1 : 0.9, y: isActive ? -2 : 0 }}

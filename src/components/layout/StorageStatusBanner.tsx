@@ -63,21 +63,22 @@ export function StorageStatusBanner() {
         return unsubscribe;
     }, []);
 
-    // Active live countdown interval (1-second tick)
+    // Server-reported storage status query
+    const { data } = trpc.system.getStorageStatus.useQuery(undefined, {
+        refetchInterval: 60000,
+    });
+
+    const isExceeded = Boolean(data?.isQuotaExceeded || clientQuotaExceeded);
+
+    // Active live countdown interval (1-second tick only when banner is active)
     useEffect(() => {
+        if (!isExceeded || dismissed) return;
         const target = getNextQuotaResetTime();
         const interval = setInterval(() => {
             setTimeLeft(calculateTimeRemaining(target));
         }, 1000);
         return () => clearInterval(interval);
-    }, []);
-
-    // Server-reported storage status query
-    const { data } = trpc.system.getStorageStatus.useQuery(undefined, {
-        refetchInterval: 30000,
-    });
-
-    const isExceeded = data?.isQuotaExceeded || clientQuotaExceeded;
+    }, [isExceeded, dismissed]);
 
     if (!isExceeded || dismissed) return null;
 

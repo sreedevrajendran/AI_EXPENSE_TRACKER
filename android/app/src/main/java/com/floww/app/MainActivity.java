@@ -1,6 +1,7 @@
 package com.floww.app;
 
 import android.os.Bundle;
+import android.view.View;
 import android.webkit.CookieManager;
 import android.webkit.WebSettings;
 import android.webkit.WebView;
@@ -20,6 +21,13 @@ public class MainActivity extends BridgeActivity {
                 settings.setDatabaseEnabled(true);
                 settings.setSupportMultipleWindows(false);
                 settings.setJavaScriptCanOpenWindowsAutomatically(true);
+
+                // Performance & Responsiveness Enhancements
+                settings.setCacheMode(WebSettings.LOAD_DEFAULT);
+                settings.setRenderPriority(WebSettings.RenderPriority.HIGH);
+                webView.setLayerType(View.LAYER_TYPE_HARDWARE, null);
+                webView.setOverScrollMode(View.OVER_SCROLL_NEVER);
+                settings.setOffscreenPreRaster(true);
 
                 CookieManager cookieManager = CookieManager.getInstance();
                 cookieManager.setAcceptCookie(true);

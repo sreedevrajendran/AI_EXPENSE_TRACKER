@@ -25,8 +25,14 @@ export function CategoryChart() {
 
     if (isLoading) {
         return (
-            <div className="w-full h-56 rounded-[28px] bg-white dark:bg-[#1C1C1E] border border-neutral-200/80 dark:border-neutral-800 flex items-center justify-center shadow-sm">
-                <Loader2 className="animate-spin text-neutral-400" />
+            <div className="w-full h-56 rounded-[28px] bg-white/60 dark:bg-[#1C1C1E]/60 border border-neutral-200/50 dark:border-neutral-800/50 p-5 space-y-4 animate-pulse">
+                <div className="flex justify-between items-center">
+                    <div className="h-4 w-28 rounded-lg bg-neutral-200/80 dark:bg-neutral-800/80" />
+                    <div className="h-4 w-12 rounded-lg bg-neutral-200/60 dark:bg-neutral-800/60" />
+                </div>
+                <div className="flex items-center justify-center h-32">
+                    <div className="w-28 h-28 rounded-full border-8 border-neutral-200/70 dark:border-neutral-800/70" />
+                </div>
             </div>
         );
     }

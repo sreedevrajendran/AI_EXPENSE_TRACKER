@@ -15,9 +15,10 @@ export function TRPCProvider({ children }: { children: React.ReactNode }) {
     const [queryClient] = useState(() => new QueryClient({
         defaultOptions: {
             queries: {
-                staleTime: 1000 * 30,
-                gcTime: 1000 * 60 * 5,
+                staleTime: 1000 * 60 * 5,
+                gcTime: 1000 * 60 * 30,
                 refetchOnWindowFocus: false,
+                refetchOnMount: false,
                 retry: (failureCount, error: any) => {
                     if (isQuotaError(error)) {
                         flagQuotaExceeded(error?.message);

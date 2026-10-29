@@ -7,9 +7,16 @@ import { PrivacyProvider } from "@/context/PrivacyContext";
 import { CurrencyProvider } from "@/context/CurrencyContext";
 import { NotificationManager } from "@/components/notifications/NotificationManager";
 import { AndroidBackHandler } from "@/components/navigation/AndroidBackHandler";
+import { useEffect } from "react";
 import { Toaster } from "react-hot-toast";
 
 export function Providers({ children }: { children: React.ReactNode }) {
+    useEffect(() => {
+        // Enables instant :active CSS pseudo-classes on mobile WebKit and Android WebView
+        const touchHandler = () => {};
+        document.addEventListener("touchstart", touchHandler, { passive: true });
+        return () => document.removeEventListener("touchstart", touchHandler);
+    }, []);
     return (
         <SessionProvider>
             <TRPCProvider>

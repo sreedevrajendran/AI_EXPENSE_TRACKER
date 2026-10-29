@@ -27,6 +27,7 @@
   html {
     -webkit-tap-highlight-color: transparent;
     overscroll-behavior: none;
+    touch-action: manipulation;
   }
 
   body {
@@ -35,6 +36,18 @@
     color: var(--ios-text-primary);
     min-height: 100dvh;
     overscroll-behavior: none;
+    touch-action: manipulation;
+  }
+
+  /* Remove 300ms tap delay and ensure instant button feedback on touch screens */
+  button, a, [role="button"], input, select, textarea {
+    touch-action: manipulation;
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  /* Enable GPU rendering for active transforms */
+  button:active, a:active, [role="button"]:active {
+    transform: translateZ(0);
   }
 
   * {

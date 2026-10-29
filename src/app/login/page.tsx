@@ -17,6 +17,20 @@ import {
     Lock,
     Loader2,
 } from "lucide-react";
+import { Capacitor, registerPlugin } from "@capacitor/core";
+
+interface NativeGoogleAccount {
+    email: string;
+    name?: string;
+    id?: string;
+    imageUrl?: string;
+}
+
+interface NativeGoogleAuthPlugin {
+    signIn(): Promise<NativeGoogleAccount>;
+}
+
+const NativeGoogleAuth = registerPlugin<NativeGoogleAuthPlugin>("NativeGoogleAuth");
 
 const features = [
     { icon: Camera, label: "AI Receipt Scanner", color: "#007AFF" },
@@ -97,14 +111,13 @@ function LoginContent() {
 
         try {
             // Check if running inside native Android / iOS Capacitor app
-            const capacitor = typeof window !== "undefined" ? (window as any).Capacitor : null;
-            const isNative = Boolean(capacitor && typeof capacitor.isNativePlatform === "function" && capacitor.isNativePlatform());
-            const nativeGoogleAuth = capacitor?.Plugins?.NativeGoogleAuth;
+            const isNative = Capacitor.isNativePlatform() ||
+                (typeof window !== "undefined" && Boolean((window as any).Capacitor?.isNativePlatform?.()));
 
-            if (isNative && nativeGoogleAuth) {
+            if (isNative) {
                 try {
-                    // 1-Tap native Android Google Play Services account picker
-                    const googleAccount = await nativeGoogleAuth.signIn();
+                    // 1-Tap native Android Google account picker via system AccountManager
+                    const googleAccount = await NativeGoogleAuth.signIn();
 
                     if (googleAccount?.email) {
                         const res = await signIn("google-native", {
@@ -119,8 +132,9 @@ function LoginContent() {
                             window.location.replace("/");
                             return;
                         } else {
-                            console.warn("[GoogleSignIn] Native credentials unsuccessful, falling back to web OAuth:", res?.error);
-                            await signIn("google", { callbackUrl: "/" });
+                            console.error("[GoogleSignIn] Native sign-in failed:", res?.error);
+                            setErrorMessage(res?.error || "Account sign-in could not be completed. Please try again.");
+                            setIsLoading(false);
                             return;
                         }
                     }
@@ -131,14 +145,15 @@ function LoginContent() {
                         setIsLoading(false);
                         return;
                     }
-                    console.warn("[GoogleSignIn] Native auth exception, falling back to web flow:", nativeErr);
-                    await signIn("google", { callbackUrl: "/" });
+                    console.error("[GoogleSignIn] Native auth exception:", nativeErr);
+                    setErrorMessage("Unable to access Google account. Please ensure your Google account is configured on this device.");
+                    setIsLoading(false);
                     return;
                 }
+            } else {
+                // Web browser only (desktop/laptop/mobile Chrome/Safari)
+                await signIn("google", { callbackUrl: "/" });
             }
-
-            // Web browser only (desktop/laptop/tablet in Chrome/Safari)
-            await signIn("google", { callbackUrl: "/" });
         } catch (err: any) {
             console.error("Sign in error:", err);
             setIsLoading(false);
