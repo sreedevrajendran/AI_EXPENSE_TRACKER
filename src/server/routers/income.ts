@@ -1,10 +1,31 @@
 import { z } from "zod";
+import { TRPCError } from "@trpc/server";
 import { protectedProcedure, router } from "../trpc";
 import { DEFAULT_CATEGORY_METAS } from "./category";
 import { getActivePeriodRange } from "./expense";
 import { learnTransactions } from "@/lib/ml/transactionClassifier";
+import { sanitizeString, sanitizeAmount } from "@/lib/sanitize";
 
 export const incomeRouter = router({
+    byId: protectedProcedure
+        .input(z.object({ id: z.string().min(1) }))
+        .query(async ({ ctx, input }) => {
+            const doc = await ctx.db.collection("incomes").doc(input.id).get();
+            if (!doc.exists) {
+                throw new TRPCError({
+                    code: "NOT_FOUND",
+                    message: "Income record not found.",
+                });
+            }
+            const data = doc.data();
+            if (data?.userId !== ctx.session.user.id) {
+                throw new TRPCError({
+                    code: "FORBIDDEN",
+                    message: "Access forbidden: you do not own this income record.",
+                });
+            }
+            return { id: doc.id, ...data };
+        }),
     list: protectedProcedure
         .input(
             z.object({
@@ -104,9 +125,9 @@ export const incomeRouter = router({
     create: protectedProcedure
         .input(
             z.object({
-                amount: z.number().positive(),
-                source: z.string().min(1),
-                note: z.string().optional(),
+                amount: z.number().positive().max(100_000_000),
+                source: z.string().trim().min(1).max(255),
+                note: z.string().max(1000).optional(),
                 date: z.date().default(() => new Date()),
                 categoryId: z.string().optional(),
                 receiptUrl: z.string().optional(),
@@ -114,8 +135,15 @@ export const incomeRouter = router({
             })
         )
         .mutation(async ({ ctx, input }) => {
+            const cleanSource = sanitizeString(input.source, 255);
+            const cleanNote = input.note ? sanitizeString(input.note, 1000) : undefined;
+            const validAmount = sanitizeAmount(input.amount);
+
             const newDoc = {
                 ...input,
+                source: cleanSource,
+                note: cleanNote,
+                amount: validAmount,
                 date: input.date.toISOString(),
                 userId: ctx.session.user.id!,
                 createdAt: new Date().toISOString(),
@@ -130,12 +158,12 @@ export const incomeRouter = router({
         .input(
             z.array(
                 z.object({
-                    amount: z.number().positive(),
-                    source: z.string().min(1),
-                    note: z.string().optional(),
+                    amount: z.number().positive().max(100_000_000),
+                    source: z.string().trim().min(1).max(255),
+                    note: z.string().max(1000).optional(),
                     date: z.date().default(() => new Date()),
                     categoryId: z.string().optional(),
-                    categoryName: z.string().optional(),
+                    categoryName: z.string().max(100).optional(),
                     receiptUrl: z.string().optional(),
                     icon: z.string().optional(),
                     importBatchId: z.string().optional(),
@@ -163,11 +191,12 @@ export const incomeRouter = router({
                     let categoryId: string | null = rest.categoryId || null;
 
                     if (!categoryId && categoryName) {
-                        const exactMatch = categoryMap.get(categoryName.toLowerCase().trim());
+                        const cleanCatName = sanitizeString(categoryName, 100);
+                        const exactMatch = categoryMap.get(cleanCatName.toLowerCase().trim());
                         if (exactMatch) {
                             categoryId = exactMatch;
                         } else {
-                            const catLower = categoryName.toLowerCase().trim();
+                            const catLower = cleanCatName.toLowerCase().trim();
                             for (const [cName, cId] of categoryMap.entries()) {
                                 if (catLower.includes(cName) || cName.includes(catLower)) {
                                     categoryId = cId;
@@ -178,9 +207,9 @@ export const incomeRouter = router({
 
                         if (!categoryId) {
                             const catRef = ctx.db.collection("categories").doc();
-                            const meta = DEFAULT_CATEGORY_METAS[categoryName] || { icon: "circle", color: "#8E8E93" };
+                            const meta = DEFAULT_CATEGORY_METAS[cleanCatName] || { icon: "circle", color: "#8E8E93" };
                             const catData = {
-                                name: categoryName,
+                                name: cleanCatName,
                                 icon: meta.icon,
                                 color: meta.color,
                                 userId,
@@ -190,13 +219,20 @@ export const incomeRouter = router({
                             };
                             await catRef.set(catData);
                             categoryId = catRef.id;
-                            categoryMap.set(categoryName.toLowerCase().trim(), categoryId);
+                            categoryMap.set(cleanCatName.toLowerCase().trim(), categoryId);
                         }
                     }
 
                     const docRef = ctx.db.collection("incomes").doc();
+                    const sanitizedSource = sanitizeString(rest.source, 255);
+                    const sanitizedNote = rest.note ? sanitizeString(rest.note, 1000) : undefined;
+                    const sanitizedAmt = sanitizeAmount(rest.amount);
+
                     const data = {
                         ...rest,
+                        source: sanitizedSource,
+                        note: sanitizedNote,
+                        amount: sanitizedAmt,
                         categoryId,
                         date: rest.date.toISOString(),
                         userId,
@@ -227,8 +263,8 @@ export const incomeRouter = router({
 
             try {
                 learnTransactions(input.map(item => ({
-                    source: item.source,
-                    categoryName: item.categoryName || "UPI Transfer",
+                    source: sanitizeString(item.source, 255),
+                    categoryName: item.categoryName ? sanitizeString(item.categoryName, 100) : "UPI Transfer",
                     type: "INCOME",
                     amount: item.amount,
                 })));
@@ -242,10 +278,10 @@ export const incomeRouter = router({
     update: protectedProcedure
         .input(
             z.object({
-                id: z.string(),
-                amount: z.number().positive().optional(),
-                source: z.string().min(1).optional(),
-                note: z.string().optional(),
+                id: z.string().min(1),
+                amount: z.number().positive().max(100_000_000).optional(),
+                source: z.string().trim().min(1).max(255).optional(),
+                note: z.string().max(1000).optional(),
                 date: z.date().optional(),
                 categoryId: z.string().optional(),
                 receiptUrl: z.string().optional(),
@@ -256,11 +292,22 @@ export const incomeRouter = router({
             const { id, date, ...data } = input;
             const docRef = ctx.db.collection("incomes").doc(id);
             const doc = await docRef.get();
-            if (!doc.exists || doc.data()?.userId !== ctx.session.user.id!) {
-                throw new Error("Not authorized");
+            if (!doc.exists) {
+                throw new TRPCError({
+                    code: "NOT_FOUND",
+                    message: "Income record not found.",
+                });
+            }
+            if (doc.data()?.userId !== ctx.session.user.id) {
+                throw new TRPCError({
+                    code: "FORBIDDEN",
+                    message: "Access forbidden: you do not have permission to modify this record.",
+                });
             }
 
             const updateData: any = { ...data, updatedAt: new Date().toISOString() };
+            if (updateData.source) updateData.source = sanitizeString(updateData.source, 255);
+            if (updateData.note) updateData.note = sanitizeString(updateData.note, 1000);
             if (date) updateData.date = date.toISOString();
 
             const cleanUpdateData = Object.fromEntries(Object.entries(updateData).filter(([_, v]) => v !== undefined));
@@ -269,12 +316,21 @@ export const incomeRouter = router({
         }),
 
     delete: protectedProcedure
-        .input(z.object({ id: z.string() }))
+        .input(z.object({ id: z.string().min(1) }))
         .mutation(async ({ ctx, input }) => {
             const docRef = ctx.db.collection("incomes").doc(input.id);
             const doc = await docRef.get();
-            if (!doc.exists || doc.data()?.userId !== ctx.session.user.id!) {
-                throw new Error("Not authorized");
+            if (!doc.exists) {
+                throw new TRPCError({
+                    code: "NOT_FOUND",
+                    message: "Income record not found.",
+                });
+            }
+            if (doc.data()?.userId !== ctx.session.user.id) {
+                throw new TRPCError({
+                    code: "FORBIDDEN",
+                    message: "Access forbidden: you do not have permission to delete this record.",
+                });
             }
             await docRef.delete();
             return { success: true };

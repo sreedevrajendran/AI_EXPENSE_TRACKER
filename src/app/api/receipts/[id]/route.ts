@@ -15,9 +15,9 @@ export async function GET(
         const currentUserId = session.user.id;
 
         const resolvedParams = await context.params;
-        const id = resolvedParams.id;
-        if (!id) {
-            return new Response("Not found", { status: 404 });
+        const id = resolvedParams?.id;
+        if (!id || typeof id !== "string" || !/^[a-zA-Z0-9_-]{1,128}$/.test(id)) {
+            return new Response("Invalid or missing receipt ID", { status: 400 });
         }
 
         const doc = await db.collection("receipt_files").doc(id).get();
@@ -30,8 +30,8 @@ export async function GET(
             return new Response("Corrupted receipt data", { status: 500 });
         }
 
-        // Enforce strict ownership: user can only view their own receipts
-        if (receipt.userId && receipt.userId !== currentUserId) {
+        // Enforce strict multi-tenant isolation (OWASP A01: Broken Access Control)
+        if (!receipt.userId || receipt.userId !== currentUserId) {
             return new Response("Forbidden: You do not have permission to view this file", { status: 403 });
         }
 

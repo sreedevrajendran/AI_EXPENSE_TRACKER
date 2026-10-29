@@ -1,7 +1,9 @@
 import { z } from "zod";
+import { TRPCError } from "@trpc/server";
 import { protectedProcedure, router } from "../trpc";
 import { findMatchingCategory } from "@/lib/categories";
 import { getActivePeriodRange } from "./expense";
+import { sanitizeAmount } from "@/lib/sanitize";
 
 // Ensure BudgetPeriod enum matches since we ripped out Prisma
 const BudgetPeriod = {
@@ -79,14 +81,16 @@ export const budgetRouter = router({
     create: protectedProcedure
         .input(
             z.object({
-                amount: z.number().positive(),
+                amount: z.number().positive().max(100_000_000),
                 period: z.nativeEnum(BudgetPeriod).default("MONTHLY"),
                 categoryId: z.string().optional(),
             })
         )
         .mutation(async ({ ctx, input }) => {
+            const validAmount = sanitizeAmount(input.amount);
             const newDoc = {
                 ...input,
+                amount: validAmount,
                 userId: ctx.session.user.id!,
                 createdAt: new Date().toISOString(),
                 updatedAt: new Date().toISOString(),
@@ -107,8 +111,8 @@ export const budgetRouter = router({
     update: protectedProcedure
         .input(
             z.object({
-                id: z.string(),
-                amount: z.number().positive().optional(),
+                id: z.string().min(1),
+                amount: z.number().positive().max(100_000_000).optional(),
                 period: z.nativeEnum(BudgetPeriod).optional(),
                 categoryId: z.string().optional(),
             })
@@ -117,11 +121,25 @@ export const budgetRouter = router({
             const { id, ...data } = input;
             const docRef = ctx.db.collection("budgets").doc(id);
             const doc = await docRef.get();
-            if (!doc.exists || doc.data()?.userId !== ctx.session.user.id!) {
-                throw new Error("Not authorized");
+            if (!doc.exists) {
+                throw new TRPCError({
+                    code: "NOT_FOUND",
+                    message: "Budget record not found.",
+                });
+            }
+            if (doc.data()?.userId !== ctx.session.user.id) {
+                throw new TRPCError({
+                    code: "FORBIDDEN",
+                    message: "Access forbidden: you do not have permission to modify this record.",
+                });
             }
 
-            await docRef.update({ ...data, updatedAt: new Date().toISOString() });
+            const updateData: any = { ...data, updatedAt: new Date().toISOString() };
+            if (updateData.amount !== undefined) {
+                updateData.amount = sanitizeAmount(updateData.amount);
+            }
+
+            await docRef.update(updateData);
 
             let category = null;
             const updatedCategoryId = data.categoryId ?? doc.data()?.categoryId;
@@ -132,16 +150,25 @@ export const budgetRouter = router({
                 }
             }
 
-            return { id, ...doc.data(), ...data, category };
+            return { id, ...doc.data(), ...updateData, category };
         }),
 
     delete: protectedProcedure
-        .input(z.object({ id: z.string() }))
+        .input(z.object({ id: z.string().min(1) }))
         .mutation(async ({ ctx, input }) => {
             const docRef = ctx.db.collection("budgets").doc(input.id);
             const doc = await docRef.get();
-            if (!doc.exists || doc.data()?.userId !== ctx.session.user.id!) {
-                throw new Error("Not authorized");
+            if (!doc.exists) {
+                throw new TRPCError({
+                    code: "NOT_FOUND",
+                    message: "Budget record not found.",
+                });
+            }
+            if (doc.data()?.userId !== ctx.session.user.id) {
+                throw new TRPCError({
+                    code: "FORBIDDEN",
+                    message: "Access forbidden: you do not have permission to delete this record.",
+                });
             }
             await docRef.delete();
             return { success: true };

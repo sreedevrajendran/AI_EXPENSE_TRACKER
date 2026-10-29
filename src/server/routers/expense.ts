@@ -1,7 +1,9 @@
 import { z } from "zod";
+import { TRPCError } from "@trpc/server";
 import { protectedProcedure, router } from "../trpc";
 import { DEFAULT_CATEGORY_METAS, normalizeCategoryName, findMatchingCategory } from "@/lib/categories";
 import { learnTransactions } from "@/lib/ml/transactionClassifier";
+import { sanitizeString, sanitizeAmount } from "@/lib/sanitize";
 // Define local PaymentMethod enum since Prisma is removed
 const PaymentMethod = {
     CASH: "CASH",
@@ -355,8 +357,15 @@ export const expenseRouter = router({
                 }
             }
 
+            const cleanMerchant = sanitizeString(expenseData.merchant, 255);
+            const cleanNote = expenseData.note ? sanitizeString(expenseData.note, 1000) : null;
+            const validAmount = sanitizeAmount(expenseData.amount);
+
             const newDoc = {
                 ...expenseData,
+                merchant: cleanMerchant,
+                note: cleanNote,
+                amount: validAmount,
                 date: input.date.toISOString(),
                 categoryId: finalCategoryId || null,
                 categoryName: categoryParams?.name || targetCategoryName || undefined,
@@ -608,13 +617,34 @@ export const expenseRouter = router({
             return { id: added.id, ...newDoc };
         }),
 
+    byId: protectedProcedure
+        .input(z.object({ id: z.string().min(1) }))
+        .query(async ({ ctx, input }) => {
+            const doc = await ctx.db.collection("expenses").doc(input.id).get();
+            if (!doc.exists) {
+                throw new TRPCError({
+                    code: "NOT_FOUND",
+                    message: "Expense record not found.",
+                });
+            }
+            const data = doc.data();
+            // Object-level authorization check (IDOR mitigation)
+            if (data?.userId !== ctx.session.user.id) {
+                throw new TRPCError({
+                    code: "FORBIDDEN",
+                    message: "Access forbidden: you do not own this expense record.",
+                });
+            }
+            return { id: doc.id, ...data };
+        }),
+
     update: protectedProcedure
         .input(
             z.object({
-                id: z.string(),
-                amount: z.number().positive().optional(),
-                merchant: z.string().min(1).optional(),
-                note: z.string().optional(),
+                id: z.string().min(1),
+                amount: z.number().positive().max(100_000_000).optional(),
+                merchant: z.string().trim().min(1).max(255).optional(),
+                note: z.string().max(1000).optional(),
                 date: z.date().optional(),
                 paymentMethod: z.nativeEnum(PaymentMethod).optional(),
                 categoryId: z.string().optional(),
@@ -626,11 +656,22 @@ export const expenseRouter = router({
             const { id, date, ...data } = input;
             const docRef = ctx.db.collection("expenses").doc(id);
             const doc = await docRef.get();
-            if (!doc.exists || doc.data()?.userId !== ctx.session.user.id!) {
-                throw new Error("Not authorized");
+            if (!doc.exists) {
+                throw new TRPCError({
+                    code: "NOT_FOUND",
+                    message: "Expense record not found.",
+                });
+            }
+            if (doc.data()?.userId !== ctx.session.user.id) {
+                throw new TRPCError({
+                    code: "FORBIDDEN",
+                    message: "Access forbidden: you do not have permission to modify this record.",
+                });
             }
 
             const updateData: any = { ...data, updatedAt: new Date().toISOString() };
+            if (updateData.merchant) updateData.merchant = sanitizeString(updateData.merchant, 255);
+            if (updateData.note) updateData.note = sanitizeString(updateData.note, 1000);
             if (date) updateData.date = date.toISOString();
 
             const cleanUpdateData = Object.fromEntries(Object.entries(updateData).filter(([_, v]) => v !== undefined));
@@ -639,12 +680,21 @@ export const expenseRouter = router({
         }),
 
     delete: protectedProcedure
-        .input(z.object({ id: z.string() }))
+        .input(z.object({ id: z.string().min(1) }))
         .mutation(async ({ ctx, input }) => {
             const docRef = ctx.db.collection("expenses").doc(input.id);
             const doc = await docRef.get();
-            if (!doc.exists || doc.data()?.userId !== ctx.session.user.id!) {
-                throw new Error("Not authorized");
+            if (!doc.exists) {
+                throw new TRPCError({
+                    code: "NOT_FOUND",
+                    message: "Expense record not found.",
+                });
+            }
+            if (doc.data()?.userId !== ctx.session.user.id) {
+                throw new TRPCError({
+                    code: "FORBIDDEN",
+                    message: "Access forbidden: you do not have permission to delete this record.",
+                });
             }
             await docRef.delete();
             return { success: true };

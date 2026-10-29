@@ -5,17 +5,23 @@ import CredentialsProvider from "next-auth/providers/credentials";
 import { db, isFirebaseConfigured } from "@/lib/firebase/admin";
 import { sendWelcomeEmail, sendLoginEmail } from "@/lib/email";
 
+import bcrypt from "bcryptjs";
 import crypto from "crypto";
+import { checkLoginRateLimit, recordFailedLogin, resetLoginRateLimit } from "@/lib/rateLimit";
 
-function hashPassword(password: string, existingSalt?: string) {
-    const salt = existingSalt || crypto.randomBytes(16).toString("hex");
-    const hash = crypto.pbkdf2Sync(password, salt, 10000, 64, "sha512").toString("hex");
-    return { hash, salt };
+const BCRYPT_SALT_ROUNDS = 12;
+
+async function hashPassword(password: string): Promise<string> {
+    return bcrypt.hash(password, BCRYPT_SALT_ROUNDS);
 }
 
-function verifyPassword(password: string, hash: string, salt: string) {
-    const check = crypto.pbkdf2Sync(password, salt, 10000, 64, "sha512").toString("hex");
-    return check === hash;
+async function verifyPassword(password: string, hash: string, legacySalt?: string): Promise<boolean> {
+    if (legacySalt) {
+        // Fallback for legacy PBKDF2 hashes (backward compatibility)
+        const check = crypto.pbkdf2Sync(password, legacySalt, 10000, 64, "sha512").toString("hex");
+        return check === hash;
+    }
+    return bcrypt.compare(password, hash);
 }
 
 export const authOptions: NextAuthOptions = {
@@ -108,7 +114,7 @@ export const authOptions: NextAuthOptions = {
                 const rawPassword = credentials?.password;
 
                 if (!rawEmail || !rawPassword) {
-                    throw new Error("Please enter both email and password.");
+                    throw new Error("Invalid credentials.");
                 }
 
                 const email = rawEmail.trim().toLowerCase();
@@ -116,8 +122,15 @@ export const authOptions: NextAuthOptions = {
                 const name = credentials?.name?.trim() || email.split("@")[0];
                 const action = credentials?.action || "signin";
 
+                // Enforce rate limiting to block brute force attacks (OWASP A07:2021)
+                const rateCheck = checkLoginRateLimit(email);
+                if (!rateCheck.isAllowed) {
+                    throw new Error(`Too many login attempts. Please wait ${rateCheck.retryAfterSeconds} seconds before trying again.`);
+                }
+
                 if (password.length < 6) {
-                    throw new Error("Password must be at least 6 characters.");
+                    recordFailedLogin(email);
+                    throw new Error("Invalid credentials.");
                 }
 
                 if (isFirebaseConfigured && db) {
@@ -126,19 +139,24 @@ export const authOptions: NextAuthOptions = {
                         const snapshot = await usersRef.where("email", "==", email).limit(1).get();
 
                         if (snapshot.empty) {
-                            // User does not exist yet -> automatically create new account
+                            if (action === "signin") {
+                                recordFailedLogin(email);
+                                throw new Error("Invalid credentials.");
+                            }
+
+                            // User sign-up -> hash password using bcrypt with 12 salt rounds
                             const docRef = usersRef.doc();
-                            const { hash, salt } = hashPassword(password);
+                            const passwordHash = await hashPassword(password);
                             const newUser = {
                                 id: docRef.id,
                                 email,
                                 name,
                                 image: `https://api.dicebear.com/7.x/initials/svg?seed=${encodeURIComponent(email)}`,
-                                passwordHash: hash,
-                                salt,
+                                passwordHash,
                                 createdAt: new Date(),
                             };
                             await docRef.set(newUser);
+                            resetLoginRateLimit(email);
                             return {
                                 id: docRef.id,
                                 name: newUser.name,
@@ -150,25 +168,37 @@ export const authOptions: NextAuthOptions = {
                         const userDoc = snapshot.docs[0];
                         const userData = userDoc.data();
 
-                        if (action === "signup" && userData.passwordHash) {
-                            throw new Error("An account with this email already exists. Please sign in.");
+                        if (action === "signup") {
+                            recordFailedLogin(email);
+                            // Generic message prevents account enumeration
+                            throw new Error("Invalid credentials or account cannot be registered.");
                         }
 
-                        if (userData.passwordHash && userData.salt) {
-                            const isValid = verifyPassword(password, userData.passwordHash, userData.salt);
+                        if (userData.passwordHash) {
+                            const isValid = await verifyPassword(password, userData.passwordHash, userData.salt);
                             if (!isValid) {
-                                throw new Error("Incorrect password. Please verify and try again.");
+                                recordFailedLogin(email);
+                                throw new Error("Invalid credentials.");
+                            }
+
+                            // If user was using legacy PBKDF2 hash, automatically upgrade to bcrypt
+                            if (userData.salt) {
+                                const newHash = await hashPassword(password);
+                                await userDoc.ref.update({
+                                    passwordHash: newHash,
+                                    salt: null,
+                                }).catch(() => {});
                             }
                         } else {
-                            // Existing account without password -> link password now
-                            const { hash, salt } = hashPassword(password);
+                            // Existing OAuth account without local password -> link password using bcrypt
+                            const passwordHash = await hashPassword(password);
                             await userDoc.ref.update({
-                                passwordHash: hash,
-                                salt,
+                                passwordHash,
                                 name: userData.name || name,
                             });
                         }
 
+                        resetLoginRateLimit(email);
                         return {
                             id: userDoc.id,
                             name: userData.name || name,
@@ -176,10 +206,12 @@ export const authOptions: NextAuthOptions = {
                             image: userData.image || `https://api.dicebear.com/7.x/initials/svg?seed=${encodeURIComponent(email)}`,
                         };
                     } catch (e: any) {
-                        if (e?.message?.includes("Incorrect password") || e?.message?.includes("already exists")) {
+                        if (e?.message?.includes("Invalid credentials") || e?.message?.includes("Too many login attempts")) {
                             throw e;
                         }
+                        recordFailedLogin(email);
                         console.warn("[credentials] Firestore auth error, falling back to local user:", e);
+                        throw new Error("Invalid credentials.");
                     }
                 }
 
@@ -210,8 +242,23 @@ export const authOptions: NextAuthOptions = {
     ],
     session: {
         strategy: "jwt",
+        maxAge: 30 * 24 * 60 * 60, // 30 days
+        updateAge: 24 * 60 * 60, // 24 hours
     },
-    secret: process.env.NEXTAUTH_SECRET || "floww-secret-jwt-key-2026-safe-production",
+    secret: process.env.NEXTAUTH_SECRET || (process.env.NODE_ENV === "production"
+        ? (() => { throw new Error("CRITICAL SECURITY VIOLATION: NEXTAUTH_SECRET is required in production environment."); })()
+        : "development-runtime-secret-only"),
+    cookies: {
+        sessionToken: {
+            name: process.env.NODE_ENV === "production" ? "__Secure-next-auth.session-token" : "next-auth.session-token",
+            options: {
+                httpOnly: true,
+                sameSite: "lax",
+                path: "/",
+                secure: process.env.NODE_ENV === "production",
+            },
+        },
+    },
     callbacks: {
         async signIn({ user }) {
             if (isFirebaseConfigured && db && user?.email) {

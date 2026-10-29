@@ -1,6 +1,8 @@
 import { z } from "zod";
+import { TRPCError } from "@trpc/server";
 import { protectedProcedure, router } from "../trpc";
 import { DEFAULT_CATEGORY_METAS } from "@/lib/categories";
+import { sanitizeString } from "@/lib/sanitize";
 
 export { DEFAULT_CATEGORY_METAS };
 
@@ -98,20 +100,21 @@ export const categoryRouter = router({
     create: protectedProcedure
         .input(
             z.object({
-                name: z.string().min(1),
-                icon: z.string().default("circle"),
-                color: z.string().default("#007AFF"),
+                name: z.string().trim().min(1).max(50),
+                icon: z.string().max(50).default("circle"),
+                color: z.string().max(20).default("#007AFF"),
                 parentId: z.string().optional(),
             })
         )
         .mutation(async ({ ctx, input }) => {
             const userId = ctx.session.user.id!;
             const categoriesRef = ctx.db.collection("categories");
+            const cleanName = sanitizeString(input.name, 50);
 
             // Note: Firestore doesn't provide case-insensitive search easily. 
             // We fetch all by User ID and check manually to enforce uniqueness.
             const snapshot = await categoriesRef.where("userId", "==", userId).get();
-            const existing = snapshot.docs.find(d => d.data().name.toLowerCase() === input.name.toLowerCase());
+            const existing = snapshot.docs.find(d => d.data().name.toLowerCase() === cleanName.toLowerCase());
 
             if (existing) {
                 return { id: existing.id, ...existing.data() };
@@ -119,6 +122,7 @@ export const categoryRouter = router({
 
             const newDoc = {
                 ...input,
+                name: cleanName,
                 userId,
                 parentId: input.parentId || null,
                 createdAt: new Date().toISOString(),
@@ -131,31 +135,54 @@ export const categoryRouter = router({
     update: protectedProcedure
         .input(
             z.object({
-                id: z.string(),
-                name: z.string().optional(),
-                icon: z.string().optional(),
-                color: z.string().optional(),
+                id: z.string().min(1),
+                name: z.string().trim().min(1).max(50).optional(),
+                icon: z.string().max(50).optional(),
+                color: z.string().max(20).optional(),
             })
         )
         .mutation(async ({ ctx, input }) => {
             const { id, ...data } = input;
             const docRef = ctx.db.collection("categories").doc(id);
             const doc = await docRef.get();
-            if (!doc.exists || doc.data()?.userId !== ctx.session.user.id!) {
-                throw new Error("Not authorized");
+            if (!doc.exists) {
+                throw new TRPCError({
+                    code: "NOT_FOUND",
+                    message: "Category not found.",
+                });
+            }
+            if (doc.data()?.userId !== ctx.session.user.id) {
+                throw new TRPCError({
+                    code: "FORBIDDEN",
+                    message: "Access forbidden: you do not have permission to modify this category.",
+                });
             }
 
-            await docRef.update({ ...data, updatedAt: new Date().toISOString() });
-            return { id, ...doc.data(), ...data };
+            const updateData: any = { ...data, updatedAt: new Date().toISOString() };
+            if (updateData.name) {
+                updateData.name = sanitizeString(updateData.name, 50);
+            }
+
+            await docRef.update(updateData);
+            return { id, ...doc.data(), ...updateData };
         }),
 
     delete: protectedProcedure
-        .input(z.object({ id: z.string() }))
+        .input(z.object({ id: z.string().min(1) }))
         .mutation(async ({ ctx, input }) => {
             const docRef = ctx.db.collection("categories").doc(input.id);
             const doc = await docRef.get();
-            if (!doc.exists || doc.data()?.userId !== ctx.session.user.id!) {
-                throw new Error("Not authorized");
+            if (!doc.exists) {
+                throw new TRPCError({
+                    code: "NOT_FOUND",
+                    message: "Category not found.",
+                });
+            }
+            if (doc.data()?.userId !== ctx.session.user.id) {
+                throw new TRPCError({
+                    code: "FORBIDDEN",
+                    message: "Access forbidden: you do not have permission to delete this category.",
+                });
             }
             await docRef.delete();
             return { success: true };

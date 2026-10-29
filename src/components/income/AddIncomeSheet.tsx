@@ -189,7 +189,13 @@ export function AddIncomeSheet({ open, onOpenChange, onSuccess, editData, editId
     // ── AI Income Doc Scan ────────────────────────────────────────
     const handleSubmit = async () => {
         const parsedAmt = parseFloat(amount);
-        if (!parsedAmt || !source) return;
+        if (isNaN(parsedAmt) || parsedAmt <= 0 || !isFinite(parsedAmt) || !source.trim()) {
+            setError("Please enter a valid source name and positive amount.");
+            return;
+        }
+
+        const cleanSource = source.replace(/<[^>]*>/g, "").trim().slice(0, 255);
+        const cleanNote = note ? note.replace(/<[^>]*>/g, "").trim().slice(0, 1000) : undefined;
 
         setUploading(true);
         setError(null);
@@ -218,7 +224,7 @@ export function AddIncomeSheet({ open, onOpenChange, onSuccess, editData, editId
 
         let mappedIcon: string | undefined = undefined;
         try {
-            const mapRes = await mapIcon.mutateAsync({ name: source.trim() });
+            const mapRes = await mapIcon.mutateAsync({ name: cleanSource });
             mappedIcon = mapRes.icon;
         } catch { /* ignore */ }
 
@@ -226,8 +232,8 @@ export function AddIncomeSheet({ open, onOpenChange, onSuccess, editData, editId
             updateIncome.mutate({
                 id: editData.id,
                 amount: convertToBase(parsedAmt),
-                source: source.trim(),
-                note: note.trim() || undefined,
+                source: cleanSource,
+                note: cleanNote,
                 date: new Date(),
                 receiptUrl: receiptUrl || existingReceiptUrl || undefined,
                 icon: mappedIcon,
@@ -235,8 +241,8 @@ export function AddIncomeSheet({ open, onOpenChange, onSuccess, editData, editId
         } else {
             createIncome.mutate({
                 amount: convertToBase(parsedAmt),
-                source: source.trim(),
-                note: note.trim() || undefined,
+                source: cleanSource,
+                note: cleanNote,
                 date: new Date(),
                 receiptUrl,
                 icon: mappedIcon,

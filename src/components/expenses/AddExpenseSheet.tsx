@@ -259,8 +259,13 @@ export function AddExpenseSheet({ open, onOpenChange, onSuccess, editData, editI
 
     const handleSubmit = async () => {
         const parsedAmt = parseFloat(amount);
-        if (!parsedAmt || !merchant) return;
+        if (isNaN(parsedAmt) || parsedAmt <= 0 || !isFinite(parsedAmt) || !merchant.trim()) {
+            setError("Please enter a valid merchant name and positive amount.");
+            return;
+        }
 
+        const cleanMerchant = merchant.replace(/<[^>]*>/g, "").trim().slice(0, 255);
+        const cleanNote = note ? note.replace(/<[^>]*>/g, "").trim().slice(0, 1000) : undefined;
         let categoryId = selectedCategory;
 
         // If custom category is selected and name provided
@@ -325,8 +330,8 @@ export function AddExpenseSheet({ open, onOpenChange, onSuccess, editData, editI
             updateExpense.mutate({
                 id: editData.id,
                 amount: baseAmt,
-                merchant,
-                note: note || undefined,
+                merchant: cleanMerchant,
+                note: cleanNote,
                 paymentMethod,
                 categoryId,
                 date: expenseDate,
@@ -336,8 +341,8 @@ export function AddExpenseSheet({ open, onOpenChange, onSuccess, editData, editI
         } else {
             createExpense.mutate({
                 amount: baseAmt,
-                merchant,
-                note: note || undefined,
+                merchant: cleanMerchant,
+                note: cleanNote,
                 paymentMethod,
                 categoryId,
                 categoryName: !categoryId && !isCustom && prefillData?.category ? prefillData.category : undefined,

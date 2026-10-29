@@ -120,8 +120,8 @@ export function BudgetSheet({ open, onOpenChange, existingBudget }: BudgetSheetP
     const isPending = create.isPending || update.isPending || createCategory.isPending || deleteBudget.isPending;
 
     const handleSave = async () => {
-        if (!amount) return;
         const parsedAmount = parseFloat(amount);
+        if (isNaN(parsedAmount) || parsedAmount <= 0 || !isFinite(parsedAmount)) return;
 
         let finalCategoryId = categoryId;
         if (isCustom && customCategoryName.trim()) {
