@@ -23,6 +23,8 @@ import { formatCurrency, formatDate, cn } from "@/lib/utils";
 import { trpc } from "@/trpc/client";
 import { showMatchingAlert } from "@/components/ui/AlertCard";
 import { useRouter } from "next/navigation";
+import { getCategoryVisual } from "@/lib/icons";
+import { inferCategoryFromTransaction } from "@/lib/categories";
 
 interface StatementTransaction {
     date?: string;
@@ -58,13 +60,24 @@ export function StatementReviewSheet({ open, onOpenChange, transactions }: State
     // Sync transactions and run duplicate detection when sheet opens
     useEffect(() => {
         if (open && transactions && transactions.length > 0) {
-            setLocalTransactions(transactions);
+            // Strictly auto-categorize every single element: no Uncategorized or Other allowed!
+            const categorizedList = transactions.map((t) => {
+                const effectiveCat = (!t.category || t.category === "Other" || t.category === "Uncategorized")
+                    ? inferCategoryFromTransaction(t.description || t.title, t.type, t.amount)
+                    : t.category;
+                return {
+                    ...t,
+                    category: effectiveCat,
+                };
+            });
+
+            setLocalTransactions(categorizedList);
             setIsCheckingDuplicates(true);
             setDuplicateIndices(new Set());
             setIsEntireStatementDuplicate(false);
 
             // Prepare payload for server duplicate check
-            const payload = transactions.map((t) => ({
+            const payload = categorizedList.map((t) => ({
                 amount: Math.abs(Number(t.amount) || 0),
                 description: t.description,
                 title: t.title,
@@ -533,7 +546,8 @@ export function StatementReviewSheet({ open, onOpenChange, transactions }: State
                                 {filteredItems.map((t) => {
                                     const isSelected = selectedIndices.has(t.originalIndex);
                                     const isIncome = t.type?.toLowerCase() === "income";
-                                    const Icon = isIncome ? ArrowUpRight : TrendingDown;
+                                    const visual = getCategoryVisual(t.category, undefined, t.type);
+                                    const CategoryIcon = visual.Icon;
 
                                     return (
                                         <div
@@ -563,16 +577,24 @@ export function StatementReviewSheet({ open, onOpenChange, transactions }: State
                                                 )}
                                             </button>
 
-                                            {/* Icon */}
+                                            {/* Category Logo & Direction Badge */}
                                             <div
-                                                className={cn(
-                                                    "w-10 h-10 rounded-xl flex items-center justify-center shrink-0",
-                                                    isIncome
-                                                        ? "bg-emerald-500/15 text-emerald-600 dark:text-emerald-400"
-                                                        : "bg-rose-500/15 text-rose-500"
-                                                )}
+                                                className="relative w-11 h-11 rounded-2xl flex items-center justify-center shrink-0 shadow-xs transition-transform"
+                                                style={{
+                                                    backgroundColor: `${visual.color}15`,
+                                                    color: visual.color,
+                                                    border: `1px solid ${visual.color}30`,
+                                                }}
                                             >
-                                                <Icon size={18} strokeWidth={2.5} />
+                                                <CategoryIcon size={20} strokeWidth={2.2} />
+                                                <span
+                                                    className={cn(
+                                                        "absolute -bottom-1 -right-1 w-4 h-4 rounded-full flex items-center justify-center text-[9px] font-black border border-white dark:border-[#1C1C1E] shadow-xs",
+                                                        isIncome ? "bg-emerald-500 text-white" : "bg-rose-500 text-white"
+                                                    )}
+                                                >
+                                                    {isIncome ? "+" : "-"}
+                                                </span>
                                             </div>
 
                                             {/* Particulars & Category Info */}
@@ -597,7 +619,7 @@ export function StatementReviewSheet({ open, onOpenChange, transactions }: State
                                                     {/* Interactive Category Selector Pill */}
                                                     <div className="relative inline-flex items-center" onClick={(e) => e.stopPropagation()}>
                                                         <select
-                                                            value={t.category || "Other"}
+                                                            value={t.category || visual.label}
                                                             onChange={(e) => {
                                                                 const newCat = e.target.value;
                                                                 setLocalTransactions((prev) =>
@@ -611,19 +633,22 @@ export function StatementReviewSheet({ open, onOpenChange, transactions }: State
                                                                 backgroundPosition: "right 4px center",
                                                             }}
                                                         >
+                                                            <option value="Food & Dining">🍽️ Food & Dining</option>
                                                             <option value="Groceries">🛒 Groceries</option>
                                                             <option value="Transport">🚗 Transport</option>
-                                                            <option value="Food & Dining">🍽️ Food & Dining</option>
                                                             <option value="Shopping">🛍️ Shopping</option>
                                                             <option value="Bills & Utilities">⚡ Bills & Utilities</option>
                                                             <option value="Entertainment">🎬 Entertainment</option>
                                                             <option value="Health">💊 Health</option>
                                                             <option value="Travel">✈️ Travel</option>
                                                             <option value="Salary">💼 Salary</option>
+                                                            <option value="Freelance">💻 Freelance</option>
                                                             <option value="UPI Transfer">🔄 UPI Transfer</option>
                                                             <option value="Investments">📈 Investments</option>
                                                             <option value="Education">📚 Education</option>
-                                                            <option value="Other">⚪ Other</option>
+                                                            <option value="Housing">🏠 Housing</option>
+                                                            <option value="Personal Care">✨ Personal Care</option>
+                                                            <option value="General">🏷️ General</option>
                                                         </select>
                                                     </div>
 

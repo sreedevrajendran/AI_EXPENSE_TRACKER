@@ -1,7 +1,7 @@
 import { z } from "zod";
 import { TRPCError } from "@trpc/server";
 import { protectedProcedure, router } from "../trpc";
-import { DEFAULT_CATEGORY_METAS } from "./category";
+import { DEFAULT_CATEGORY_METAS, inferCategoryFromTransaction, findMatchingCategory } from "@/lib/categories";
 import { getActivePeriodRange } from "./expense";
 import { learnTransactions } from "@/lib/ml/transactionClassifier";
 import { sanitizeString, sanitizeAmount } from "@/lib/sanitize";
@@ -60,14 +60,30 @@ export const incomeRouter = router({
             }
 
             const catSnapshot = await ctx.db.collection("categories").where("userId", "==", userId).get();
-            const categories = catSnapshot.docs.map(d => ({ id: d.id, ...d.data() }));
+            const categories = catSnapshot.docs.map(d => ({ id: d.id, ...d.data() })) as any[];
 
-            return incomes.map(inc => ({
-                ...inc,
-                date: new Date(inc.date),
-                createdAt: inc.createdAt ? new Date(inc.createdAt) : undefined,
-                category: inc.categoryId ? categories.find(c => c.id === inc.categoryId) : null
-            }));
+            return incomes.map(inc => {
+                let resolvedCat: any = inc.categoryId ? categories.find(c => c.id === inc.categoryId) : null;
+                if (!resolvedCat && (inc.categoryName || inc.source)) {
+                    resolvedCat = findMatchingCategory(inc.categoryName || inc.source, categories as any);
+                }
+                if (!resolvedCat) {
+                    const catName = inferCategoryFromTransaction(inc.categoryName || inc.source, "INCOME", inc.amount);
+                    const meta = DEFAULT_CATEGORY_METAS[catName] || DEFAULT_CATEGORY_METAS["Salary"];
+                    resolvedCat = {
+                        id: `virtual-${catName.toLowerCase().replace(/\s+/g, "-")}`,
+                        name: catName,
+                        icon: meta.icon,
+                        color: meta.color,
+                    };
+                }
+                return {
+                    ...inc,
+                    date: new Date(inc.date),
+                    createdAt: inc.createdAt ? new Date(inc.createdAt) : undefined,
+                    category: resolvedCat
+                };
+            });
         }),
 
     getMonthTotal: protectedProcedure
@@ -112,14 +128,30 @@ export const incomeRouter = router({
             incomes = incomes.slice(0, input.limit);
 
             const catSnapshot = await ctx.db.collection("categories").where("userId", "==", userId).get();
-            const categories = catSnapshot.docs.map(d => ({ id: d.id, ...d.data() }));
+            const categories = catSnapshot.docs.map(d => ({ id: d.id, ...d.data() })) as any[];
 
-            return incomes.map(inc => ({
-                ...inc,
-                date: new Date(inc.date),
-                createdAt: inc.createdAt ? new Date(inc.createdAt) : undefined,
-                category: inc.categoryId ? categories.find(c => c.id === inc.categoryId) : null
-            }));
+            return incomes.map(inc => {
+                let resolvedCat: any = inc.categoryId ? categories.find(c => c.id === inc.categoryId) : null;
+                if (!resolvedCat && (inc.categoryName || inc.source)) {
+                    resolvedCat = findMatchingCategory(inc.categoryName || inc.source, categories as any);
+                }
+                if (!resolvedCat) {
+                    const catName = inferCategoryFromTransaction(inc.categoryName || inc.source, "INCOME", inc.amount);
+                    const meta = DEFAULT_CATEGORY_METAS[catName] || DEFAULT_CATEGORY_METAS["Salary"];
+                    resolvedCat = {
+                        id: `virtual-${catName.toLowerCase().replace(/\s+/g, "-")}`,
+                        name: catName,
+                        icon: meta.icon,
+                        color: meta.color,
+                    };
+                }
+                return {
+                    ...inc,
+                    date: new Date(inc.date),
+                    createdAt: inc.createdAt ? new Date(inc.createdAt) : undefined,
+                    category: resolvedCat
+                };
+            });
         }),
 
     create: protectedProcedure
@@ -139,11 +171,36 @@ export const incomeRouter = router({
             const cleanNote = input.note ? sanitizeString(input.note, 1000) : undefined;
             const validAmount = sanitizeAmount(input.amount);
 
+            let categoryId = input.categoryId;
+            if (!categoryId) {
+                const targetName = inferCategoryFromTransaction(cleanSource, "INCOME", validAmount);
+                const catSnapshot = await ctx.db.collection("categories").where("userId", "==", ctx.session.user.id!).get();
+                const userCategories = catSnapshot.docs.map(d => ({ id: d.id, name: d.data().name }));
+                const matched = findMatchingCategory(targetName, userCategories);
+                if (matched) {
+                    categoryId = matched.id;
+                } else {
+                    const meta = DEFAULT_CATEGORY_METAS[targetName] || DEFAULT_CATEGORY_METAS["Salary"];
+                    const catRef = ctx.db.collection("categories").doc();
+                    await catRef.set({
+                        name: targetName,
+                        icon: meta.icon,
+                        color: meta.color,
+                        userId: ctx.session.user.id!,
+                        parentId: null,
+                        createdAt: new Date().toISOString(),
+                        updatedAt: new Date().toISOString(),
+                    });
+                    categoryId = catRef.id;
+                }
+            }
+
             const newDoc = {
                 ...input,
                 source: cleanSource,
                 note: cleanNote,
                 amount: validAmount,
+                categoryId,
                 date: input.date.toISOString(),
                 userId: ctx.session.user.id!,
                 createdAt: new Date().toISOString(),
@@ -207,7 +264,7 @@ export const incomeRouter = router({
 
                         if (!categoryId) {
                             const catRef = ctx.db.collection("categories").doc();
-                            const meta = DEFAULT_CATEGORY_METAS[cleanCatName] || { icon: "circle", color: "#8E8E93" };
+                            const meta = DEFAULT_CATEGORY_METAS[cleanCatName] || DEFAULT_CATEGORY_METAS["Salary"];
                             const catData = {
                                 name: cleanCatName,
                                 icon: meta.icon,
@@ -217,7 +274,32 @@ export const incomeRouter = router({
                                 createdAt: new Date().toISOString(),
                                 updatedAt: new Date().toISOString(),
                             };
-                            await catRef.set(catData);
+                            batch.set(catRef, catData);
+                            categoryId = catRef.id;
+                            categoryMap.set(cleanCatName.toLowerCase().trim(), categoryId);
+                        }
+                    }
+
+                    if (!categoryId) {
+                        const targetName = categoryName || rest.source;
+                        const finalName = inferCategoryFromTransaction(targetName, "INCOME", rest.amount);
+                        const cleanCatName = sanitizeString(finalName, 100);
+                        const exactMatch = categoryMap.get(cleanCatName.toLowerCase().trim());
+                        if (exactMatch) {
+                            categoryId = exactMatch;
+                        } else {
+                            const catRef = ctx.db.collection("categories").doc();
+                            const meta = DEFAULT_CATEGORY_METAS[cleanCatName] || DEFAULT_CATEGORY_METAS["Salary"];
+                            const catData = {
+                                name: cleanCatName,
+                                icon: meta.icon,
+                                color: meta.color,
+                                userId,
+                                parentId: null,
+                                createdAt: new Date().toISOString(),
+                                updatedAt: new Date().toISOString(),
+                            };
+                            batch.set(catRef, catData);
                             categoryId = catRef.id;
                             categoryMap.set(cleanCatName.toLowerCase().trim(), categoryId);
                         }

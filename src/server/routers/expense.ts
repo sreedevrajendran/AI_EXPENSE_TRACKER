@@ -1,7 +1,7 @@
 import { z } from "zod";
 import { TRPCError } from "@trpc/server";
 import { protectedProcedure, router } from "../trpc";
-import { DEFAULT_CATEGORY_METAS, normalizeCategoryName, findMatchingCategory } from "@/lib/categories";
+import { DEFAULT_CATEGORY_METAS, normalizeCategoryName, findMatchingCategory, inferCategoryFromTransaction } from "@/lib/categories";
 import { learnTransactions } from "@/lib/ml/transactionClassifier";
 import { sanitizeString, sanitizeAmount } from "@/lib/sanitize";
 // Define local PaymentMethod enum since Prisma is removed
@@ -129,15 +129,25 @@ export const expenseRouter = router({
             const categories = catSnapshot.docs.map(d => ({ id: d.id, ...d.data() })) as any[];
 
             return expenses.map(exp => {
-                let resolvedCat = exp.categoryId ? categories.find(c => c.id === exp.categoryId) : null;
+                let resolvedCat: any = exp.categoryId ? categories.find(c => c.id === exp.categoryId) : null;
                 if (!resolvedCat && (exp.categoryName || exp.merchant)) {
                     resolvedCat = findMatchingCategory(exp.categoryName || exp.merchant, categories);
+                }
+                if (!resolvedCat) {
+                    const catName = inferCategoryFromTransaction(exp.categoryName || exp.merchant, "EXPENSE", exp.amount);
+                    const meta = DEFAULT_CATEGORY_METAS[catName] || DEFAULT_CATEGORY_METAS["Food & Dining"];
+                    resolvedCat = {
+                        id: `virtual-${catName.toLowerCase().replace(/\s+/g, "-")}`,
+                        name: catName,
+                        icon: meta.icon,
+                        color: meta.color,
+                    };
                 }
                 return {
                     ...exp,
                     date: new Date(exp.date),
                     createdAt: exp.createdAt ? new Date(exp.createdAt) : undefined,
-                    category: resolvedCat || null
+                    category: resolvedCat
                 };
             });
         }),
@@ -189,14 +199,30 @@ export const expenseRouter = router({
             expenses = expenses.slice(0, input.limit);
 
             const catSnapshot = await ctx.db.collection("categories").where("userId", "==", userId).get();
-            const categories = catSnapshot.docs.map(d => ({ id: d.id, ...d.data() }));
+            const categories = catSnapshot.docs.map(d => ({ id: d.id, ...d.data() })) as any[];
 
-            return expenses.map(exp => ({
-                ...exp,
-                date: new Date(exp.date),
-                createdAt: exp.createdAt ? new Date(exp.createdAt) : undefined,
-                category: exp.categoryId ? categories.find(c => c.id === exp.categoryId) : null
-            }));
+            return expenses.map(exp => {
+                let resolvedCat: any = exp.categoryId ? categories.find((c: any) => c.id === exp.categoryId) : null;
+                if (!resolvedCat && (exp.categoryName || exp.merchant)) {
+                    resolvedCat = findMatchingCategory(exp.categoryName || exp.merchant, categories as any);
+                }
+                if (!resolvedCat) {
+                    const catName = inferCategoryFromTransaction(exp.categoryName || exp.merchant, "EXPENSE", exp.amount);
+                    const meta = DEFAULT_CATEGORY_METAS[catName] || DEFAULT_CATEGORY_METAS["Food & Dining"];
+                    resolvedCat = {
+                        id: `virtual-${catName.toLowerCase().replace(/\s+/g, "-")}`,
+                        name: catName,
+                        icon: meta.icon,
+                        color: meta.color,
+                    };
+                }
+                return {
+                    ...exp,
+                    date: new Date(exp.date),
+                    createdAt: exp.createdAt ? new Date(exp.createdAt) : undefined,
+                    category: resolvedCat
+                };
+            });
         }),
 
     getMonthlyChartData: protectedProcedure.query(async ({ ctx }) => {
@@ -318,10 +344,13 @@ export const expenseRouter = router({
             let categoryParams: any = null;
 
             let targetCategoryName = categoryName;
-            if (!finalCategoryId && !targetCategoryName && expenseData.merchant) {
-                const detected = normalizeCategoryName(expenseData.merchant + " " + (expenseData.note || ""));
-                if (detected && detected !== "Other") {
-                    targetCategoryName = detected;
+            if (!finalCategoryId) {
+                if (!targetCategoryName || targetCategoryName === "Other" || targetCategoryName === "Uncategorized") {
+                    targetCategoryName = inferCategoryFromTransaction(
+                        expenseData.merchant + " " + (expenseData.note || ""),
+                        "EXPENSE",
+                        expenseData.amount
+                    );
                 }
             }
 
@@ -335,8 +364,10 @@ export const expenseRouter = router({
                     categoryParams = matched;
                 } else {
                     const canonical = normalizeCategoryName(targetCategoryName);
-                    const finalName = canonical !== "Other" ? canonical : targetCategoryName;
-                    const meta = DEFAULT_CATEGORY_METAS[finalName] || { icon: "circle", color: "#007AFF" };
+                    const finalName = (canonical && canonical !== "Other" && canonical !== "Uncategorized")
+                        ? canonical
+                        : inferCategoryFromTransaction(targetCategoryName, "EXPENSE", expenseData.amount);
+                    const meta = DEFAULT_CATEGORY_METAS[finalName] || DEFAULT_CATEGORY_METAS["Food & Dining"];
                     const catRef = ctx.db.collection("categories").doc();
                     const catData = {
                         name: finalName,
@@ -469,8 +500,10 @@ export const expenseRouter = router({
                             categoryId = matched.id;
                         } else {
                             const canonical = normalizeCategoryName(targetName);
-                            const finalName = canonical !== "Other" ? canonical : (categoryName || "Other");
-                            const meta = DEFAULT_CATEGORY_METAS[finalName] || { icon: "circle", color: "#8E8E93" };
+                            const finalName = (canonical && canonical !== "Other" && canonical !== "Uncategorized")
+                                ? canonical
+                                : inferCategoryFromTransaction(targetName, "EXPENSE", item.amount);
+                            const meta = DEFAULT_CATEGORY_METAS[finalName] || DEFAULT_CATEGORY_METAS["Food & Dining"];
                             const catRef = ctx.db.collection("categories").doc();
                             const catData = {
                                 name: finalName,
@@ -482,6 +515,28 @@ export const expenseRouter = router({
                                 updatedAt: new Date().toISOString(),
                             };
                             batch.set(catRef, catData);
+                            categoryId = catRef.id;
+                            userCategories.push({ id: catRef.id, name: finalName });
+                        }
+                    }
+
+                    if (!categoryId) {
+                        const finalName = inferCategoryFromTransaction(rest.merchant, "EXPENSE", item.amount);
+                        const meta = DEFAULT_CATEGORY_METAS[finalName] || DEFAULT_CATEGORY_METAS["Food & Dining"];
+                        const matched = findMatchingCategory(finalName, userCategories);
+                        if (matched) {
+                            categoryId = matched.id;
+                        } else {
+                            const catRef = ctx.db.collection("categories").doc();
+                            batch.set(catRef, {
+                                name: finalName,
+                                icon: meta.icon,
+                                color: meta.color,
+                                userId,
+                                parentId: null,
+                                createdAt: new Date().toISOString(),
+                                updatedAt: new Date().toISOString(),
+                            });
                             categoryId = catRef.id;
                             userCategories.push({ id: catRef.id, name: finalName });
                         }
@@ -570,22 +625,30 @@ export const expenseRouter = router({
             const totalAmount = (inputTotalAmount && inputTotalAmount > 0) ? inputTotalAmount : itemsSum;
 
             let finalCategoryId = expenseData.categoryId;
-            if (!finalCategoryId && categoryName) {
+            if (!finalCategoryId) {
+                const targetName = categoryName || expenseData.merchant;
                 const catSnapshot = await ctx.db.collection("categories").where("userId", "==", userId).get();
                 const userCategories = catSnapshot.docs.map(d => ({ id: d.id, name: d.data().name }));
-                const categoryMap = new Map(userCategories.map(c => [c.name.toLowerCase().trim(), c.id]));
-
-                const exactMatch = categoryMap.get(categoryName.toLowerCase().trim());
-                if (exactMatch) {
-                    finalCategoryId = exactMatch;
+                const matched = findMatchingCategory(targetName, userCategories);
+                if (matched) {
+                    finalCategoryId = matched.id;
                 } else {
-                    const aiNameLower = categoryName.toLowerCase().trim();
-                    for (const [catName, catId] of categoryMap.entries()) {
-                        if (aiNameLower.includes(catName) || catName.includes(aiNameLower)) {
-                            finalCategoryId = catId;
-                            break;
-                        }
-                    }
+                    const canonical = normalizeCategoryName(targetName);
+                    const finalName = (canonical && canonical !== "Other" && canonical !== "Uncategorized")
+                        ? canonical
+                        : inferCategoryFromTransaction(targetName, "EXPENSE", totalAmount);
+                    const meta = DEFAULT_CATEGORY_METAS[finalName] || DEFAULT_CATEGORY_METAS["Food & Dining"];
+                    const catRef = ctx.db.collection("categories").doc();
+                    await catRef.set({
+                        name: finalName,
+                        icon: meta.icon,
+                        color: meta.color,
+                        userId,
+                        parentId: null,
+                        createdAt: new Date().toISOString(),
+                        updatedAt: new Date().toISOString(),
+                    });
+                    finalCategoryId = catRef.id;
                 }
             }
 

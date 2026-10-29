@@ -21,7 +21,7 @@ import { getLucideIcon } from "@/lib/icons";
 import { useEffect } from "react";
 import { showMatchingAlert } from "@/components/ui/AlertCard";
 import { useCurrency } from "@/context/CurrencyContext";
-import { findMatchingCategory } from "@/lib/categories";
+import { findMatchingCategory, inferCategoryFromTransaction } from "@/lib/categories";
 
 export interface ExpenseEditData {
     id: string;
@@ -345,7 +345,7 @@ export function AddExpenseSheet({ open, onOpenChange, onSuccess, editData, editI
                 note: cleanNote,
                 paymentMethod,
                 categoryId,
-                categoryName: !categoryId && !isCustom && prefillData?.category ? prefillData.category : undefined,
+                categoryName: !categoryId && !isCustom ? (prefillData?.category || inferCategoryFromTransaction(cleanMerchant, "EXPENSE", baseAmt)) : undefined,
                 date: expenseDate,
                 receiptUrl,
                 icon: categoryId ? undefined : mappedIcon,

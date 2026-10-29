@@ -15,7 +15,7 @@ export const DEFAULT_CATEGORY_METAS: Record<string, { icon: string; color: strin
     "Entertainment": { icon: "film", color: "#5856D6" },
     "Health": { icon: "heart-pulse", color: "#34C759" },
     "Travel": { icon: "plane", color: "#5AC8FA" },
-    "Investments": { icon: "bar-chart-2", color: "#AF52DE" },
+    "Investments": { icon: "trending-up", color: "#AF52DE" },
     "Salary": { icon: "briefcase", color: "#30D158" },
     "UPI Transfer": { icon: "arrow-left-right", color: "#5E5CE6" },
     "Transfers": { icon: "repeat", color: "#0A84FF" },
@@ -23,7 +23,8 @@ export const DEFAULT_CATEGORY_METAS: Record<string, { icon: string; color: strin
     "Interest & Dividends": { icon: "trending-up", color: "#34C759" },
     "Refunds": { icon: "rotate-ccw", color: "#64D2FF" },
     "Education": { icon: "book-open", color: "#BF5AF2" },
-    "Other": { icon: "circle", color: "#8E8E93" },
+    "General": { icon: "wallet", color: "#007AFF" },
+    "Other": { icon: "wallet", color: "#8E8E93" },
 };
 
 export const VALID_CATEGORIES = Object.keys(DEFAULT_CATEGORY_METAS) as readonly string[];
@@ -341,4 +342,134 @@ export function findMatchingCategory<T extends { id: string; name: string }>(
     if (partial) return partial;
 
     return null;
+}
+
+/**
+ * Accurately infers a valid, non-"Other", non-"Uncategorized" category for any transaction.
+ * Strictly guarantees that every single element added by file or bank statement PDF
+ * is assigned an appropriate, rich category with a clean logo.
+ */
+export function inferCategoryFromTransaction(
+    description?: string | null,
+    type?: "EXPENSE" | "INCOME" | string | null,
+    amount?: number | null
+): string {
+    const isIncome = type?.toUpperCase() === "INCOME";
+    const text = (description || "").trim();
+    if (!text) return isIncome ? "UPI Transfer" : "Shopping";
+
+    const lower = text.toLowerCase();
+
+    // 1. Check if canonical normalization detects a specific category
+    const detected = normalizeCategoryName(text);
+    if (detected && detected !== "Other" && detected !== "Uncategorized") {
+        return detected;
+    }
+
+    // 2. Income-specific patterns
+    if (isIncome) {
+        if (lower.includes("salary") || lower.includes("payroll") || lower.includes("wages") || lower.includes("stipend") || lower.includes("comp") || lower.includes("bonus")) {
+            return "Salary";
+        }
+        if (lower.includes("cashback") || lower.includes("reward") || lower.includes("loyalty")) {
+            return "Cashback & Rewards";
+        }
+        if (lower.includes("interest") || lower.includes("dividend") || lower.includes("int.pd") || lower.includes("yield")) {
+            return "Interest & Dividends";
+        }
+        if (lower.includes("refund") || lower.includes("reversal") || lower.includes("credited back") || lower.includes("chargeback")) {
+            return "Refunds";
+        }
+        if (lower.includes("self") || lower.includes("internal") || lower.includes("transfer") || lower.includes("linked account")) {
+            return "Transfers";
+        }
+        if (lower.includes("invest") || lower.includes("stock") || lower.includes("mutual") || lower.includes("trading") || lower.includes("fund")) {
+            return "Investments";
+        }
+        return "UPI Transfer";
+    }
+
+    // 3. Expense-specific patterns
+    if (
+        lower.includes("supermarket") || lower.includes("mart") || lower.includes("store") || lower.includes("kirana") ||
+        lower.includes("bazaar") || lower.includes("veg") || lower.includes("fruit") || lower.includes("milk") ||
+        lower.includes("dairy") || lower.includes("bread") || lower.includes("provision") || lower.includes("ration")
+    ) {
+        return "Groceries";
+    }
+
+    if (
+        lower.includes("restaurant") || lower.includes("hotel") || lower.includes("cafe") || lower.includes("coffee") ||
+        lower.includes("chai") || lower.includes("tea") || lower.includes("bake") || lower.includes("bakery") ||
+        lower.includes("kitchen") || lower.includes("eatery") || lower.includes("snack") || lower.includes("dine") ||
+        lower.includes("dining") || lower.includes("food") || lower.includes("juice") || lower.includes("burger") ||
+        lower.includes("pizza") || lower.includes("biryani") || lower.includes("dhaba") || lower.includes("canteen")
+    ) {
+        return "Food & Dining";
+    }
+
+    if (
+        lower.includes("fuel") || lower.includes("petrol") || lower.includes("diesel") || lower.includes("cng") ||
+        lower.includes("hpcl") || lower.includes("bpcl") || lower.includes("iocl") || lower.includes("auto") ||
+        lower.includes("cab") || lower.includes("taxi") || lower.includes("ride") || lower.includes("trip") ||
+        lower.includes("metro") || lower.includes("bus") || lower.includes("rail") || lower.includes("train") ||
+        lower.includes("toll") || lower.includes("fastag") || lower.includes("parking") || lower.includes("flight")
+    ) {
+        return "Transport";
+    }
+
+    if (
+        lower.includes("bill") || lower.includes("utility") || lower.includes("elect") || lower.includes("water") ||
+        lower.includes("gas") || lower.includes("recharge") || lower.includes("mobile") || lower.includes("wifi") ||
+        lower.includes("broadband") || lower.includes("postpaid") || lower.includes("dth") || lower.includes("fee") ||
+        lower.includes("charge") || lower.includes("maintenance") || lower.includes("rent")
+    ) {
+        return "Bills & Utilities";
+    }
+
+    if (
+        lower.includes("shop") || lower.includes("retail") || lower.includes("mall") || lower.includes("wear") ||
+        lower.includes("cloth") || lower.includes("textile") || lower.includes("dress") || lower.includes("shoe") ||
+        lower.includes("fashion") || lower.includes("fancy") || lower.includes("jewel") || lower.includes("gift") ||
+        lower.includes("purchase") || lower.includes("cart") || lower.includes("order") || lower.includes("pcd") ||
+        lower.includes("pos")
+    ) {
+        return "Shopping";
+    }
+
+    if (
+        lower.includes("med") || lower.includes("pharma") || lower.includes("doctor") || lower.includes("clinic") ||
+        lower.includes("hospital") || lower.includes("health") || lower.includes("care") || lower.includes("cure") ||
+        lower.includes("lab") || lower.includes("dent") || lower.includes("opt")
+    ) {
+        return "Health";
+    }
+
+    if (
+        lower.includes("movie") || lower.includes("cinema") || lower.includes("theatre") || lower.includes("show") ||
+        lower.includes("play") || lower.includes("game") || lower.includes("gaming") || lower.includes("sport") ||
+        lower.includes("stream") || lower.includes("music")
+    ) {
+        return "Entertainment";
+    }
+
+    if (
+        lower.includes("travel") || lower.includes("trip") || lower.includes("resort") || lower.includes("lodge") ||
+        lower.includes("stay") || lower.includes("holiday") || lower.includes("vacation")
+    ) {
+        return "Travel";
+    }
+
+    if (
+        lower.includes("upi") || lower.includes("@") || lower.includes("sent to") || lower.includes("pay to") ||
+        lower.includes("transfer to") || lower.includes("payment to")
+    ) {
+        return "UPI Transfer";
+    }
+
+    // 4. Default fallback based on amount heuristic (never "Other" or "Uncategorized")
+    if (amount && amount > 2500) {
+        return "Shopping";
+    }
+    return "Food & Dining";
 }

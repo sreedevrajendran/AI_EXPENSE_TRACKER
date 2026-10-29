@@ -17,6 +17,7 @@ import { trpc } from "@/trpc/client";
 import { showMatchingAlert } from "@/components/ui/AlertCard";
 import { useRouter } from "next/navigation";
 import { formatCurrency } from "@/lib/utils";
+import { getCategoryVisual } from "@/lib/icons";
 
 interface BillItem {
     name: string;
@@ -159,11 +160,13 @@ export function BillReviewSheet({ open, onOpenChange, billData, initialFile }: B
             const billDate = billData.date ? new Date(billData.date) : new Date();
             const validDate = !isNaN(billDate.getTime()) ? billDate : new Date();
 
+            const categoryVisual = getCategoryVisual(billData.category || billData.merchant, undefined, "EXPENSE");
+
             await createWithItems.mutateAsync({
                 merchant: billData.merchant || "Unknown Store",
                 date: validDate,
                 paymentMethod,
-                categoryName: billData.category || undefined,
+                categoryName: categoryVisual.label,
                 note: compiledNote,
                 totalAmount: finalTotal,
                 referenceId: billData.referenceId || undefined,
@@ -222,6 +225,8 @@ export function BillReviewSheet({ open, onOpenChange, billData, initialFile }: B
     };
 
     const isDue = billData?.billStatus === "DUE" || billData?.billStatus === "UNPAID";
+    const headerVisual = getCategoryVisual(billData?.category || billData?.merchant, undefined, "EXPENSE");
+    const CategoryIcon = headerVisual.Icon;
 
     return (
         <Drawer.Root open={open} onOpenChange={onOpenChange}>
@@ -239,15 +244,22 @@ export function BillReviewSheet({ open, onOpenChange, billData, initialFile }: B
                     <div className="px-5 pt-3 pb-3 border-b border-[#E5E5EA] dark:border-[#3A3A3C] space-y-2.5">
                         <div className="flex items-center justify-between gap-3">
                             <div className="flex items-center gap-3 min-w-0">
-                                <div className="w-10 h-10 rounded-2xl bg-gradient-to-br from-orange-400 to-pink-500 flex items-center justify-center shadow-sm flex-shrink-0">
-                                    <Receipt size={20} className="text-white" />
+                                <div
+                                    className="w-11 h-11 rounded-2xl flex items-center justify-center shrink-0 shadow-xs"
+                                    style={{
+                                        backgroundColor: `${headerVisual.color}15`,
+                                        color: headerVisual.color,
+                                        border: `1px solid ${headerVisual.color}30`,
+                                    }}
+                                >
+                                    <CategoryIcon size={22} strokeWidth={2.2} />
                                 </div>
                                 <div className="min-w-0">
                                     <h2 className="text-[18px] font-bold text-neutral-900 dark:text-white truncate">
                                         {billData?.merchant || "Bill Review"}
                                     </h2>
                                     <p className="text-[12px] text-neutral-500 dark:text-neutral-400 truncate">
-                                        {billData?.date || "Today"} {billData?.time ? `• ${billData.time}` : ""} · {billData?.category || "Shopping"}
+                                        {billData?.date || "Today"} {billData?.time ? `• ${billData.time}` : ""} · {headerVisual.label}
                                     </p>
                                 </div>
                             </div>

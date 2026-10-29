@@ -9,7 +9,7 @@ import { formatCurrency, formatDate } from "@/lib/utils";
 import { PrivacyWrapper } from "@/components/ui/PrivacyWrapper";
 import { AddExpenseSheet } from "@/components/expenses/AddExpenseSheet";
 import { TransactionStatementModal } from "@/components/transactions/TransactionStatementModal";
-import { getLucideIcon } from "@/lib/icons";
+import { getLucideIcon, getCategoryVisual } from "@/lib/icons";
 import { PullToRefresh } from "@/components/ui/PullToRefresh";
 import { cn } from "@/lib/utils";
 
@@ -131,7 +131,8 @@ export default function ExpensesPage() {
                                 <p className="text-[13px] font-semibold ios-text-secondary uppercase tracking-wider mb-3 px-1 mt-2">{date}</p>
                                 <div className="space-y-3">
                                     {(grouped[date] ?? []).map((expense: ExpenseItem, i: number) => {
-                                        const Icon = getLucideIcon(expense.category?.icon ?? expense.icon ?? "circle");
+                                        const visual = getCategoryVisual(expense.category?.name || expense.merchant, expense.category?.icon || expense.icon, "EXPENSE");
+                                        const Icon = visual.Icon;
                                         return (
                                             <motion.button
                                                 type="button"
@@ -144,11 +145,16 @@ export default function ExpensesPage() {
                                             >
                                                 <div
                                                     className="absolute top-0 right-0 w-32 h-32 blur-3xl rounded-full opacity-10 transition-opacity group-hover:opacity-20 pointer-events-none"
-                                                    style={{ backgroundColor: expense.category?.color ?? "#007AFF" }}
+                                                    style={{ backgroundColor: visual.color }}
                                                 />
-                                                <div className="relative w-14 h-14 rounded-[20px] flex items-center justify-center flex-shrink-0 shadow-inner overflow-hidden">
-                                                    <div className="absolute inset-0 opacity-20" style={{ backgroundColor: expense.category?.color ?? "#007AFF" }} />
-                                                    <Icon size={26} style={{ color: expense.category?.color ?? "#007AFF" }} className="relative z-10" />
+                                                <div
+                                                    className="relative w-14 h-14 rounded-[20px] flex items-center justify-center flex-shrink-0 shadow-xs overflow-hidden"
+                                                    style={{
+                                                        backgroundColor: `${visual.color}15`,
+                                                        border: `1px solid ${visual.color}30`,
+                                                    }}
+                                                >
+                                                    <Icon size={26} style={{ color: visual.color }} className="relative z-10" />
                                                 </div>
                                                 <div className="flex-1 min-w-0 relative z-10">
                                                     <div className="flex items-center gap-2 mb-1">
@@ -160,8 +166,14 @@ export default function ExpensesPage() {
                                                         )}
                                                     </div>
                                                     <div className="flex flex-wrap items-center gap-2">
-                                                        <span className="text-[12px] font-medium ios-text-secondary bg-[#F2F2F7] dark:bg-[#2C2C2E] px-2 py-0.5 rounded-md">
-                                                            {expense.category?.name ?? "Uncategorized"}
+                                                        <span
+                                                            className="text-[12px] font-bold px-2 py-0.5 rounded-md"
+                                                            style={{
+                                                                color: visual.color,
+                                                                backgroundColor: `${visual.color}15`,
+                                                            }}
+                                                        >
+                                                            {visual.label}
                                                         </span>
                                                         <span
                                                             className="text-[10px] uppercase font-bold tracking-wider px-2 py-0.5 rounded-md"

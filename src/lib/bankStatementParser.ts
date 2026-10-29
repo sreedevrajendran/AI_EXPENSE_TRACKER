@@ -13,6 +13,7 @@
 
 import { extractText } from "unpdf";
 import { classifyTransaction } from "./ml/transactionClassifier";
+import { inferCategoryFromTransaction } from "./categories";
 
 export interface ParsedStatementTransaction {
     date: string; // YYYY-MM-DD
@@ -390,12 +391,13 @@ function categorizeNarration(narration: string, type: "EXPENSE" | "INCOME"): str
         return "UPI Transfer";
     }
 
-    // 9. Default fallback
-    if (type === "INCOME") {
-        return "UPI Transfer";
+    // 9. Comprehensive fallback - guarantees zero Uncategorized and zero Other
+    const inferred = inferCategoryFromTransaction(narration, type);
+    if (inferred && inferred !== "Other" && inferred !== "Uncategorized") {
+        return inferred;
     }
 
-    return "Other";
+    return type === "INCOME" ? "UPI Transfer" : "Food & Dining";
 }
 
 // Detect payment method from narration

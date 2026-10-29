@@ -1,6 +1,7 @@
 import { formatCurrency, formatDate, getCurrencyConfig, convertFromBaseCurrency } from "./utils";
 import { Capacitor } from "@capacitor/core";
 import { Filesystem, Directory } from "@capacitor/filesystem";
+import { inferCategoryFromTransaction } from "./categories";
 
 export interface TransactionRecord {
     id: string;
@@ -66,7 +67,7 @@ export function generateStatementRecords(expenses: any[] = [], incomes: any[] = 
             amount: Number(e.amount) || 0,
             type: "DEBIT",
             description: e.merchant || "Expense",
-            category: e.category?.name || e.categoryName || "Uncategorized",
+            category: e.category?.name || e.categoryName || inferCategoryFromTransaction(e.merchant || e.note, "EXPENSE", e.amount),
             paymentMethod: e.paymentMethod || "UPI",
         });
     }
@@ -79,7 +80,7 @@ export function generateStatementRecords(expenses: any[] = [], incomes: any[] = 
             amount: Number(i.amount) || 0,
             type: "CREDIT",
             description: i.source || "Income",
-            category: "Income",
+            category: i.category?.name || i.categoryName || inferCategoryFromTransaction(i.source || i.note, "INCOME", i.amount),
             paymentMethod: "Bank Deposit",
         });
     }

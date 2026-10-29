@@ -3,7 +3,7 @@ import { protectedProcedure, router } from "../trpc";
 import { GoogleGenAI } from "@google/genai";
 import { parseBankStatementPdf } from "@/lib/bankStatementParser";
 import { classifyTransaction } from "@/lib/ml/transactionClassifier";
-import { normalizeCategoryName } from "@/lib/categories";
+import { normalizeCategoryName, inferCategoryFromTransaction } from "@/lib/categories";
 import { answerFinancialQuery, buildRichPromptContext, FinancialContext } from "@/lib/ai/financialAssistant";
 import { retrieveFinancialContext, RAGCitation } from "@/lib/ai/ragEngine";
 import { formatCurrency, getCurrencyConfig } from "@/lib/utils";
@@ -117,11 +117,20 @@ const VALID_CATEGORIES = [
     "Interest & Dividends",
     "Refunds",
     "Education",
-    "Other",
+    "General",
 ] as const;
 
-function sanitizeCategory(val?: any): string {
-    return normalizeCategoryName(val);
+function sanitizeCategory(
+    val?: any,
+    descriptionOrMerchant?: string,
+    type: "EXPENSE" | "INCOME" = "EXPENSE",
+    amount?: number
+): string {
+    const clean = normalizeCategoryName(val);
+    if (clean && clean !== "Other" && clean !== "Uncategorized") {
+        return clean;
+    }
+    return inferCategoryFromTransaction(descriptionOrMerchant || "", type, amount);
 }
 
 function formatPaymentNote(fields: {
@@ -352,7 +361,8 @@ export const aiRouter = router({
                 }
 
                 const pm = sanitizePaymentMethod(parsed.paymentMethod);
-                const category = sanitizeCategory(parsed.category);
+                const rawAmount = typeof parsed.amount === "number" ? parsed.amount : (parseFloat(parsed.amount) || null);
+                const category = sanitizeCategory(parsed.category, parsed.merchant || parsed.note, "EXPENSE", rawAmount || undefined);
                 const note = formatPaymentNote({
                     invoiceNumber: parsed.invoiceNumber,
                     referenceId: parsed.referenceId,
@@ -482,7 +492,7 @@ export const aiRouter = router({
                         merchant: "Document Uploaded",
                         amount: 0,
                         date: new Date().toISOString().split("T")[0],
-                        category: "Other",
+                        category: "Bills & Utilities",
                         paymentMethod: "UPI",
                         note: "Configure GEMINI_API_KEY in .env.local for full AI receipt OCR",
                     },
@@ -515,7 +525,7 @@ Return ONLY a raw JSON object with NO markdown, NO backticks, and NO conversatio
   "date": "<Transaction or bill date in YYYY-MM-DD format, or null>",
   "time": "<Time in HH:MM format if visible, otherwise null>",
   "paymentMethod": "<exactly one of: 'UPI' | 'CREDIT_CARD' | 'DEBIT_CARD' | 'NET_BANKING' | 'BANK_TRANSFER' | 'CASH' | 'OTHER' | null>",
-  "category": "<exactly one of: 'Food & Dining' | 'Groceries' | 'Shopping' | 'Transport' | 'Bills & Utilities' | 'Entertainment' | 'Health' | 'Travel' | 'Investments' | 'Salary' | 'UPI Transfer' | 'Transfers' | 'Cashback & Rewards' | 'Interest & Dividends' | 'Refunds' | 'Education' | 'Other'>",
+  "category": "<Must be a specific authentic category. NEVER 'Other' or 'Uncategorized'. Exactly one of: 'Food & Dining' | 'Groceries' | 'Shopping' | 'Transport' | 'Bills & Utilities' | 'Entertainment' | 'Health' | 'Travel' | 'Investments' | 'Salary' | 'UPI Transfer' | 'Transfers' | 'Cashback & Rewards' | 'Interest & Dividends' | 'Refunds' | 'Education' | 'General'>",
   "status": "<'PAID' for completed receipts/transactions, 'DUE' or 'UNPAID' for unpaid bills, or null>",
   "dueDate": "<YYYY-MM-DD if this is a bill with a due date, otherwise null>",
   "invoiceNumber": "<Invoice #, Bill #, Receipt #, Order ID, or Token # if visible, otherwise null>",
@@ -605,7 +615,7 @@ Return ONLY a raw JSON object with NO markdown, NO backticks, and NO conversatio
                 }
 
                 const pm = sanitizePaymentMethod(parsed.paymentMethod);
-                const category = sanitizeCategory(parsed.category);
+                const category = sanitizeCategory(parsed.category, parsed.merchant || parsed.note, "EXPENSE", totalAmount);
                 const note = formatPaymentNote({
                     invoiceNumber: parsed.invoiceNumber,
                     referenceId: parsed.referenceId,
@@ -731,7 +741,7 @@ Return ONLY a raw JSON object with NO markdown, NO backticks, and NO conversatio
                             amount: Math.abs(parseFloat(tx.amount) || 0),
                             type: tx.type === "INCOME" ? "INCOME" : "EXPENSE",
                             paymentMethod: sanitizePaymentMethod(tx.paymentMethod),
-                            category: sanitizeCategory(tx.category),
+                            category: sanitizeCategory(tx.category, tx.description, tx.type === "INCOME" ? "INCOME" : "EXPENSE", Math.abs(parseFloat(tx.amount) || 0)),
                         })),
                     };
                 }

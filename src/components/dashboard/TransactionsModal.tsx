@@ -7,6 +7,7 @@ import { Paperclip, TrendingDown } from "lucide-react";
 import * as LucideIcons from "lucide-react";
 import { AddExpenseSheet } from "@/components/expenses/AddExpenseSheet";
 import { AddIncomeSheet } from "@/components/income/AddIncomeSheet";
+import { getCategoryVisual } from "@/lib/icons";
 
 function getIcon(name: string) {
     const key = name.split("-").map((w) => w.charAt(0).toUpperCase() + w.slice(1)).join("");
@@ -77,8 +78,9 @@ export function TransactionsModal({ open, onOpenChange, title, transactions }: T
                             <div className="space-y-3">
                                 {transactions.map((t, i) => {
                                     const isIncome = t.type === 'income';
-                                    const Icon = getIcon(t.category?.icon ?? t.icon ?? "circle");
-                                    const color = isIncome ? "#34C759" : (t.category?.color ?? "#007AFF");
+                                    const visual = getCategoryVisual(t.category?.name || t.title, t.category?.icon || t.icon, isIncome ? "INCOME" : "EXPENSE");
+                                    const Icon = visual.Icon;
+                                    const color = visual.color;
 
                                     return (
                                         <motion.button
@@ -99,8 +101,11 @@ export function TransactionsModal({ open, onOpenChange, title, transactions }: T
                                         >
                                             <div className="flex items-center gap-3 min-w-0 flex-1">
                                                 <div
-                                                    className="w-10 h-10 rounded-[10px] flex items-center justify-center flex-shrink-0"
-                                                    style={{ backgroundColor: `${color}20` }}
+                                                    className="w-10 h-10 rounded-[12px] flex items-center justify-center flex-shrink-0 shadow-xs"
+                                                    style={{
+                                                        backgroundColor: `${color}15`,
+                                                        border: `1px solid ${color}25`,
+                                                    }}
                                                 >
                                                     <Icon size={18} style={{ color }} />
                                                 </div>
@@ -113,8 +118,8 @@ export function TransactionsModal({ open, onOpenChange, title, transactions }: T
                                                             </div>
                                                         )}
                                                     </div>
-                                                    <p className="text-xs ios-text-secondary">
-                                                        {isIncome ? "Income" : (t.category?.name ?? "Uncategorized")} · {formatDate(t.date)}
+                                                    <p className="text-xs ios-text-secondary font-medium">
+                                                        {visual.label} · {formatDate(t.date)}
                                                     </p>
                                                 </div>
                                             </div>

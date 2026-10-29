@@ -18,6 +18,7 @@ import { TransactionsModal, ModalTransaction } from "@/components/dashboard/Tran
 import { PullToRefresh } from "@/components/ui/PullToRefresh";
 import * as LucideIcons from "lucide-react";
 import { useSession } from "next-auth/react";
+import { getCategoryVisual } from "@/lib/icons";
 
 function getIcon(name: string) {
     const key = name.split("-").map((w) => w.charAt(0).toUpperCase() + w.slice(1)).join("");
@@ -312,8 +313,9 @@ export default function HomePage() {
                                         {recentTransactions.map((t, i) => {
                                             const isIncome = t.type === 'income';
                                             const title = isIncome ? (t as any).source : (t as any).merchant;
-                                            const Icon = getIcon(t.category?.icon ?? t.icon ?? "circle");
-                                            const color = isIncome ? "#34C759" : (t.category?.color ?? "#007AFF");
+                                            const visual = getCategoryVisual(t.category?.name || title, t.category?.icon || t.icon, isIncome ? "INCOME" : "EXPENSE");
+                                            const Icon = visual.Icon;
+                                            const color = visual.color;
 
                                             return (
                                                 <motion.div
@@ -333,8 +335,11 @@ export default function HomePage() {
                                                     className="flex items-center gap-3 px-4 py-3.5 flex-shrink-0 cursor-pointer active:bg-black/5 dark:active:bg-white/5 transition-colors"
                                                 >
                                                     <div
-                                                        className="w-10 h-10 rounded-[10px] flex items-center justify-center flex-shrink-0"
-                                                        style={{ backgroundColor: `${color}20` }}
+                                                        className="w-10 h-10 rounded-[12px] flex items-center justify-center flex-shrink-0 shadow-xs"
+                                                        style={{
+                                                            backgroundColor: `${color}15`,
+                                                            border: `1px solid ${color}25`,
+                                                        }}
                                                     >
                                                         <Icon size={18} style={{ color }} />
                                                     </div>
@@ -347,8 +352,8 @@ export default function HomePage() {
                                                                 </a>
                                                             )}
                                                         </div>
-                                                        <p className="text-xs ios-text-secondary">
-                                                            {isIncome ? "Income" : (t.category?.name ?? "Uncategorized")} · {formatDate(t.date)}
+                                                        <p className="text-xs ios-text-secondary font-medium">
+                                                            {visual.label} · {formatDate(t.date)}
                                                         </p>
                                                     </div>
                                                     <PrivacyWrapper>
